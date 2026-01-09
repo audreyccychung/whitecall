@@ -222,14 +222,29 @@ What parameters should it accept?"
 **CRITICAL: ExitPlanMode Protocol**
 ⚠️ **NEVER call ExitPlanMode automatically!** It requires user approval.
 
-**Correct flow:**
+**Correct flow (TWO-STEP PROCESS):**
 ```
+Step 1: Exit Plan Mode
 1. Write plan to .claude/plans/ file
 2. Present summary to user
-3. Ask: "Would you like me to proceed with this plan?"
-4. Wait for user response ("yes" / "looks good" / "proceed")
-5. THEN call ExitPlanMode
+3. Ask: "Should I exit plan mode?"
+4. Wait for user response:
+   - If YES → Call ExitPlanMode
+   - If NO → Ask "What would you like me to change?"
+
+Step 2: Start Implementation (SEPARATE decision)
+5. After exiting, ask: "Should I proceed with implementation?"
+6. Wait for user response:
+   - User may want to review plan first
+   - User may want to give feedback
+   - User may want to discuss approach
+7. Only start building after explicit approval
 ```
+
+**Why two steps:**
+- **Step 1**: Exit plan mode (close planning phase)
+- **Step 2**: Start implementation (user may want time to review)
+- **Don't assume**: Exiting plan ≠ start building immediately
 
 **Incorrect flow (causes blocking):**
 ```
@@ -285,8 +300,11 @@ QUESTIONS:
 
 I've written the full plan to .claude/plans/[plan-file].md
 
-Would you like me to proceed with this approach, or do you want to adjust the plan?
-[WAIT FOR USER RESPONSE BEFORE CALLING ExitPlanMode]
+**Should I exit plan mode?**
+- If YES, I'll close the planning phase
+- If NO, tell me what you'd like me to change
+
+[After exiting, I'll ask separately if you want me to start implementation]
 ```
 
 ### PROACTIVE ISSUE DETECTION
