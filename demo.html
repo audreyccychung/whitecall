@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhiteCall Demo - V0 UI Mockup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8f0f7 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 375px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    /* Your Avatar Section */
+    .your-avatar-section {
+      padding: 30px 20px;
+      background: linear-gradient(to bottom, #f8f9ff, white);
+      border-bottom: 1px solid #e8eaf6;
+    }
+
+    .avatar-container {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto 15px;
+    }
+
+    .avatar {
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, #a8c0ff, #c2e9fb);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hearts floating around avatar */
+    .heart {
+      position: absolute;
+      font-size: 28px;
+      animation: float 3s ease-in-out infinite;
+      opacity: 0;
+    }
+
+    .heart:nth-child(1) {
+      top: 10%;
+      left: -10%;
+      animation-delay: 0s;
+    }
+
+    .heart:nth-child(2) {
+      top: 20%;
+      right: -5%;
+      animation-delay: 0.5s;
+    }
+
+    .heart:nth-child(3) {
+      bottom: 30%;
+      left: -5%;
+      animation-delay: 1s;
+    }
+
+    .heart:nth-child(4) {
+      bottom: 15%;
+      right: -10%;
+      animation-delay: 1.5s;
+    }
+
+    .heart:nth-child(5) {
+      top: 50%;
+      left: -15%;
+      animation-delay: 2s;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 0;
+      }
+      20% {
+        opacity: 1;
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-80px) scale(1);
+        opacity: 0;
+      }
+    }
+
+    .username {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .heart-counter {
+      text-align: center;
+      font-size: 16px;
+      color: #667eea;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    /* On Call Checkbox */
+    .on-call-toggle {
+      background: #f8f9ff;
+      border: 2px solid #e8eaf6;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .on-call-toggle:hover {
+      background: #f0f2ff;
+      border-color: #667eea;
+    }
+
+    .on-call-toggle label {
+      font-size: 16px;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      accent-color: #667eea;
+      cursor: pointer;
+    }
+
+    /* Friends on Call Section */
+    .friends-section {
+      padding: 20px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .friend-card {
+      background: white;
+      border: 1px solid #e8eaf6;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .friend-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .friend-avatar {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      flex-shrink: 0;
+    }
+
+    .friend-info {
+      flex: 1;
+    }
+
+    .friend-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 3px;
+    }
+
+    .friend-status {
+      font-size: 13px;
+      color: #667eea;
+      font-weight: 500;
+    }
+
+    .send-heart-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+    }
+
+    .send-heart-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .send-heart-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      padding: 15px 0;
+      border-top: 1px solid #e8eaf6;
+      background: white;
+    }
+
+    .nav-btn {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      color: #999;
+      font-size: 12px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      color: #667eea;
+    }
+
+    .nav-btn.active {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    /* Demo Note */
+    .demo-note {
+      text-align: center;
+      padding: 20px;
+      background: #fff3cd;
+      border-radius: 10px;
+      margin: 20px 20px 0;
+      font-size: 14px;
+      color: #856404;
+    }
+
+    .demo-note strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-note">
+    <strong>📱 WhiteCall V0 Demo</strong>
+    This is a static mockup showing the UI concept. Click "Send 🤍" to see heart animations!
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🤍 WhiteCall</h1>
+      <p>Support your friends on call</p>
+    </div>
+
+    <!-- Your Avatar Section -->
+    <div class="your-avatar-section">
+      <div class="avatar-container">
+        <div class="avatar">🐧</div>
+        <!-- Hearts floating around -->
+        <div class="heart">🤍</div>
+        <div class="heart">🤍</div>
+        <div class="heart">🤍</div>
+        <div class="heart">🤍</div>
+        <div class="heart">🤍</div>
+      </div>
+
+      <div class="username">Audrey</div>
+      <div class="heart-counter">7 white calls received! 🤍</div>
+
+      <!-- On Call Toggle -->
+      <div class="on-call-toggle">
+        <label>
+          <input type="checkbox" class="checkbox" id="onCallCheck">
+          I'm on call today
+        </label>
+      </div>
+    </div>
+
+    <!-- Friends on Call -->
+    <div class="friends-section">
+      <div class="section-title">
+        <span>💭</span>
+        Friends on call today
+      </div>
+
+      <!-- Friend 1 -->
+      <div class="friend-card">
+        <div class="friend-avatar">🐻</div>
+        <div class="friend-info">
+          <div class="friend-name">Bob Chen</div>
+          <div class="friend-status">On call today</div>
+        </div>
+        <button class="send-heart-btn" onclick="sendHeart(this)">Send 🤍</button>
+      </div>
+
+      <!-- Friend 2 -->
+      <div class="friend-card">
+        <div class="friend-avatar">🐱</div>
+        <div class="friend-info">
+          <div class="friend-name">Carol Lee</div>
+          <div class="friend-status">On call today</div>
+        </div>
+        <button class="send-heart-btn" onclick="sendHeart(this)">Send 🤍</button>
+      </div>
+
+      <!-- Friend 3 -->
+      <div class="friend-card">
+        <div class="friend-avatar">🐶</div>
+        <div class="friend-info">
+          <div class="friend-name">Dave Kim</div>
+          <div class="friend-status">On call today</div>
+        </div>
+        <button class="send-heart-btn" onclick="sendHeart(this)">Send 🤍</button>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <div class="nav-btn active">
+        <div class="nav-icon">🏠</div>
+        Home
+      </div>
+      <div class="nav-btn">
+        <div class="nav-icon">👥</div>
+        Friends
+      </div>
+      <div class="nav-btn">
+        <div class="nav-icon">📅</div>
+        Calendar
+      </div>
+      <div class="nav-btn">
+        <div class="nav-icon">🎨</div>
+        Groups
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function sendHeart(button) {
+      // Animate button
+      button.textContent = '✓ Sent!';
+      button.style.background = '#48bb78';
+      button.disabled = true;
+
+      // Show success animation
+      const card = button.closest('.friend-card');
+      card.style.transform = 'scale(0.98)';
+
+      setTimeout(() => {
+        card.style.transform = 'scale(1)';
+      }, 200);
+
+      // Create floating heart animation
+      const heart = document.createElement('div');
+      heart.textContent = '🤍';
+      heart.style.position = 'fixed';
+      heart.style.fontSize = '40px';
+      heart.style.pointerEvents = 'none';
+      heart.style.zIndex = '9999';
+
+      const rect = button.getBoundingClientRect();
+      heart.style.left = rect.left + 'px';
+      heart.style.top = rect.top + 'px';
+      heart.style.animation = 'float 2s ease-out forwards';
+
+      document.body.appendChild(heart);
+
+      setTimeout(() => {
+        heart.remove();
+      }, 2000);
+
+      // Reset button after 3 seconds
+      setTimeout(() => {
+        button.textContent = 'Send 🤍';
+        button.style.background = '';
+        button.disabled = false;
+      }, 3000);
+    }
+
+    // Toggle on-call status
+    document.getElementById('onCallCheck').addEventListener('change', function() {
+      const section = document.querySelector('.your-avatar-section');
+      if (this.checked) {
+        section.style.background = 'linear-gradient(to bottom, #fff5f5, white)';
+        alert('You marked yourself as on call. Your friends can now send you hearts! 🤍');
+      } else {
+        section.style.background = 'linear-gradient(to bottom, #f8f9ff, white)';
+      }
+    });
+  </script>
+</body>
+</html>

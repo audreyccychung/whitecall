@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Soft whites and pastels for WhiteCall theme */
+    --color-white-call-50: #ffffff;
+    --color-white-call-100: #fefefe;
+    --color-white-call-200: #fafafa;
+    --color-white-call-300: #f5f5f5;
+    --color-white-call-400: #f0f0f0;
+
+    /* Light blues */
+    --color-sky-soft-50: #f0f9ff;
+    --color-sky-soft-100: #e0f2fe;
+    --color-sky-soft-200: #bae6fd;
+    --color-sky-soft-300: #7dd3fc;
+    --color-sky-soft-400: #38bdf8;
+    --color-sky-soft-500: #0ea5e9;
+
+    /* Pastels */
+    --color-pastel-pink: #ffd6e8;
+    --color-pastel-blue: #d6e8ff;
+    --color-pastel-purple: #e8d6ff;
+    --color-pastel-green: #d6ffe8;
+    --color-pastel-yellow: #fff4d6;
+    --color-pastel-peach: #ffd6d6;
+
+    /* Shift type colors */
+    --color-shift-day: #38bdf8;
+    --color-shift-night: #818cf8;
+    --color-shift-evening: #fb923c;
+    --color-shift-call: #ec4899;
+    --color-shift-weekend: #a855f7;
+  }
+
+  body {
+    background-color: var(--color-white-call-200);
+    color: rgb(17 24 39);
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* Custom component classes can go here */
+  .btn-primary {
+    background-color: var(--color-sky-soft-500);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: colors 200ms;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-sky-soft-400);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.95);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    background-color: var(--color-white-call-100);
+    color: rgb(55 65 81);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    border: 1px solid rgb(229 231 235);
+    transition: colors 200ms;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--color-white-call-300);
+  }
+
+  .btn-secondary:active {
+    transform: scale(0.95);
+  }
+
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .card {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1rem;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(229 231 235);
+    transition: all 200ms;
+  }
+
+  .input-field:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-sky-soft-400);
+  }
+}
+
+@layer utilities {
+  /* Touch-friendly sizing for mobile */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

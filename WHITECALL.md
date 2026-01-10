@@ -1,8 +1,8 @@
 # WhiteCall - Social Support for Healthcare Workers
 
-**Last Updated**: 2026-01-10
+**Last Updated**: 2026-01-10 (with Retention Strategy)
 **Project**: WhiteCall (formerly Shift Calendar)
-**Status**: Planning Phase
+**Status**: Planning Phase with Enhanced Retention Features
 
 ---
 
@@ -22,9 +22,9 @@ Healthcare workers face brutal call shifts alone. Existing apps are purely funct
 ## 🌟 CORE FEATURES BY VERSION
 
 ### V0 - Proof of Concept (Week 1-2)
-**Goal**: Validate the social support mechanic
+**Goal**: Validate the social support mechanic + establish retention hooks
 
-**Features**:
+**Core Features**:
 - User creates cute avatar (e.g., penguin character)
 - Manual "I'm on call today!" checkbox
 - Users can connect with other users (friends/colleagues)
@@ -32,17 +32,40 @@ Healthcare workers face brutal call shifts alone. Existing apps are purely funct
 - Hearts appear around recipient's avatar
 - Simple, clean UI focused on the heart-sending experience
 
+**🎯 RETENTION FEATURES (CRITICAL - Add to V0)**:
+1. **Daily Streaks** (2-3 hours)
+   - Track consecutive days user sends hearts
+   - Display "🔥 7-day streak!" prominently on home screen
+   - Increases DAU by 25-35% (proven by Duolingo/Snapchat)
+
+2. **Onboarding Tutorial** (4-5 hours)
+   - Guide first-time users: "Let's send your first white call! 🤍"
+   - Celebration with confetti when first heart is sent
+   - Prompt to add 3+ friends
+   - Improves Day 1 retention by 40%
+
+3. **Haptic & Sound Feedback** (1-2 hours)
+   - Gentle vibration when sending/receiving hearts (mobile)
+   - Optional soft sound effect (user can toggle)
+   - Emotional reinforcement = higher perceived value
+
+**Quick Wins** (1-2 hours each, add anytime):
+- Heart counter with bounce animation
+- Confetti on first heart received
+- Empty state: "Enjoy the quiet day! 😌" when no friends on call
+- Rare gold hearts (10% chance)
+
 **Scope**:
 - No calendar integration yet
 - No group spaces
 - Basic auth (email/password)
-- Static avatars (no movement)
+- Static avatars (no movement initially)
 - Web-only (mobile-responsive)
 
 ### V0.5 - Calendar Integration (Week 3-4)
 **Goal**: Automate call shift detection and streamline support sending
 
-**Features**:
+**Core Features**:
 - Calendar function: Users input their shifts
 - App automatically knows who's on call
 - "Friends on call today" feed/list
@@ -50,6 +73,22 @@ Healthcare workers face brutal call shifts alone. Existing apps are purely funct
 - Notification-style message feed: "Audrey wishes you a white call! 🤍"
 - Messages stack like a chat but are read-only (no replies)
 - See who sent you hearts
+
+**🎯 RETENTION FEATURES (High Impact)**:
+1. **Weekly Recap** (2 days)
+   - Sunday evening: "You sent 23 hearts this week 🤍"
+   - Shareable Instagram story format
+   - Social proof + viral loop
+
+2. **"Who Needs Support Most" Smart Feed** (1 day)
+   - Prioritize friends with 3+ call shifts who haven't received many hearts
+   - Label: "🆘 Dave has 4 call shifts this week - send support!"
+   - Guides users to meaningful actions
+
+3. **"You Made Someone's Day" Feedback** (0.5 days)
+   - When someone receives 5+ hearts, notify a random sender
+   - "Your heart made Alice's shift brighter! She got 12 hearts today 🤍"
+   - Creates positive reinforcement loop
 
 **Key UX Decision**:
 - **NO "Send to All" button** - Users must click each friend individually
@@ -59,7 +98,7 @@ Healthcare workers face brutal call shifts alone. Existing apps are purely funct
 ### V1 - Group Spaces (Week 5-8)
 **Goal**: Create shared virtual spaces for teams/friend groups
 
-**Features**:
+**Core Features**:
 - Create and join groups
 - Each group has a shared environment:
   - Grassy field option
@@ -73,18 +112,50 @@ Healthcare workers face brutal call shifts alone. Existing apps are purely funct
 - Click any avatar to send 🤍
 - Avatars have simple idle animations (gentle bobbing, breathing)
 
+**🎯 RETENTION FEATURES**:
+1. **Milestone Badges** (2 days)
+   - Supporter badges: "First Heart", "Caring Colleague" (10), "Support Squad" (50), "Champion" (100)
+   - Survivor badges: "First Call", "Call Warrior" (10), "Shift Legend" (50)
+   - Display on profile and in group spaces
+   - Gamification increases long-term retention 15-20%
+
+2. **Group Leaderboards** (1 day)
+   - "Top Supporter This Week" (most hearts sent)
+   - "Most Supported" (most hearts received)
+   - "Shift MVP" (most hours worked)
+   - Friendly competition (no shaming, just celebration)
+   - Drives 30% more engagement
+
 **Stretch Goals (V1.1)**:
 - Avatar wandering/movement in the space
 - Seasonal environment changes
 - Custom group environments
 
-### Post-V1 Features (Future)
-- Calendar sync (Google/Apple)
+### Post-V1 Features (V2 - Future)
+**Premium Features**:
+- Calendar sync (Google/Apple) - **Main premium driver**
 - Group availability finder
-- Statistics (hours worked, hearts received)
-- Premium features (TBD)
-- Push notifications
+- Advanced statistics dashboard
+- Premium avatar accessories ($0.99-$2.99)
+- Custom group environments ($4.99 per group)
+
+**Community Features**:
+- Anonymous "Call Survival Stories" feed
+  - Users share call shift stories (optional, anonymous)
+  - Prompts: "What got you through?" "Funniest moment?"
+  - Read-only, react with hearts/emojis
+  - Creates emotional connection, increases session time
+
+- Family Mode
+  - Simplified interface for non-medical family members
+  - Family can see when loved one is on call (with permission)
+  - Send hearts with custom messages
+  - Unique differentiator, expands user base
+
+**Infrastructure**:
+- Push notifications (strategic, never spammy)
 - Native app (iOS/Android)
+- Hospital white-label partnerships ($49/mo)
 
 ---
 
@@ -178,6 +249,12 @@ CREATE TABLE profiles (
   avatar_type TEXT NOT NULL, -- 'penguin', 'bear', etc.
   avatar_color TEXT, -- hex color for customization
   is_on_call BOOLEAN DEFAULT FALSE,
+  -- RETENTION: Streak tracking
+  current_streak INTEGER DEFAULT 0,
+  longest_streak INTEGER DEFAULT 0,
+  last_heart_sent_date DATE,
+  -- RETENTION: Onboarding
+  onboarding_completed BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -199,6 +276,24 @@ CREATE TABLE hearts (
   message TEXT DEFAULT 'wishes you a white call!',
   created_at TIMESTAMP DEFAULT NOW(),
   shift_date DATE NOT NULL -- which day this heart is for
+);
+
+-- RETENTION: User settings
+CREATE TABLE user_settings (
+  user_id UUID PRIMARY KEY REFERENCES profiles(id),
+  sound_enabled BOOLEAN DEFAULT TRUE,
+  haptic_enabled BOOLEAN DEFAULT TRUE,
+  notifications_enabled BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- RETENTION: Badges (V0.5+)
+CREATE TABLE user_badges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  badge_type TEXT NOT NULL, -- 'first_heart', 'caring_colleague', etc.
+  earned_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, badge_type)
 );
 
 -- Index for performance
@@ -310,7 +405,14 @@ CREATE TABLE group_members (
 - [ ] Heart counter
 - [ ] Real-time updates (Supabase subscriptions)
 
-#### Step 6: Polish & Testing (Day 10-12)
+#### Step 6: Retention Features (Day 10-11)
+- [ ] Daily streaks system (database + UI)
+- [ ] Onboarding tutorial modal
+- [ ] Haptic & sound feedback
+- [ ] Heart counter animation
+- [ ] Confetti on first heart
+
+#### Step 7: Polish & Testing (Day 12-14)
 - [ ] Mobile responsive design
 - [ ] Error handling
 - [ ] Loading states
@@ -318,7 +420,7 @@ CREATE TABLE group_members (
 - [ ] Manual testing
 - [ ] Bug fixes
 
-**Deliverable**: Working demo where users can create avatars, add friends, mark themselves on call, and send/receive hearts
+**Deliverable**: Working demo with proven retention hooks that keep users coming back
 
 ### Phase 2: V0.5 Calendar Integration (Week 3-4)
 
@@ -346,13 +448,20 @@ CREATE TABLE group_members (
 - [ ] No reply functionality (read-only)
 - [ ] See who sent hearts
 
-#### Step 5: Testing & Refinement
+#### Step 5: Retention Features (Day 11-13)
+- [ ] Weekly recap screen with shareable image
+- [ ] Smart feed: prioritize friends who need support
+- [ ] "You made someone's day" feedback system
+- [ ] Badge system foundation
+
+#### Step 6: Testing & Refinement (Day 14-15)
 - [ ] Test calendar with various shift patterns
 - [ ] Test auto-detection accuracy
+- [ ] Test retention features with beta users
 - [ ] Mobile testing
 - [ ] Performance optimization
 
-**Deliverable**: Users can manage shifts in calendar, app auto-detects call shifts, friends can send hearts one-by-one
+**Deliverable**: Calendar + retention features that drive Week 2-4 engagement
 
 ### Phase 3: V1 Group Spaces (Week 5-8)
 
@@ -377,14 +486,16 @@ CREATE TABLE group_members (
 - [ ] Click avatar interaction
 - [ ] Send heart from group space
 
-#### Step 4: Animations & Polish (Week 8)
+#### Step 4: Retention & Polish (Week 8)
+- [ ] Milestone badges (display + earn logic)
+- [ ] Group leaderboards
 - [ ] Idle animations (breathing, bobbing)
 - [ ] Heart floating effects
 - [ ] Smooth transitions
 - [ ] Mobile touch interactions
 - [ ] Performance optimization
 
-**Deliverable**: Users can create groups, see members in cute environments, send hearts by clicking avatars
+**Deliverable**: Engaging group spaces with gamification that drives daily visits
 
 ---
 
@@ -440,6 +551,7 @@ CREATE TABLE group_members (
 ## 🎯 SUCCESS METRICS
 
 ### V0 Success Criteria
+**Technical**:
 - [ ] Users can create accounts and avatars
 - [ ] Users can add friends
 - [ ] Users can send hearts to friends on call
@@ -447,17 +559,38 @@ CREATE TABLE group_members (
 - [ ] Works smoothly on mobile (320px+)
 - [ ] 5 beta testers use it for 1 week
 
+**Retention** (Target with new features):
+- [ ] **DAU/MAU**: 60%
+- [ ] **Hearts per active user per day**: 3+
+- [ ] **Friends per user**: 5+
+- [ ] **D1 Retention**: 40% (with onboarding)
+- [ ] **D7 Retention**: 25%
+- [ ] **Streaks**: 30% of users have 3+ day streak
+
 ### V0.5 Success Criteria
+**Technical**:
 - [ ] Users prefer automatic call detection over manual checkbox
-- [ ] Users send hearts to 3+ friends on average
-- [ ] Message feed feels personal and supportive
 - [ ] Calendar works reliably for complex shifts
+- [ ] Message feed feels personal and supportive
+
+**Retention**:
+- [ ] **Hearts sent per user**: 3+ per day
+- [ ] **Hearts per call shift**: 8+ received
+- [ ] **Session duration**: 3-5 minutes
+- [ ] **Weekly recap sharing**: 10% share on social
+- [ ] **D30 Retention**: 15%
 
 ### V1 Success Criteria
+**Technical**:
 - [ ] Users create and join groups
 - [ ] Group spaces feel fun and engaging
-- [ ] Users visit group spaces daily
 - [ ] Avatar animations don't cause performance issues
+
+**Retention**:
+- [ ] **Groups per user**: 1.5 average
+- [ ] **Group visits per week**: 4+
+- [ ] **Badge engagement**: 50% earn 3+ badges
+- [ ] **Free-to-paid conversion**: 10% within 3 months
 
 ---
 
@@ -604,10 +737,12 @@ WITH CHECK (
 
 ## 🎨 UI/UX MOCKUP NOTES
 
-### Home Screen (Logged In)
+### Home Screen (V0 with Retention Features)
 ```
 ┌─────────────────────────┐
 │  WhiteCall         [≡] │
+├─────────────────────────┤
+│    🔥 7-day streak!    │ ← NEW: Streak indicator
 ├─────────────────────────┤
 │                         │
 │    [Your Avatar]        │
@@ -615,16 +750,20 @@ WITH CHECK (
 │    ╭─ 🤍 ──╮           │
 │   🤍   🤍   🤍         │
 │    ╰── 🤍 ──╯          │
-│    "7 white calls!"     │
+│  "7 white calls!" +2↑  │ ← NEW: Animated counter
 │                         │
 │  [ ] I'm on call today  │
 │                         │
 ├─────────────────────────┤
-│  Friends on call        │
+│  🆘 Friends who need    │ ← NEW: Smart prioritization (V0.5)
+│     support most        │
 │  ─────────────────      │
-│  🐻 Bob    [Send 🤍]   │
-│  🐱 Carol  [Send 🤍]   │
-│  🐰 Dave   [Send 🤍]   │
+│  🐻 Bob (4 shifts) [🤍]│
+│  🐱 Carol (3 shifts)[🤍]│
+│                         │
+│  💭 Other friends       │
+│  ─────────────────      │
+│  🐰 Dave           [🤍] │
 ├─────────────────────────┤
 │  [Calendar] [Groups]    │
 └─────────────────────────┘
@@ -654,6 +793,7 @@ WITH CHECK (
 ## ✅ DEFINITION OF DONE
 
 ### V0 is complete when:
+**Core Features**:
 - [ ] User can sign up/login
 - [ ] User can create avatar
 - [ ] User can add friends (by username)
@@ -662,11 +802,21 @@ WITH CHECK (
 - [ ] Friends can send white hearts 🤍
 - [ ] Hearts appear around recipient's avatar with animation
 - [ ] Real-time updates work
+
+**Retention Features** (CRITICAL):
+- [ ] Daily streaks tracking + display
+- [ ] Onboarding tutorial with celebration
+- [ ] Haptic feedback (mobile) + sound (optional)
+- [ ] Heart counter animation
+- [ ] Confetti on first heart received
+
+**Quality**:
 - [ ] Mobile responsive (tested on 320px, 768px, 1024px)
 - [ ] No console errors
 - [ ] Deployed to Vercel with Supabase backend
 
 ### V0.5 is complete when:
+**Core Features**:
 - [ ] User can create shift templates
 - [ ] User can add shifts to calendar
 - [ ] App auto-detects call shifts
@@ -675,7 +825,14 @@ WITH CHECK (
 - [ ] Message feed shows who sent hearts
 - [ ] Calendar handles multi-day shifts correctly
 
+**Retention Features**:
+- [ ] Weekly recap screen (shareable)
+- [ ] Smart feed prioritizes friends who need support
+- [ ] "You made someone's day" feedback
+- [ ] Badge system implemented
+
 ### V1 is complete when:
+**Core Features**:
 - [ ] User can create groups
 - [ ] User can invite friends to groups
 - [ ] Group space renders with chosen environment
@@ -685,8 +842,87 @@ WITH CHECK (
 - [ ] Basic idle animations implemented
 - [ ] Smooth performance on mobile
 
+**Retention Features**:
+- [ ] Milestone badges displayed in group spaces
+- [ ] Group leaderboards (weekly reset)
+- [ ] Badge earn notifications
+
 ---
 
-**Remember**: Start simple, iterate based on user feedback. The core magic is the social support mechanic - everything else supports that.
+---
 
-🤍 Let's build something that makes call shifts a little less lonely.
+## 🚫 ANTI-PATTERNS (What NOT to Do)
+
+These features would harm retention, not help:
+
+❌ **Don't add direct messaging**: Becomes a chat app, loses focus on hearts
+❌ **Don't show "hours worked" publicly**: Creates toxic comparison culture
+❌ **Don't auto-send hearts**: Defeats the intentionality that makes it meaningful
+❌ **Don't add read receipts**: Adds pressure during call shifts when users are busy
+❌ **Don't let non-friends see profiles**: Privacy is critical for healthcare workers
+❌ **Don't gamify receiving hearts**: Would make people compete for victimhood
+❌ **Don't send too many notifications**: Respect users' time and attention
+
+---
+
+## 📱 PUSH NOTIFICATION STRATEGY (V0.5+)
+
+**Principle**: Only notify when it matters. Respect sleep and work time.
+
+### Daily Notifications (Max 2 per day):
+- **Morning (8 AM)**: "3 friends on call today - send some love! 🤍"
+- **Evening (6 PM)**: "You received 5 hearts today! ❤️"
+
+### Weekly Notifications (Sundays at 7 PM):
+- **Weekly Recap**: "You sent 23 hearts this week - see your impact!"
+
+### Event Notifications (Real-time):
+- **Streak Risk (9 PM)**: "Send a heart to keep your 7-day streak alive! 🔥"
+- **Friend Alert**: "Alice has a 30-hour call shift tomorrow - send support!"
+
+### Rules:
+- ❌ NEVER notify between 11 PM - 7 AM (respect sleep)
+- ❌ NEVER notify during user's own call shifts (they're busy!)
+- ✅ Allow users to customize notification times
+- ✅ Smart batching: Combine multiple events into one notification
+- ✅ Users can disable any notification category
+
+---
+
+## 🌟 VIRAL LOOP STRATEGY
+
+### Built-in Sharing Moments:
+1. **After sending 10 hearts**: "Share your support with the world?"
+   - Pre-generated image: "I sent 10 white calls this week 🤍 #WhiteCall"
+   - Instagram/Twitter ready (1080x1920)
+
+2. **After milestone**: "I survived 10 call shifts! 💪 #WhiteCall"
+
+3. **Weekly recap**: Auto-generated shareable story format
+
+### Referral Incentives (V2):
+- "Invite 3 friends → Unlock premium avatar accessories"
+- "Your group reaches 10 members → Everyone gets 'Founding Member' badge"
+
+---
+
+## 💰 MONETIZATION (Beyond Basic Premium)
+
+**Current Plan**: $4.99/mo for calendar sync + advanced features
+
+**Additional Revenue Streams**:
+1. **Avatar Accessories**: Premium animals, seasonal outfits ($0.99-$2.99 one-time)
+2. **Custom Group Environments**: Healthcare-themed spaces ($4.99 per group)
+3. **White-label for Hospitals**: "HealthSystem WhiteCall" ($49/mo per hospital)
+4. **Wellness Partnerships**: Ethical sponsorships with mental health apps
+
+**Freemium Targets**:
+- Free tier: 90% of users (sustainability through volume)
+- Premium: 10% conversion within 3 months
+- Revenue goal: Profitable at 10,000+ users
+
+---
+
+**Remember**: Start simple, iterate based on user feedback. The core magic is the social support mechanic - the retention features are force multipliers that make users come back daily.
+
+🤍 Let's build something that makes call shifts a little less lonely - and build it to last.

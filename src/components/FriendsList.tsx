@@ -1,0 +1,68 @@
+// Friends list component
+import { AvatarDisplay } from './AvatarDisplay';
+import { HeartButton } from './HeartButton';
+import type { Friend } from '../types/friend';
+
+interface FriendsListProps {
+  friends: Friend[];
+  onSendHeart: (friendId: string) => Promise<void>;
+  showOnlyOnCall?: boolean;
+}
+
+export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: FriendsListProps) {
+  // Filter friends who are on call TODAY (check both is_on_call and call_date)
+  const today = new Date().toISOString().split('T')[0];
+  const filteredFriends = showOnlyOnCall
+    ? friends.filter((f) => f.is_on_call && f.call_date === today)
+    : friends;
+
+  if (filteredFriends.length === 0) {
+    return (
+      <div className="text-center py-12 px-4">
+        <p className="text-6xl mb-4">😌</p>
+        <p className="text-gray-600">
+          {showOnlyOnCall
+            ? 'No friends on call today. Enjoy the quiet day!'
+            : 'No friends yet. Add some friends to send support!'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {filteredFriends.map((friend) => (
+        <div
+          key={friend.id}
+          className="flex items-center justify-between p-4 bg-white rounded-xl shadow-soft hover:shadow-soft-lg transition-shadow"
+        >
+          <div className="flex items-center gap-3">
+            <AvatarDisplay
+              avatarType={friend.avatar_type}
+              avatarColor={friend.avatar_color}
+              size="medium"
+            />
+            <div>
+              <p className="font-medium text-gray-800">
+                {friend.display_name || friend.username}
+              </p>
+              <p className="text-sm text-gray-500">@{friend.username}</p>
+              {friend.is_on_call && friend.call_date === today && (
+                <span className="inline-block mt-1 text-xs bg-sky-soft-100 text-sky-soft-700 px-2 py-1 rounded-full">
+                  On call today
+                </span>
+              )}
+            </div>
+          </div>
+
+          {friend.is_on_call && friend.call_date === today && (
+            <HeartButton
+              onClick={() => onSendHeart(friend.id)}
+              alreadySent={!friend.can_send_heart}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
