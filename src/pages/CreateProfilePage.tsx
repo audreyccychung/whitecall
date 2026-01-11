@@ -15,7 +15,7 @@ export default function CreateProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   // If still loading auth, show loading state
@@ -96,6 +96,9 @@ export default function CreateProfilePage() {
       });
 
       if (insertError) throw insertError;
+
+      // Refresh profile in AuthContext so HomePage has it immediately
+      await refreshProfile();
 
       // Navigate to home
       navigate('/home');
