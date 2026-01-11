@@ -1,60 +1,39 @@
-// Main home page - user's avatar, hearts, call status, friends on call feed
-import { useState, useEffect } from 'react';
+// Main home page - user's avatar, hearts, friends on call feed
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { useStore } from '../lib/store';
 import { useHearts } from '../hooks/useHearts';
 import { useFriends } from '../hooks/useFriends';
-import { useCallStatus } from '../hooks/useCallStatus';
+import { useCalls } from '../hooks/useCalls';
+import { useStore } from '../lib/store';
+import { getTodayDate } from '../utils/date';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { HeartDisplay } from '../components/HeartDisplay';
 import { HeartButton } from '../components/HeartButton';
-import { StreakDisplay } from '../components/StreakDisplay';
 import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
-import { OnboardingModal } from '../components/OnboardingModal';
-import { FirstHeartConfetti } from '../components/FirstHeartConfetti';
-import { miniCelebration } from '../utils/confetti';
 
 export default function HomePage() {
   const { user, profile, signOut } = useAuth();
-  const { showOnboardingModal, setShowOnboardingModal } = useStore();
   const { stats, sendHeart } = useHearts(user?.id);
   const { friends, loading: friendsLoading } = useFriends(user?.id);
-  const { updating, toggleCallStatus } = useCallStatus(user?.id);
 
-  // Check if user is on call TODAY (not just is_on_call flag)
-  const isOnCallToday = () => {
-    if (!profile?.is_on_call) return false;
-    if (!profile?.call_date) return false;
-    const today = new Date().toISOString().split('T')[0];
-    return profile.call_date === today;
-  };
+  // Load calls data (this syncs to global store)
+  useCalls(user?.id);
 
-  const [localOnCall, setLocalOnCall] = useState(isOnCallToday());
+  // Read call dates from global store - subscribing to callDates triggers re-render when it changes
+  const callDates = useStore((state) => state.callDates);
+  const isCallStatusLoaded = useStore((state) => state.isCallStatusLoaded);
 
-  useEffect(() => {
-    setLocalOnCall(isOnCallToday());
-  }, [profile?.is_on_call, profile?.call_date]);
-
-  const handleToggleCallStatus = async (checked: boolean) => {
-    setLocalOnCall(checked);
-    const success = await toggleCallStatus(checked);
-    if (!success) {
-      setLocalOnCall(!checked); // Revert on error
-    }
-  };
+  // Compute on-call status from the subscribed state
+  const today = getTodayDate();
+  const isUserOnCall = isCallStatusLoaded && callDates.has(today);
 
   const handleSendHeart = async (friendId: string) => {
-    const result = await sendHeart(friendId);
-    if (result.success) {
-      miniCelebration();
-    }
+    await sendHeart(friendId);
   };
 
-  // Filter friends who are on call TODAY (not just have is_on_call = true)
-  const today = new Date().toISOString().split('T')[0];
-  const friendsOnCall = friends.filter((f) => f.is_on_call && f.call_date === today);
+  // Filter friends who are on call (derived from calls table)
+  const friendsOnCall = friends.filter((f) => f.is_on_call);
 
   if (!profile || !user) {
     return (
@@ -69,8 +48,14 @@ export default function HomePage() {
       {/* Header */}
       <header className="bg-white shadow-soft">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">WhiteCall 🤍</h1>
+          <h1 className="text-2xl font-bold text-gray-800">WhiteCall</h1>
           <div className="flex items-center gap-3">
+            <Link
+              to="/calls"
+              className="px-4 py-2 text-gray-700 hover:text-sky-soft-600 font-medium transition-colors"
+            >
+              My Calls
+            </Link>
             <Link
               to="/friends"
               className="px-4 py-2 text-gray-700 hover:text-sky-soft-600 font-medium transition-colors"
@@ -88,16 +73,6 @@ export default function HomePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Streak Display */}
-        {profile.current_streak > 0 && (
-          <div className="flex justify-center">
-            <StreakDisplay
-              currentStreak={profile.current_streak}
-              longestStreak={profile.longest_streak}
-            />
-          </div>
-        )}
-
         {/* User's Avatar with Hearts */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -122,22 +97,7 @@ export default function HomePage() {
             <p className="text-gray-600 mb-4">@{profile.username}</p>
 
             {/* Heart Counter */}
-            <HeartCounterAnimation count={stats.received_today} />
-
-            {/* On Call Toggle */}
-            <div className="mt-6 flex items-center gap-3 bg-gray-50 px-6 py-4 rounded-xl">
-              <input
-                type="checkbox"
-                id="onCall"
-                checked={localOnCall}
-                onChange={(e) => handleToggleCallStatus(e.target.checked)}
-                disabled={updating}
-                className="w-5 h-5 text-sky-soft-500 rounded focus:ring-2 focus:ring-sky-soft-500"
-              />
-              <label htmlFor="onCall" className="text-gray-800 font-medium cursor-pointer">
-                I'm on call today
-              </label>
-            </div>
+            <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
           </div>
         </motion.div>
 
@@ -189,6 +149,20 @@ export default function HomePage() {
           )}
         </div>
 
+        {/* Support Summary */}
+        {stats.sent_today > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-pink-50 to-sky-soft-50 rounded-xl p-6 text-center"
+          >
+            <p className="text-lg text-gray-700">
+              You supported <span className="font-bold text-sky-soft-600">{stats.sent_today}</span>{' '}
+              {stats.sent_today === 1 ? 'friend' : 'friends'} today
+            </p>
+          </motion.div>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl shadow-soft p-6 text-center">
@@ -201,18 +175,6 @@ export default function HomePage() {
           </div>
         </div>
       </main>
-
-      {/* Onboarding Modal */}
-      {user && (
-        <OnboardingModal
-          isOpen={showOnboardingModal}
-          onClose={() => setShowOnboardingModal(false)}
-          userId={user.id}
-        />
-      )}
-
-      {/* First Heart Confetti */}
-      <FirstHeartConfetti heartCount={stats.received_today} />
     </div>
   );
 }

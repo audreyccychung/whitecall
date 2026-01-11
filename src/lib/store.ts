@@ -1,54 +1,49 @@
 // Global state management with Zustand
 import { create } from 'zustand';
-import type { Profile, UserSettings } from '../types/database';
+import type { Profile } from '../types/database';
 
 interface AppState {
   // User state
   user: Profile | null;
-  settings: UserSettings | null;
   isLoadingUser: boolean;
 
-  // UI state
-  showOnboardingModal: boolean;
+  // Call status - global so it updates everywhere
+  callDates: Set<string>; // Set of YYYY-MM-DD strings
+  isCallStatusLoaded: boolean;
 
   // Actions
   setUser: (user: Profile | null) => void;
-  setSettings: (settings: UserSettings | null) => void;
   setIsLoadingUser: (loading: boolean) => void;
-  setShowOnboardingModal: (show: boolean) => void;
-  updateUserStreak: (currentStreak: number, longestStreak: number) => void;
-  updateCallStatus: (isOnCall: boolean, callDate: string | null) => void;
-  completeOnboarding: () => void;
+
+  // Call status actions
+  setCallDates: (dates: string[]) => void;
+  addCallDate: (date: string) => void;
+  removeCallDate: (date: string) => void;
 }
 
-export const useStore = create<AppState>((set) => ({
+export const useStore = create<AppState>((set, get) => ({
   // Initial state
   user: null,
-  settings: null,
   isLoadingUser: true,
-  showOnboardingModal: false,
+  callDates: new Set(),
+  isCallStatusLoaded: false,
 
   // Actions
   setUser: (user) => set({ user }),
-  setSettings: (settings) => set({ settings }),
   setIsLoadingUser: (loading) => set({ isLoadingUser: loading }),
-  setShowOnboardingModal: (show) => set({ showOnboardingModal: show }),
 
-  updateUserStreak: (currentStreak, longestStreak) =>
-    set((state) => ({
-      user: state.user
-        ? { ...state.user, current_streak: currentStreak, longest_streak: longestStreak }
-        : null,
-    })),
-
-  updateCallStatus: (isOnCall, callDate) =>
-    set((state) => ({
-      user: state.user ? { ...state.user, is_on_call: isOnCall, call_date: callDate } : null,
-    })),
-
-  completeOnboarding: () =>
-    set((state) => ({
-      user: state.user ? { ...state.user, onboarding_completed: true } : null,
-      showOnboardingModal: false,
-    })),
+  // Call status actions
+  setCallDates: (dates) => {
+    set({ callDates: new Set(dates), isCallStatusLoaded: true });
+  },
+  addCallDate: (date) => {
+    const newDates = new Set(get().callDates);
+    newDates.add(date);
+    set({ callDates: newDates });
+  },
+  removeCallDate: (date) => {
+    const newDates = new Set(get().callDates);
+    newDates.delete(date);
+    set({ callDates: newDates });
+  },
 }));
