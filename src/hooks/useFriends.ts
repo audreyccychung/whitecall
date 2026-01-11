@@ -38,7 +38,7 @@ export function useFriends(userId: string | undefined) {
       // Get friend profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color, timezone')
+        .select('id, username, display_name, avatar_type, avatar_color')
         .in('id', friendIds);
 
       if (profilesError) throw profilesError;
@@ -110,7 +110,7 @@ export function useFriends(userId: string | undefined) {
       // Find user by username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color, timezone')
+        .select('id, username, display_name, avatar_type, avatar_color')
         .eq('username', normalizedUsername)
         .single();
 

@@ -6,7 +6,6 @@ export interface Friend {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
-  timezone: string;
   friendship_id: string;
   is_on_call?: boolean; // Derived from active shift
   can_send_heart?: boolean;
