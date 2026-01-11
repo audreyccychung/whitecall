@@ -103,12 +103,15 @@ export function useFriends(userId: string | undefined) {
       return { success: false, error: 'Not logged in' };
     }
 
+    // Normalize username to lowercase (usernames are stored lowercase)
+    const normalizedUsername = username.trim().toLowerCase();
+
     try {
       // Find user by username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, username, display_name, avatar_type, avatar_color, timezone')
-        .eq('username', username)
+        .eq('username', normalizedUsername)
         .single();
 
       if (profileError || !profileData) {
