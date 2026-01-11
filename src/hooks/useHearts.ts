@@ -1,11 +1,8 @@
-// Heart management hook with real-time subscriptions
+// Heart management hook - refetch on focus/action (no realtime)
 import { useState, useEffect } from 'react';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { HeartWithSender, SendHeartResult, HeartStats } from '../types/heart';
 import { getTodayDate } from '../utils/date';
-import { triggerActionFeedback } from '../utils/feedback';
-import { useStore } from '../lib/store';
 
 export function useHearts(userId: string | undefined) {
   const [heartsReceived, setHeartsReceived] = useState<HeartWithSender[]>([]);
@@ -17,8 +14,6 @@ export function useHearts(userId: string | undefined) {
     sent_today: 0,
   });
   const [loading, setLoading] = useState(true);
-
-  const { settings, updateUserStreak } = useStore();
 
   // Load hearts
   const loadHearts = async () => {
@@ -102,42 +97,15 @@ export function useHearts(userId: string | undefined) {
     loadHearts();
   }, [userId]);
 
-  // Real-time subscription for hearts received
+  // Refetch on window focus (instead of realtime subscriptions)
   useEffect(() => {
-    if (!userId) return;
-
-    let channel: RealtimeChannel;
-
-    const setupSubscription = async () => {
-      channel = supabase
-        .channel('hearts-received')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'hearts',
-            filter: `recipient_id=eq.${userId}`,
-          },
-          () => {
-            // Reload hearts when new one is received
-            loadHearts();
-
-            // Trigger feedback
-            triggerActionFeedback('heart-received', settings || undefined);
-          }
-        )
-        .subscribe();
+    const handleFocus = () => {
+      loadHearts();
     };
 
-    setupSubscription();
-
-    return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
-    };
-  }, [userId, settings]);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [userId]);
 
   // Send heart to friend
   const sendHeart = async (
@@ -180,20 +148,6 @@ export function useHearts(userId: string | undefined) {
 
       // Reload hearts to update counts
       await loadHearts();
-
-      // Trigger feedback
-      triggerActionFeedback('heart-sent', settings || undefined);
-
-      // Update user's streak (will be updated by database trigger, but fetch latest)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('current_streak, longest_streak')
-        .eq('id', userId)
-        .single();
-
-      if (profileData) {
-        updateUserStreak(profileData.current_streak, profileData.longest_streak);
-      }
 
       return { success: true, heart: data };
     } catch (err) {

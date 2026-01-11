@@ -6,7 +6,6 @@ import { useFriends } from '../hooks/useFriends';
 import { useHearts } from '../hooks/useHearts';
 import { AddFriendForm } from '../components/AddFriendForm';
 import { FriendsList } from '../components/FriendsList';
-import { miniCelebration } from '../utils/confetti';
 
 export default function FriendsPage() {
   const { user } = useAuth();
@@ -14,18 +13,11 @@ export default function FriendsPage() {
   const { sendHeart } = useHearts(user?.id);
 
   const handleSendHeart = async (friendId: string) => {
-    const result = await sendHeart(friendId);
-    if (result.success) {
-      miniCelebration();
-    }
+    await sendHeart(friendId);
   };
 
   const handleAddFriend = async (username: string) => {
-    const result = await addFriend(username);
-    if (result.success) {
-      miniCelebration();
-    }
-    return result;
+    return addFriend(username);
   };
 
   return (

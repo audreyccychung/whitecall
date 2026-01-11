@@ -6,15 +6,10 @@ export interface Friend {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
-  is_on_call: boolean;
-  call_date: string | null; // Date when friend marked themselves on call (YYYY-MM-DD)
+  timezone: string;
   friendship_id: string;
-  hearts_received_today?: number;
+  is_on_call?: boolean; // Derived from active shift
   can_send_heart?: boolean;
-}
-
-export interface AddFriendRequest {
-  username: string;
 }
 
 export interface AddFriendResult {

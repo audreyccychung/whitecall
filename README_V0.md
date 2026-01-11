@@ -5,7 +5,7 @@
 
 ## What is WhiteCall?
 
-WhiteCall is a social support app for healthcare workers facing call shifts. "White call" (白鐘) is Hong Kong medical slang for a peaceful call shift. When colleagues are on call, you can send them white hearts 🤍 as encouragement.
+WhiteCall is an emotional support app for healthcare workers facing call shifts. "White call" is Hong Kong medical slang for a peaceful call shift. When colleagues are on call, you can send them white hearts 🤍 as encouragement.
 
 ## V0 Features Implemented
 

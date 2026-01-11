@@ -9,7 +9,7 @@ export function useFriends(userId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load friends
+  // Load friends with their active call status
   const loadFriends = async () => {
     if (!userId) {
       setLoading(false);
@@ -38,13 +38,22 @@ export function useFriends(userId: string | undefined) {
       // Get friend profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color, is_on_call, call_date')
+        .select('id, username, display_name, avatar_type, avatar_color, timezone')
         .in('id', friendIds);
 
       if (profilesError) throw profilesError;
 
-      // Get hearts sent today to each friend
+      // Get friends who have a call today (date-based, no time)
       const today = getTodayDate();
+      const { data: activeCalls } = await supabase
+        .from('calls')
+        .select('user_id')
+        .in('user_id', friendIds)
+        .eq('call_date', today);
+
+      const friendsOnCall = new Set(activeCalls?.map((c) => c.user_id) || []);
+
+      // Get hearts sent today to each friend
       const { data: heartsData } = await supabase
         .from('hearts')
         .select('recipient_id')
@@ -60,6 +69,7 @@ export function useFriends(userId: string | undefined) {
           return {
             ...profile,
             friendship_id: friendship?.id || '',
+            is_on_call: friendsOnCall.has(profile.id),
             can_send_heart: !heartsSentTo.has(profile.id),
           };
         }) || [];
@@ -77,6 +87,16 @@ export function useFriends(userId: string | undefined) {
     loadFriends();
   }, [userId]);
 
+  // Refetch on window focus
+  useEffect(() => {
+    const handleFocus = () => {
+      loadFriends();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [userId]);
+
   // Add friend by username
   const addFriend = async (username: string): Promise<AddFriendResult> => {
     if (!userId) {
@@ -87,7 +107,7 @@ export function useFriends(userId: string | undefined) {
       // Find user by username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color, is_on_call, call_date')
+        .select('id, username, display_name, avatar_type, avatar_color, timezone')
         .eq('username', username)
         .single();
 
@@ -129,6 +149,7 @@ export function useFriends(userId: string | undefined) {
       const newFriend: Friend = {
         ...profileData,
         friendship_id: friendship1.id,
+        is_on_call: false,
         can_send_heart: true,
       };
 

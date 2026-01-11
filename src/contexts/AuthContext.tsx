@@ -35,12 +35,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { setUser: setStoreUser, setSettings, setIsLoadingUser, setShowOnboardingModal } = useStore();
+  const { setUser: setStoreUser, setIsLoadingUser } = useStore();
 
-  // Load user profile and settings
+  // Load user profile
   const loadUserData = async (userId: string) => {
     try {
-      // Load profile
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -51,25 +50,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setProfile(profileData);
       setStoreUser(profileData);
-
-      // Load settings
-      const { data: settingsData, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        // PGRST116 = no rows returned, which is OK (will be created by trigger)
-        console.error('Error loading settings:', settingsError);
-      } else if (settingsData) {
-        setSettings(settingsData);
-      }
-
-      // Show onboarding modal if not completed
-      if (profileData && !profileData.onboarding_completed) {
-        setShowOnboardingModal(true);
-      }
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {
@@ -106,7 +86,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         setProfile(null);
         setStoreUser(null);
-        setSettings(null);
         setLoading(false);
         setIsLoadingUser(false);
       }
@@ -145,7 +124,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await supabase.auth.signOut();
     setProfile(null);
     setStoreUser(null);
-    setSettings(null);
   };
 
   return (

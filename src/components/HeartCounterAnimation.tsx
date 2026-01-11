@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 
 interface HeartCounterAnimationProps {
   count: number;
-  label?: string;
+  isOnCall: boolean;
 }
 
-export function HeartCounterAnimation({ count, label = 'white calls' }: HeartCounterAnimationProps) {
+export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimationProps) {
   const [prevCount, setPrevCount] = useState(count);
   const [showIncrease, setShowIncrease] = useState(false);
 
@@ -21,6 +21,19 @@ export function HeartCounterAnimation({ count, label = 'white calls' }: HeartCou
 
   const increase = count - prevCount;
 
+  // Generate message based on count and on-call status
+  const getMessage = () => {
+    if (!isOnCall) {
+      return "You're not on call today, yay! Wish a friend white call";
+    } else if (count === 0) {
+      return 'No friends have wished you a white call yet, remind them now!';
+    } else if (count === 1) {
+      return '1 friend wished you a white call today!';
+    } else {
+      return `${count} friends wished you a white call today!`;
+    }
+  };
+
   return (
     <div className="relative inline-block">
       <motion.div
@@ -30,8 +43,8 @@ export function HeartCounterAnimation({ count, label = 'white calls' }: HeartCou
         transition={{ duration: 0.3 }}
         className="text-center"
       >
-        <div className="text-4xl font-bold text-gray-800">{count}</div>
-        <div className="text-sm text-gray-600">{label}</div>
+        {isOnCall && <div className="text-4xl font-bold text-gray-800 mb-1">{count}</div>}
+        <div className="text-sm text-gray-600 max-w-[200px]">{getMessage()}</div>
       </motion.div>
 
       {/* Increase indicator */}

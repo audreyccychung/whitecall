@@ -10,10 +10,9 @@ interface FriendsListProps {
 }
 
 export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: FriendsListProps) {
-  // Filter friends who are on call TODAY (check both is_on_call and call_date)
-  const today = new Date().toISOString().split('T')[0];
+  // Filter friends who are on call (derived from active shifts)
   const filteredFriends = showOnlyOnCall
-    ? friends.filter((f) => f.is_on_call && f.call_date === today)
+    ? friends.filter((f) => f.is_on_call)
     : friends;
 
   if (filteredFriends.length === 0) {
@@ -47,15 +46,15 @@ export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: Fr
                 {friend.display_name || friend.username}
               </p>
               <p className="text-sm text-gray-500">@{friend.username}</p>
-              {friend.is_on_call && friend.call_date === today && (
+              {friend.is_on_call && (
                 <span className="inline-block mt-1 text-xs bg-sky-soft-100 text-sky-soft-700 px-2 py-1 rounded-full">
-                  On call today
+                  On call
                 </span>
               )}
             </div>
           </div>
 
-          {friend.is_on_call && friend.call_date === today && (
+          {friend.is_on_call && (
             <HeartButton
               onClick={() => onSendHeart(friend.id)}
               alreadySent={!friend.can_send_heart}
