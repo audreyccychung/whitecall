@@ -1,5 +1,5 @@
 // Login page
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
@@ -10,8 +10,28 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { signIn } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      // User is logged in - redirect to home (ProtectedRoute will handle profile check)
+      navigate('/home', { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-soft-50 to-white-call-100">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
