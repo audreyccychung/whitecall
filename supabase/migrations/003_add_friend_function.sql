@@ -23,10 +23,10 @@ BEGIN
     RETURN '{"code": "UNAUTHORIZED"}'::JSON;
   END IF;
 
-  -- Find friend by username (normalize to lowercase)
+  -- Find friend by username (case-insensitive, handles mixed-case stored usernames)
   SELECT id INTO v_friend_id
   FROM profiles
-  WHERE username = lower(trim(friend_username));
+  WHERE lower(username) = lower(trim(friend_username));
 
   -- User not found
   IF v_friend_id IS NULL THEN
