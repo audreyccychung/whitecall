@@ -1,7 +1,17 @@
 // Friend management hook
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Friend, AddFriendResult } from '../types/friend';
+import type { Friend, AddFriendResult, AddFriendCode } from '../types/friend';
+
+// Exhaustive mapping: every code maps to exactly one message
+const ADD_FRIEND_MESSAGES: Record<AddFriendCode, string> = {
+  SUCCESS: 'Friend added!',
+  USER_NOT_FOUND: 'User not found. Check the username and try again.',
+  ALREADY_FRIENDS: 'You are already friends with this user.',
+  CANNOT_ADD_SELF: 'You cannot add yourself as a friend.',
+  UNAUTHORIZED: 'You must be logged in to add friends.',
+  UNKNOWN_ERROR: 'Something went wrong. Please try again.',
+};
 import { getTodayDate } from '../utils/date';
 
 export function useFriends(userId: string | undefined) {
@@ -97,80 +107,33 @@ export function useFriends(userId: string | undefined) {
     return () => window.removeEventListener('focus', handleFocus);
   }, [userId]);
 
-  // Add friend by username
+  // Add friend by username - calls DB function, no app-level validation
   const addFriend = async (username: string): Promise<AddFriendResult> => {
-    if (!userId) {
-      return { success: false, error: 'Not logged in' };
-    }
+    // Call the single source of truth: add_friend DB function
+    const { data, error } = await supabase.rpc('add_friend', {
+      friend_username: username.trim(),
+    });
 
-    // Normalize username to lowercase (usernames are stored lowercase)
-    const normalizedUsername = username.trim().toLowerCase();
-
-    try {
-      // Find user by username
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color')
-        .eq('username', normalizedUsername)
-        .single();
-
-      if (profileError || !profileData) {
-        return { success: false, error: 'User not found' };
-      }
-
-      if (profileData.id === userId) {
-        return { success: false, error: 'Cannot add yourself as a friend' };
-      }
-
-      // Check if already friends
-      const { data: existingFriendship } = await supabase
-        .from('friendships')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('friend_id', profileData.id)
-        .single();
-
-      if (existingFriendship) {
-        return { success: false, error: 'Already friends with this user' };
-      }
-
-      // Create bidirectional friendship
-      const { data: friendship1, error: error1 } = await supabase
-        .from('friendships')
-        .insert({ user_id: userId, friend_id: profileData.id })
-        .select()
-        .single();
-
-      const { error: error2 } = await supabase
-        .from('friendships')
-        .insert({ user_id: profileData.id, friend_id: userId });
-
-      if (error1 || error2) {
-        throw error1 || error2;
-      }
-
-      const newFriend: Friend = {
-        ...profileData,
-        friendship_id: friendship1.id,
-        is_on_call: false,
-        can_send_heart: true,
-      };
-
-      setFriends((prev) => [...prev, newFriend]);
-
-      return { success: true, friend: newFriend };
-    } catch (err) {
-      console.error('Error adding friend:', err);
-      // Check for unique constraint violation (already friends)
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      if (errorMessage.includes('duplicate') || errorMessage.includes('unique')) {
-        return { success: false, error: 'Already friends with this user' };
-      }
+    // Network or RPC error
+    if (error) {
       return {
         success: false,
-        error: 'Failed to add friend. Please try again.',
+        code: 'UNKNOWN_ERROR',
+        error: ADD_FRIEND_MESSAGES.UNKNOWN_ERROR,
       };
     }
+
+    // DB function returns JSON with code field
+    const code = (data?.code as AddFriendCode) || 'UNKNOWN_ERROR';
+    const message = ADD_FRIEND_MESSAGES[code];
+
+    if (code === 'SUCCESS') {
+      // Refetch friends list to get real data (is_on_call, can_send_heart)
+      await loadFriends();
+      return { success: true, code };
+    }
+
+    return { success: false, code, error: message };
   };
 
   // Remove friend

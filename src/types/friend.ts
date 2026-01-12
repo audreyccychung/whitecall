@@ -11,8 +11,17 @@ export interface Friend {
   can_send_heart?: boolean;
 }
 
+// Exhaustive result codes from add_friend DB function
+export type AddFriendCode =
+  | 'SUCCESS'
+  | 'USER_NOT_FOUND'
+  | 'ALREADY_FRIENDS'
+  | 'CANNOT_ADD_SELF'
+  | 'UNAUTHORIZED'
+  | 'UNKNOWN_ERROR';
+
 export interface AddFriendResult {
   success: boolean;
-  friend?: Friend;
-  error?: string;
+  code: AddFriendCode;
+  error?: string; // Present when success is false
 }

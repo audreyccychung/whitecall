@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface AddFriendFormProps {
-  onAddFriend: (username: string) => Promise<{ success: boolean; error?: string }>;
+  onAddFriend: (username: string) => Promise<{ success: boolean; code: string; error?: string }>;
 }
 
 export function AddFriendForm({ onAddFriend }: AddFriendFormProps) {
@@ -29,7 +29,8 @@ export function AddFriendForm({ onAddFriend }: AddFriendFormProps) {
       setUsername('');
       setTimeout(() => setSuccess(false), 3000);
     } else {
-      setError(result.error || 'Failed to add friend');
+      // Hook guarantees error message for all failure codes
+      setError(result.error ?? null);
     }
   };
 
