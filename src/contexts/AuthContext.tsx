@@ -95,10 +95,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Set loading while fetching profile to prevent flash of wrong content
-        setLoading(true);
-        await loadUserData(session.user.id);
-        setLoading(false);
+        // Load profile in background - don't block with loading state
+        // This allows CreateProfilePage to render immediately after signup
+        loadUserData(session.user.id);
       } else {
         setProfile(null);
         setStoreUser(null);
