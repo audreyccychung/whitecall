@@ -5,6 +5,10 @@
 
 **Stage**: V0 - Minimal viable social mechanic
 
+## Production URLs
+- **App**: https://whitecall-ok4n.vercel.app/
+- **Supabase**: https://uerolgdehjywyjlfqymx.supabase.co
+
 ## Tech Stack
 - Frontend: React 18 + TypeScript + Vite + Tailwind + Framer Motion
 - Backend: Supabase (Auth, PostgreSQL, RLS)
@@ -110,6 +114,28 @@ Before implementing, run complexity check (if 2+ are YES, simplify or reject):
 - All network actions need loading, error, and offline states
 - Avoid browser-only APIs (plan for Capacitor wrapper later)
 - Env vars via import.meta.env, no hardcoded URLs/keys
+
+## Auth Invariants
+- Supabase Site URL = production URL (not localhost)
+- Redirect URLs must include both localhost AND production
+- Never rely on Supabase dashboard defaults
+- After any Supabase project change, verify: Auth → URL Configuration
+
+## Debug Protocol
+
+When user reports a bug or asks to debug:
+
+1. **STOP** - Don't guess, don't patch symptoms
+2. **Trace** - Map the full flow end-to-end
+3. **List sources** - All possible places the bug could originate
+4. **Root cause** - Explain in plain English
+5. **Prove causality** - Why does this specific thing cause the bug?
+6. **Minimal fix** - Smallest change that solves it
+7. **Verify** - Confirm fix works in prod without breaking dev
+
+**Constraints:** No new features, no refactors, no speculative fixes, no unrelated changes.
+
+**If you can't prove causality, STOP and ask for missing info.**
 
 ## Future (Not V0)
 
