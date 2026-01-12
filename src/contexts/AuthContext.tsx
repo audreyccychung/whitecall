@@ -10,6 +10,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  error: string | null;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -35,24 +36,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const { setUser: setStoreUser, setIsLoadingUser } = useStore();
 
   // Load user profile
   const loadUserData = async (userId: string) => {
     try {
+      setError(null);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        // PGRST116 = no rows found, which is expected for new users who haven't created a profile yet
+        if (profileError.code === 'PGRST116') {
+          setProfile(null);
+          return;
+        }
+        throw profileError;
+      }
 
       setProfile(profileData);
       setStoreUser(profileData);
-    } catch (error) {
-      console.error('Error loading user data:', error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load profile';
+      console.error('Error loading user data:', err);
+      setError(message);
     } finally {
       setIsLoadingUser(false);
     }
@@ -60,30 +72,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        loadUserData(session.user.id);
-      }
-
-      // Always set loading to false after checking session
-      setLoading(false);
-      if (!session?.user) {
+        // Wait for profile to load before setting loading to false
+        await loadUserData(session.user.id);
+      } else {
         setIsLoadingUser(false);
       }
+
+      // Only set loading to false AFTER profile is loaded
+      setLoading(false);
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        loadUserData(session.user.id);
+        // Set loading while fetching profile to prevent flash of wrong content
+        setLoading(true);
+        await loadUserData(session.user.id);
+        setLoading(false);
       } else {
         setProfile(null);
         setStoreUser(null);
@@ -140,6 +155,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         profile,
         session,
         loading,
+        error,
         signUp,
         signIn,
         signOut,

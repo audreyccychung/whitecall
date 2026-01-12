@@ -161,9 +161,14 @@ export function useFriends(userId: string | undefined) {
       return { success: true, friend: newFriend };
     } catch (err) {
       console.error('Error adding friend:', err);
+      // Check for unique constraint violation (already friends)
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      if (errorMessage.includes('duplicate') || errorMessage.includes('unique')) {
+        return { success: false, error: 'Already friends with this user' };
+      }
       return {
         success: false,
-        error: err instanceof Error ? err.message : 'Failed to add friend',
+        error: 'Failed to add friend. Please try again.',
       };
     }
   };

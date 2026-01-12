@@ -6,7 +6,6 @@ export interface Profile {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
-  timezone: string; // User's timezone (e.g., 'America/New_York')
   created_at: string;
   updated_at: string;
 }

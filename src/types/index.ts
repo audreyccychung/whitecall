@@ -4,7 +4,6 @@ export interface User {
   email: string
   display_name?: string
   profession?: string
-  timezone?: string
   avatar_url?: string
   created_at: Date
 }

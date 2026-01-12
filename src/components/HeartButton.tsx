@@ -26,9 +26,10 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
     return (
       <button
         disabled
-        className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg text-sm font-medium cursor-not-allowed"
+        className="flex items-center gap-2 px-4 py-2.5 bg-gray-400 text-white rounded-xl text-base font-medium cursor-not-allowed"
       >
-        Sent 🤍
+        <span className="text-xl">🤍</span>
+        <span>Sent</span>
       </button>
     );
   }
@@ -37,14 +38,16 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
     <motion.button
       onClick={handleClick}
       disabled={disabled || sending}
-      whileTap={{ scale: 0.95 }}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+      whileTap={{ scale: 0.9 }}
+      whileHover={{ scale: 1.05 }}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-medium transition-all ${
         disabled || sending
-          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          : 'bg-sky-soft-500 text-white hover:bg-sky-soft-600 shadow-soft'
+          ? 'bg-gray-400 text-white cursor-not-allowed'
+          : 'bg-pink-500 text-white hover:bg-pink-600 shadow-md hover:shadow-lg'
       }`}
     >
-      {sending ? 'Sending...' : 'Send 🤍'}
+      <span className="text-xl">🤍</span>
+      <span>{sending ? 'Sending...' : 'Send'}</span>
     </motion.button>
   );
 }
