@@ -1,6 +1,6 @@
 // Sign up page
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -10,9 +10,9 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const { signUp } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,10 +37,39 @@ export default function SignUpPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      // Redirect to profile creation
-      navigate('/create-profile');
+      // Show confirmation message
+      setEmailSent(true);
+      setLoading(false);
     }
   };
+
+  // Show success message after signup
+  if (emailSent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-soft-lg p-8 w-full max-w-md text-center"
+        >
+          <div className="text-6xl mb-4">📧</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Check your email</h1>
+          <p className="text-gray-600 mb-6">
+            We sent a confirmation link to <span className="font-medium">{email}</span>
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            Click the link in the email to activate your account, then you can create your profile.
+          </p>
+          <Link
+            to="/login"
+            className="text-sky-soft-600 hover:text-sky-soft-700 font-medium"
+          >
+            Back to login
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center p-4">

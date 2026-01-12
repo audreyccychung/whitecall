@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -22,6 +22,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // User is logged in but has no profile - send to profile creation
+  if (!profile) {
+    return <Navigate to="/create-profile" replace />;
   }
 
   return <>{children}</>;
