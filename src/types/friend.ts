@@ -26,3 +26,17 @@ export interface AddFriendResult {
   code: AddFriendCode;
   error?: string; // Present when success is false
 }
+
+// Exhaustive result codes from remove_friend DB function
+export type RemoveFriendCode =
+  | 'SUCCESS'
+  | 'NOT_FRIENDS'
+  | 'CANNOT_REMOVE_SELF'
+  | 'UNAUTHORIZED'
+  | 'UNKNOWN_ERROR';
+
+export interface RemoveFriendResult {
+  success: boolean;
+  code: RemoveFriendCode;
+  error?: string; // Present when success is false
+}

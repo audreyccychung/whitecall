@@ -25,15 +25,7 @@ export interface Avatar {
   color: AvatarColor;
 }
 
-export interface Profile {
-  id: string;
-  user_id: string;
-  username: string;
-  avatar_type: AvatarType;
-  avatar_color: AvatarColor;
-  created_at: Date;
-  updated_at?: Date;
-}
+// Profile type is defined in database.ts
 
 // Helper to get emoji for avatar type
 export const getAvatarEmoji = (type: AvatarType): string => {

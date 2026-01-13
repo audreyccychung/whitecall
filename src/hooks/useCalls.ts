@@ -20,10 +20,8 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Global store actions
+  // Global store action - syncs call dates for cross-component access
   const setCallDates = useStore((state) => state.setCallDates);
-  const addCallDate = useStore((state) => state.addCallDate);
-  const removeCallDate = useStore((state) => state.removeCallDate);
 
   const loadCalls = async () => {
     if (!userId) {
@@ -63,17 +61,14 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
     }
 
     try {
-      const { data, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('calls')
-        .insert({ user_id: userId, call_date: date })
-        .select()
-        .single();
+        .insert({ user_id: userId, call_date: date });
 
       if (insertError) throw insertError;
 
-      setCalls((prev) => [...prev, data].sort((a, b) => a.call_date.localeCompare(b.call_date)));
-      // Sync to global store immediately
-      addCallDate(date);
+      // Refetch from DB to confirm success (no state guessing)
+      await loadCalls();
 
       return { success: true };
     } catch (err) {
@@ -90,9 +85,6 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
     }
 
     try {
-      // Get the date before deleting so we can update global store
-      const callToDelete = calls.find((c) => c.id === callId);
-
       const { error: deleteError } = await supabase
         .from('calls')
         .delete()
@@ -101,11 +93,8 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
 
       if (deleteError) throw deleteError;
 
-      setCalls((prev) => prev.filter((c) => c.id !== callId));
-      // Sync to global store immediately
-      if (callToDelete) {
-        removeCallDate(callToDelete.call_date);
-      }
+      // Refetch from DB to confirm success (no state guessing)
+      await loadCalls();
 
       return { success: true };
     } catch (err) {

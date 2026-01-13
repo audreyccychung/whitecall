@@ -1,8 +1,20 @@
 // Heart management hook - refetch on focus/action (no realtime)
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import type { HeartWithSender, SendHeartResult, HeartStats } from '../types/heart';
+import type { HeartWithSender, SendHeartResult, SendHeartCode, HeartStats } from '../types/heart';
 import { getTodayDate } from '../utils/date';
+
+// Exhaustive mapping: every code maps to exactly one message
+const SEND_HEART_MESSAGES: Record<SendHeartCode, string> = {
+  SUCCESS: 'Heart sent!',
+  UNAUTHORIZED: 'You must be logged in to send hearts.',
+  CANNOT_SEND_TO_SELF: 'You cannot send a heart to yourself.',
+  RECIPIENT_NOT_FOUND: 'User not found.',
+  NOT_FRIENDS: 'You can only send hearts to friends.',
+  RECIPIENT_NOT_ON_CALL: 'This friend is not on call today.',
+  ALREADY_SENT_TODAY: 'You already sent a heart to this friend today.',
+  UNKNOWN_ERROR: 'Something went wrong. Please try again.',
+};
 
 export function useHearts(userId: string | undefined) {
   const [heartsReceived, setHeartsReceived] = useState<HeartWithSender[]>([]);
@@ -107,48 +119,50 @@ export function useHearts(userId: string | undefined) {
     return () => window.removeEventListener('focus', handleFocus);
   }, [userId]);
 
-  // Send heart to friend
+  // Send heart to friend - calls DB function, no app-level validation
   const sendHeart = async (
     recipientId: string,
     message: string = 'wishes you a white call!'
   ): Promise<SendHeartResult> => {
-    if (!userId) {
-      return { success: false, error: 'Not logged in' };
-    }
+    // Call the single source of truth: send_heart DB function
+    const { data, error } = await supabase.rpc('send_heart', {
+      p_recipient_id: recipientId,
+      p_message: message,
+    });
 
-    try {
-      const today = getTodayDate();
-
-      // Insert heart - DB unique constraint enforces one per friend per day
-      const { data, error } = await supabase
-        .from('hearts')
-        .insert({
-          sender_id: userId,
-          recipient_id: recipientId,
-          message,
-          shift_date: today,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        // Handle unique constraint violation (already sent today)
-        if (error.code === '23505') {
-          return { success: false, error: 'Already sent a heart to this friend today' };
-        }
-        throw error;
-      }
-
-      // Reload hearts to update counts
-      await loadHearts();
-
-      return { success: true, heart: data };
-    } catch (err) {
+    // Network or RPC error
+    if (error) {
       return {
         success: false,
-        error: err instanceof Error ? err.message : 'Failed to send heart',
+        code: 'UNKNOWN_ERROR',
+        error: SEND_HEART_MESSAGES.UNKNOWN_ERROR,
       };
     }
+
+    // Normalize response: handle string, object, or unexpected shapes
+    let result: { code?: string; heart_id?: string };
+    if (typeof data === 'string') {
+      try {
+        result = JSON.parse(data);
+      } catch {
+        result = {};
+      }
+    } else if (data && typeof data === 'object') {
+      result = data;
+    } else {
+      result = {};
+    }
+
+    const code = (result.code as SendHeartCode) || 'UNKNOWN_ERROR';
+    const errorMessage = SEND_HEART_MESSAGES[code];
+
+    if (code === 'SUCCESS') {
+      // Refetch hearts to update counts (no state guessing)
+      await loadHearts();
+      return { success: true, code, heart_id: result.heart_id };
+    }
+
+    return { success: false, code, error: errorMessage };
   };
 
   return {

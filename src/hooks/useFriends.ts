@@ -1,7 +1,13 @@
 // Friend management hook
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Friend, AddFriendResult, AddFriendCode } from '../types/friend';
+import type {
+  Friend,
+  AddFriendResult,
+  AddFriendCode,
+  RemoveFriendResult,
+  RemoveFriendCode,
+} from '../types/friend';
 
 // Exhaustive mapping: every code maps to exactly one message
 const ADD_FRIEND_MESSAGES: Record<AddFriendCode, string> = {
@@ -10,6 +16,14 @@ const ADD_FRIEND_MESSAGES: Record<AddFriendCode, string> = {
   ALREADY_FRIENDS: 'You are already friends with this user.',
   CANNOT_ADD_SELF: 'You cannot add yourself as a friend.',
   UNAUTHORIZED: 'You must be logged in to add friends.',
+  UNKNOWN_ERROR: 'Something went wrong. Please try again.',
+};
+
+const REMOVE_FRIEND_MESSAGES: Record<RemoveFriendCode, string> = {
+  SUCCESS: 'Friend removed.',
+  NOT_FRIENDS: 'You are not friends with this user.',
+  CANNOT_REMOVE_SELF: 'You cannot remove yourself.',
+  UNAUTHORIZED: 'You must be logged in to remove friends.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 import { getTodayDate } from '../utils/date';
@@ -165,24 +179,46 @@ export function useFriends(userId: string | undefined) {
     return { success: false, code, error: message };
   };
 
-  // Remove friend
-  const removeFriend = async (friendshipId: string): Promise<boolean> => {
-    if (!userId) return false;
+  // Remove friend by friend_id - calls DB function, no app-level validation
+  const removeFriend = async (friendId: string): Promise<RemoveFriendResult> => {
+    // Call the single source of truth: remove_friend DB function
+    const { data, error } = await supabase.rpc('remove_friend', {
+      p_friend_id: friendId,
+    });
 
-    try {
-      const { error } = await supabase
-        .from('friendships')
-        .delete()
-        .eq('id', friendshipId);
-
-      if (error) throw error;
-
-      // Refetch from DB to confirm deletion (no state guessing)
-      await loadFriends();
-      return true;
-    } catch {
-      return false;
+    // Network or RPC error
+    if (error) {
+      return {
+        success: false,
+        code: 'UNKNOWN_ERROR',
+        error: REMOVE_FRIEND_MESSAGES.UNKNOWN_ERROR,
+      };
     }
+
+    // Normalize response: handle string, object, or unexpected shapes
+    let result: { code?: string };
+    if (typeof data === 'string') {
+      try {
+        result = JSON.parse(data);
+      } catch {
+        result = {};
+      }
+    } else if (data && typeof data === 'object') {
+      result = data;
+    } else {
+      result = {};
+    }
+
+    const code = (result.code as RemoveFriendCode) || 'UNKNOWN_ERROR';
+    const message = REMOVE_FRIEND_MESSAGES[code];
+
+    if (code === 'SUCCESS') {
+      // Refetch friends list to confirm deletion (no state guessing)
+      await loadFriends();
+      return { success: true, code };
+    }
+
+    return { success: false, code, error: message };
   };
 
   return {

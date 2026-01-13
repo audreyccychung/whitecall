@@ -17,14 +17,7 @@ export interface Friendship {
   created_at: string;
 }
 
-export interface Heart {
-  id: string;
-  sender_id: string;
-  recipient_id: string;
-  message: string;
-  shift_date: string; // Date in YYYY-MM-DD format
-  created_at: string;
-}
+// Heart type is defined in heart.ts
 
 export interface Call {
   id: string;
@@ -33,9 +26,4 @@ export interface Call {
   created_at: string;
 }
 
-// Extended types with joined data
-export interface FriendProfile extends Profile {
-  friendship_id: string;
-  is_on_call?: boolean; // Derived from active call
-  can_send_heart?: boolean;
-}
+// Friend type (with extended fields) is defined in friend.ts
