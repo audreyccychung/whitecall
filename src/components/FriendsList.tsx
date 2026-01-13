@@ -42,12 +42,12 @@ export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: Fr
               size="medium"
             />
             <div>
-              <p className="font-medium text-gray-800">
+              <p className="font-semibold text-base text-gray-800">
                 {friend.display_name || friend.username}
               </p>
-              <p className="text-sm text-gray-500">@{friend.username}</p>
+              <p className="text-xs text-gray-400">@{friend.username}</p>
               {friend.is_on_call && (
-                <span className="inline-block mt-1 text-xs bg-sky-soft-100 text-sky-soft-700 px-2 py-1 rounded-full">
+                <span className="inline-block mt-0.5 text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
                   On call
                 </span>
               )}
