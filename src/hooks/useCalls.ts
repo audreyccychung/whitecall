@@ -47,7 +47,6 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
       // Sync to global store
       setCallDates((data || []).map((c) => c.call_date));
     } catch (err) {
-      console.error('Error loading calls:', err);
       setError(err instanceof Error ? err.message : 'Failed to load calls');
     } finally {
       setLoading(false);
@@ -78,7 +77,6 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
 
       return { success: true };
     } catch (err) {
-      console.error('Error creating call:', err);
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to create call',
@@ -111,7 +109,6 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
 
       return { success: true };
     } catch (err) {
-      console.error('Error deleting call:', err);
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to delete call',

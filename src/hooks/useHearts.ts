@@ -86,8 +86,8 @@ export function useHearts(userId: string | undefined) {
         received_today: receivedToday,
         sent_today: sentToday,
       });
-    } catch (err) {
-      console.error('Error loading hearts:', err);
+    } catch {
+      // Silent fail - stats will show 0
     } finally {
       setLoading(false);
     }
@@ -119,20 +119,7 @@ export function useHearts(userId: string | undefined) {
     try {
       const today = getTodayDate();
 
-      // Check if already sent today (database will also enforce this)
-      const { data: existing } = await supabase
-        .from('hearts')
-        .select('id')
-        .eq('sender_id', userId)
-        .eq('recipient_id', recipientId)
-        .eq('shift_date', today)
-        .single();
-
-      if (existing) {
-        return { success: false, error: 'Already sent a heart to this friend today' };
-      }
-
-      // Insert heart
+      // Insert heart - DB unique constraint enforces one per friend per day
       const { data, error } = await supabase
         .from('hearts')
         .insert({
@@ -144,14 +131,19 @@ export function useHearts(userId: string | undefined) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Handle unique constraint violation (already sent today)
+        if (error.code === '23505') {
+          return { success: false, error: 'Already sent a heart to this friend today' };
+        }
+        throw error;
+      }
 
       // Reload hearts to update counts
       await loadHearts();
 
       return { success: true, heart: data };
     } catch (err) {
-      console.error('Error sending heart:', err);
       return {
         success: false,
         error: err instanceof Error ? err.message : 'Failed to send heart',

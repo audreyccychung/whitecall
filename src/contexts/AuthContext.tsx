@@ -63,7 +63,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setStoreUser(profileData);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load profile';
-      console.error('Error loading user data:', err);
       setError(message);
     } finally {
       setIsLoadingUser(false);

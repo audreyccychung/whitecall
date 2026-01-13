@@ -36,15 +36,40 @@ src/
 - DB tables/columns: snake_case
 
 ## V0 Database Tables
-profiles, friendships, hearts, shifts, shift_templates
+profiles, friendships, hearts, calls, user_settings, user_badges
 
 Key rules:
 - Store times in UTC (timestamptz), display in user timezone
-- Detect timezone on signup via `Intl.DateTimeFormat().resolvedOptions().timeZone`, store in profile
-- Shifts can span multiple days (24-34 hour calls)
-- Call status derived from shifts table, not a flag
+- Call status derived from `calls` table (one row per user per day)
 - RLS: users see own data + friends' data where permitted
 - No realtime subscriptions - refetch on focus/action instead
+
+## Schema Documentation Rules
+
+**Every table MUST have a migration file.**
+
+1. **Single source of truth**: `supabase/migrations/` is the ONLY place schemas are defined
+2. **Never create tables directly in Supabase dashboard** without immediately creating a migration file
+3. **Delete root SQL files**: No `*.sql` files in project root. All SQL goes in `supabase/migrations/`
+4. **Migration naming**: `NNN_description.sql` (e.g., `004_add_calls_table.sql`)
+5. **Include in migration**: Table, indexes, RLS policies, functions, grants
+6. **Use IF NOT EXISTS**: For idempotency when documenting existing tables
+
+**Migration order for destructive changes:**
+1. Add new system (new table/column)
+2. Update code to use new system
+3. Deploy and verify in production
+4. Wait one release cycle
+5. THEN delete old columns/tables
+
+**Never delete columns until replacement is fully verified in production.**
+
+If you discover a table exists in production but has no migration:
+1. STOP
+2. Query production for exact schema: `SELECT column_name, data_type... FROM information_schema.columns`
+3. Query production for RLS: `SELECT * FROM pg_policies WHERE tablename = 'table_name'`
+4. Create migration file documenting what exists
+5. THEN proceed with other work
 
 ## V0 Scope
 

@@ -38,17 +38,14 @@ export default function CreateProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted!', { user, username });
 
     if (!user) {
-      console.error('No user found!');
       setError('You must be logged in to create a profile');
       return;
     }
 
     // Validate username
     const trimmedUsername = username.trim().toLowerCase();
-    console.log('Validating username:', trimmedUsername);
 
     if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
       setError('Username must be 3-20 characters long');
@@ -62,28 +59,16 @@ export default function CreateProfilePage() {
     setError(null);
     setLoading(true);
 
-    // Debug: Check auth state before profile creation
-    const { data: sessionData } = await supabase.auth.getSession();
-    console.log('Debug - Creating profile:', {
-      userId: user.id,
-      sessionExists: !!sessionData.session,
-      sessionUserId: sessionData.session?.user?.id,
-      accessToken: sessionData.session?.access_token ? 'present' : 'missing',
-    });
-
     try {
       // Check if user already has a profile (redirect if so)
       // Note: Ignore errors here - if SELECT fails, we'll catch it on INSERT
-      const { data: myProfile, error: myProfileError } = await supabase
+      const { data: myProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', user.id)
         .maybeSingle();
 
-      console.log('Profile check:', { myProfile, myProfileError });
-
       if (myProfile) {
-        console.log('Profile already exists, redirecting to home');
         await refreshProfile();
         navigate('/home');
         return;
@@ -91,13 +76,11 @@ export default function CreateProfilePage() {
 
       // Check if username is available
       // Note: Ignore errors - if this fails, INSERT will catch duplicates
-      const { data: existingProfile, error: usernameCheckError } = await supabase
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('username', trimmedUsername)
         .maybeSingle();
-
-      console.log('Username check:', { existingProfile, usernameCheckError });
 
       if (existingProfile) {
         setError('Username already taken. Please choose another.');
@@ -131,7 +114,6 @@ export default function CreateProfilePage() {
             setError('Username already taken. Please choose another.');
           } else {
             // Profile with this id exists - refresh and redirect
-            console.log('Profile already exists (conflict), redirecting');
             await refreshProfile();
             navigate('/home');
             return;
@@ -148,7 +130,6 @@ export default function CreateProfilePage() {
       // Navigate to home
       navigate('/home');
     } catch (err) {
-      console.error('Error creating profile:', err);
       setError(err instanceof Error ? err.message : 'Failed to create profile');
       setLoading(false);
     }

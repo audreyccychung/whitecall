@@ -86,7 +86,6 @@ export function useFriends(userId: string | undefined) {
 
       setFriends(friendsList);
     } catch (err) {
-      console.error('Error loading friends:', err);
       setError(err instanceof Error ? err.message : 'Failed to load friends');
     } finally {
       setLoading(false);
@@ -113,9 +112,6 @@ export function useFriends(userId: string | undefined) {
     const { data, error } = await supabase.rpc('add_friend', {
       friend_username: username.trim(),
     });
-
-    // Debug: log actual response shape (remove after verifying fix)
-    console.log('add_friend RPC response:', JSON.stringify({ data, error, dataType: typeof data }));
 
     // Network or RPC error
     if (error) {
@@ -157,7 +153,6 @@ export function useFriends(userId: string | undefined) {
     if (!userId) return false;
 
     try {
-      // Delete both directions of friendship
       const { error } = await supabase
         .from('friendships')
         .delete()
@@ -165,10 +160,10 @@ export function useFriends(userId: string | undefined) {
 
       if (error) throw error;
 
-      setFriends((prev) => prev.filter((f) => f.friendship_id !== friendshipId));
+      // Refetch from DB to confirm deletion (no state guessing)
+      await loadFriends();
       return true;
-    } catch (err) {
-      console.error('Error removing friend:', err);
+    } catch {
       return false;
     }
   };
