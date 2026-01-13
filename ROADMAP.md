@@ -4,21 +4,15 @@
 
 ---
 
-## V0.5 - Stability (CURRENT)
+## V0.5 - Stability ✓ COMPLETE
 
-**Status**: In Progress
-
-### Completed
-- Audit fixes (migrations, cleanup, no state guessing)
-- Codebase documentation (CLAUDE.md rules)
-
-### Remaining
-- [ ] Show friend's next call date in badge
-- [ ] Manual testing of core flows
+- [x] Audit fixes (migrations, cleanup, no state guessing)
+- [x] Codebase documentation (CLAUDE.md rules)
+- [x] Show friend's next call date in badge
 
 ---
 
-## V0.6 - Groups Foundation
+## V0.6 - Groups Foundation (CURRENT)
 
 **Scope**: Create and manage groups
 
@@ -26,17 +20,22 @@
 - [ ] Create `groups` table (id, name, created_by, created_at)
 - [ ] Create `group_members` table (group_id, user_id, joined_at)
 - [ ] RLS policies for group access
+- [ ] `add_group_member` RPC function (atomic, with error codes)
 - [ ] Migration file: `006_add_groups.sql`
 
-### Backend
-- [ ] `useGroups` hook (CRUD operations)
-- [ ] `add_group_member` RPC function (atomic, with error codes)
-- [ ] Group types in `types/group.ts`
+### Types
+- [ ] `types/group.ts` - Group, GroupMember, AddMemberResult types
 
-### Frontend
-- [ ] GroupsPage - list user's groups
+### Hooks
+- [ ] `useGroups` hook - list groups, create group, delete group
+- [ ] `useGroupMembers` hook - list members, add member, remove member
+
+### Pages & Components
+- [ ] GroupsPage - list user's groups with create form
+- [ ] GroupDetailPage - view group members, add/remove
 - [ ] CreateGroupForm - name input
-- [ ] GroupMembersList - show members, add by username
+- [ ] GroupMembersList - show members with remove button
+- [ ] AddMemberForm - add by username
 - [ ] Navigation link to Groups
 
 ### Constraints
@@ -46,45 +45,29 @@
 
 ---
 
-## V0.7 - Group Calendar View
+## V0.9 - Group Calendar + Find Free Day
 
-**Scope**: See all members' calls in a date range
+**Scope**: See all members' calls and find common free days
 
 ### Backend
-- [ ] Query to fetch all calls for group members in date range
-- [ ] `useGroupCalls` hook
+- [ ] `useGroupCalls` hook - fetch calls for all members in date range
+- [ ] Free day calculation (client-side, from fetched data)
 
 ### Frontend
 - [ ] GroupCalendarView component
-- [ ] Date range picker (default: next 14 days)
-- [ ] Grid showing member avatars on each date they have calls
-- [ ] Visual indicator for "busy" vs "free" days
+- [ ] 14-day grid showing member avatars on busy days
+- [ ] Green highlight on free days (no one on call)
+- [ ] "Next free day: Jan 20" summary at top
+- [ ] Click day to see who's on call
 
 ### Data Structure
 ```typescript
 type GroupCalendarDay = {
   date: string;
   membersOnCall: { id: string; username: string; avatar_type: string; avatar_color: string }[];
-  isFree: boolean; // No members on call
+  isFree: boolean;
 };
 ```
-
----
-
-## V0.8 - Find Free Day
-
-**Scope**: Automatically find days when no group member is on call
-
-### Backend
-- [ ] `find_group_free_days` RPC function
-  - Input: group_id, start_date, end_date
-  - Output: array of free dates
-- [ ] Efficient query (one DB call)
-
-### Frontend
-- [ ] "Find Free Day" button on group calendar
-- [ ] Highlight free days in calendar view
-- [ ] "Next free day: Jan 20" summary
 
 ---
 
@@ -96,7 +79,6 @@ type GroupCalendarDay = {
 - [ ] Group invites (share link)
 - [ ] Leave group functionality
 - [ ] Delete group (creator only)
-- [ ] Group notifications (optional)
 
 ### Quality
 - [ ] Error handling for all group operations
