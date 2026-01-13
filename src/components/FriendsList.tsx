@@ -1,6 +1,7 @@
 // Friends list component
 import { AvatarDisplay } from './AvatarDisplay';
 import { HeartButton } from './HeartButton';
+import { formatCallDateBadge } from '../utils/date';
 import type { Friend } from '../types/friend';
 
 interface FriendsListProps {
@@ -46,9 +47,15 @@ export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: Fr
                 {friend.display_name || friend.username}
               </p>
               <p className="text-xs text-gray-400">@{friend.username}</p>
-              {friend.is_on_call && (
-                <span className="inline-block mt-0.5 text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full">
-                  On call
+              {friend.next_call_date && (
+                <span
+                  className={`inline-block mt-0.5 text-xs px-2 py-0.5 rounded-full ${
+                    friend.is_on_call
+                      ? 'bg-green-50 text-green-600'
+                      : 'bg-sky-50 text-sky-600'
+                  }`}
+                >
+                  {formatCallDateBadge(friend.next_call_date)}
                 </span>
               )}
             </div>

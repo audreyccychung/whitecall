@@ -41,3 +41,23 @@ export const isToday = (dateString: string): boolean => {
     date.getFullYear() === today.getFullYear()
   );
 };
+
+export const formatCallDateBadge = (dateString: string): string => {
+  // Parse as local date (YYYY-MM-DD format)
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isDateToday =
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear();
+
+  if (isDateToday) {
+    return 'On call today';
+  }
+
+  // Format as "Jan 15"
+  return `On call ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)}`;
+};

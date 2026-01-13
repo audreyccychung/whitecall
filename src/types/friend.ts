@@ -7,7 +7,8 @@ export interface Friend {
   avatar_type: string;
   avatar_color: string;
   friendship_id: string;
-  is_on_call?: boolean; // Derived from active shift
+  is_on_call?: boolean; // Derived from active call (today)
+  next_call_date?: string; // Next call date (today or future, YYYY-MM-DD)
   can_send_heart?: boolean;
 }
 

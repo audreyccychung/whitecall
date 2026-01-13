@@ -63,6 +63,22 @@ export function useFriends(userId: string | undefined) {
 
       const friendsOnCall = new Set(activeCalls?.map((c) => c.user_id) || []);
 
+      // Get each friend's next call date (today or future, within 7 days)
+      const { data: upcomingCalls } = await supabase
+        .from('calls')
+        .select('user_id, call_date')
+        .in('user_id', friendIds)
+        .gte('call_date', today)
+        .order('call_date', { ascending: true });
+
+      // Map friend ID to their next call date (first occurrence)
+      const nextCallByFriend = new Map<string, string>();
+      for (const call of upcomingCalls || []) {
+        if (!nextCallByFriend.has(call.user_id)) {
+          nextCallByFriend.set(call.user_id, call.call_date);
+        }
+      }
+
       // Get hearts sent today to each friend
       const { data: heartsData } = await supabase
         .from('hearts')
@@ -80,6 +96,7 @@ export function useFriends(userId: string | undefined) {
             ...profile,
             friendship_id: friendship?.id || '',
             is_on_call: friendsOnCall.has(profile.id),
+            next_call_date: nextCallByFriend.get(profile.id),
             can_send_heart: !heartsSentTo.has(profile.id),
           };
         }) || [];
