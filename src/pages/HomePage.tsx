@@ -47,24 +47,24 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-800">WhiteCall</h1>
-          <div className="flex items-center gap-3">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">WhiteCall</h1>
+          <div className="flex items-center gap-1 sm:gap-3">
             <Link
               to="/calls"
-              className="px-4 py-2 text-gray-700 hover:text-sky-soft-600 font-medium transition-colors"
+              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-sky-soft-600 font-semibold text-sm sm:text-base transition-colors"
             >
               My Calls
             </Link>
             <Link
               to="/friends"
-              className="px-4 py-2 text-gray-700 hover:text-sky-soft-600 font-medium transition-colors"
+              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-sky-soft-600 font-semibold text-sm sm:text-base transition-colors"
             >
               Friends
             </Link>
             <button
               onClick={signOut}
-              className="px-4 py-2 text-gray-700 hover:text-red-600 font-medium transition-colors"
+              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-red-600 font-semibold text-sm sm:text-base transition-colors"
             >
               Sign Out
             </button>

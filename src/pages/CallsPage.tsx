@@ -32,15 +32,15 @@ export default function CallsPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               to="/home"
-              className="text-gray-600 hover:text-gray-800 transition-colors"
+              className="text-gray-600 hover:text-gray-800 font-semibold text-sm sm:text-base transition-colors"
             >
               ← Back
             </Link>
-            <h1 className="text-2xl font-bold text-gray-800">My Calls</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">My Calls</h1>
           </div>
         </div>
       </header>

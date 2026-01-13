@@ -31,7 +31,7 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
       <button
         disabled
         aria-label="White call already sent"
-        className="px-4 py-2 rounded-full bg-sky-soft-100 text-sky-soft-400 cursor-default text-sm font-medium"
+        className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-sky-soft-100 text-sky-soft-400 cursor-default text-xs sm:text-sm font-semibold"
       >
         Sent 🤍
       </button>
@@ -48,7 +48,7 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
       whileHover={{ scale: 1.02 }}
       animate={justSent ? { scale: [1, 1.1, 1] } : {}}
       transition={{ duration: 0.2 }}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors ${
         disabled || sending
           ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
           : 'bg-sky-soft-500 hover:bg-sky-soft-600 text-white shadow-sm hover:shadow-md'
