@@ -62,6 +62,12 @@ export default function HomePage() {
             >
               Friends
             </Link>
+            <Link
+              to="/groups"
+              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-sky-soft-600 font-semibold text-sm sm:text-base transition-colors"
+            >
+              Groups
+            </Link>
             <button
               onClick={signOut}
               className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-red-600 font-semibold text-sm sm:text-base transition-colors"

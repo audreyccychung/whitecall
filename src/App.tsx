@@ -10,6 +10,8 @@ import CreateProfilePage from './pages/CreateProfilePage';
 import HomePage from './pages/HomePage';
 import FriendsPage from './pages/FriendsPage';
 import CallsPage from './pages/CallsPage';
+import GroupsPage from './pages/GroupsPage';
+import GroupDetailPage from './pages/GroupDetailPage';
 
 function App() {
   return (
@@ -44,6 +46,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <CallsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/groups"
+            element={
+              <ProtectedRoute>
+                <GroupsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/groups/:id"
+            element={
+              <ProtectedRoute>
+                <GroupDetailPage />
               </ProtectedRoute>
             }
           />

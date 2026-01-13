@@ -12,40 +12,46 @@
 
 ---
 
-## V0.6 - Groups Foundation (CURRENT)
+## V0.6 - Groups Foundation ✓ COMPLETE
 
 **Scope**: Create and manage groups
 
 ### Database
-- [ ] Create `groups` table (id, name, created_by, created_at)
-- [ ] Create `group_members` table (group_id, user_id, joined_at)
-- [ ] RLS policies for group access
-- [ ] `add_group_member` RPC function (atomic, with error codes)
-- [ ] Migration file: `006_add_groups.sql`
+- [x] Create `groups` table (id, name, created_by, created_at)
+- [x] Create `group_members` table (group_id, user_id, joined_at)
+- [x] RLS policies for group access
+- [x] `create_group` RPC function (atomic, with error codes)
+- [x] `add_group_member` RPC function (atomic, with error codes)
+- [x] `remove_group_member` RPC function (atomic, with error codes)
+- [x] `delete_group` RPC function (atomic, with error codes)
+- [x] Migration file: `009_add_groups.sql`
+- [x] 20-member limit trigger (prevents race conditions)
 
 ### Types
-- [ ] `types/group.ts` - Group, GroupMember, AddMemberResult types
+- [x] `types/group.ts` - Group, GroupMember, result types
 
 ### Hooks
-- [ ] `useGroups` hook - list groups, create group, delete group
-- [ ] `useGroupMembers` hook - list members, add member, remove member
+- [x] `useGroups` hook - list groups, create group, delete group
+- [x] `useGroupMembers` hook - list members, add member, remove member
 
 ### Pages & Components
-- [ ] GroupsPage - list user's groups with create form
-- [ ] GroupDetailPage - view group members, add/remove
-- [ ] CreateGroupForm - name input
-- [ ] GroupMembersList - show members with remove button
-- [ ] AddMemberForm - add by username
-- [ ] Navigation link to Groups
+- [x] GroupsPage - list user's groups with create form
+- [x] GroupDetailPage - view group members, add/remove, delete group
+- [x] CreateGroupForm - name input with validation
+- [x] GroupMembersList - show members with remove button
+- [x] AddMemberForm - add by username
+- [x] GroupCard - group display in list
+- [x] Navigation link to Groups in HomePage
 
 ### Constraints
-- Max 20 members per group (DB constraint)
-- Only creator can add/remove members (for now)
+- Max 20 members per group (DB trigger + RPC check)
+- Only creator can add/remove members
 - Group names: 3-30 characters
+- Self-healing for I11 invariant (creator always member)
 
 ---
 
-## V0.9 - Group Calendar + Find Free Day
+## V0.9 - Group Calendar + Find Free Day (NEXT)
 
 **Scope**: See all members' calls and find common free days
 
@@ -78,13 +84,13 @@ type GroupCalendarDay = {
 ### Features
 - [ ] Group invites (share link)
 - [ ] Leave group functionality
-- [ ] Delete group (creator only)
+- [x] Delete group (creator only) - done in V0.6
 
 ### Quality
-- [ ] Error handling for all group operations
-- [ ] Loading states
-- [ ] Empty states
-- [ ] Mobile responsive design
+- [x] Error handling for all group operations - done in V0.6
+- [x] Loading states - done in V0.6
+- [x] Empty states - done in V0.6
+- [x] Mobile responsive design - done in V0.6
 
 ### Deferred from Audit
 - [ ] M5: Username validation error codes
