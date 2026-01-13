@@ -1,213 +1,331 @@
-# Shift Calendar
+# WhiteCall V0 - Setup & Running Guide
 
-A modern scheduling application designed specifically for healthcare workers to manage complex shift schedules, sync with personal calendars, and coordinate availability with friends and family.
+**Version**: 0.0.1 (V0 - Proof of Concept)
+**Last Updated**: 2026-01-10
 
-## 🎯 Problem We're Solving
+## What is WhiteCall?
 
-Healthcare workers (doctors, nurses, PAs) work irregular hours with shifts ranging from 8 to 34 hours. Existing scheduling apps like MyDuty have critical limitations:
-- Cannot handle shifts spanning multiple days (e.g., 8:30 AM Monday → 6 PM Tuesday)
-- No automatic calendar synchronization (must maintain duplicate schedules)
-- No intelligent group availability finder
+WhiteCall is an emotional support app for healthcare workers facing call shifts. "White call" is Hong Kong medical slang for a peaceful call shift. When colleagues are on call, you can send them white hearts 🤍 as encouragement.
 
-Shift Calendar solves all of these problems.
+## V0 Features Implemented
 
-## ✨ Core Features
+### Core Features
+- ✅ User authentication (email/password via Supabase)
+- ✅ Avatar creation (8 animals × 6 colors)
+- ✅ Profile creation with username
+- ✅ Friends system (add by username, bidirectional)
+- ✅ "I'm on call today" toggle
+- ✅ Send hearts to friends on call (one per day per friend)
+- ✅ Real-time heart updates
+- ✅ Hearts displayed around avatar with animations
 
-### MVP (Version 0.1)
-- **Multi-day shift support**: Create shifts from 8 to 34 hours that automatically span multiple days
-- **Shift templates**: Pre-configure common shift types with custom start times
-- **Monthly calendar view**: Quick-tap interface to add shifts (preserving the best UX from MyDuty)
-- **Group scheduling**: Create groups to view colleagues' schedules in a clean weekly block format
-- **Smart availability finder**:
-  - Find times when X out of Y group members are free
-  - Filter by time of day and minimum duration needed
-  - Shows results with availability counts (e.g., "3/5 free")
-- **Statistics tracking**:
-  - Total hours worked per month
-  - Number of call shifts (24+ hour shifts)
-  - Simple visualizations
-- **Calendar sync** (Premium): Two-way sync with Google Calendar and Apple Calendar
-- **iCal feed generation**: Share your schedule with family members who can subscribe
+### Retention Features
+- ✅ Daily streaks tracking
+- ✅ Streak display (🔥 X-day streak!)
+- ✅ Onboarding tutorial modal with confetti
+- ✅ Haptic feedback (mobile vibration)
+- ✅ Sound feedback (optional, user can toggle)
+- ✅ Heart counter animation
+- ✅ Confetti on first heart received
+- ✅ User settings (sound, haptic, notifications)
 
-### Freemium Model
-**Free Tier:**
-- Up to 5 shift templates
-- Up to 3 groups
-- Up to 10 members per group
-- Basic statistics
+### UI/UX
+- ✅ Mobile-first responsive design
+- ✅ Professional cute aesthetic
+- ✅ Framer Motion animations
+- ✅ Loading states
+- ✅ Empty states
+- ✅ Error handling
+- ✅ Protected routes
 
-**Premium ($4.99/month or $49/year):**
-- Calendar sync (Google + Apple)
-- iCal feed generation for family sharing
-- Unlimited shift templates
-- Unlimited groups
-- Up to 99 members per group
-- Advanced statistics
+## Setup Instructions
 
-## 🛠️ Tech Stack
+### 1. Prerequisites
 
-- **Frontend**: React 18 with TypeScript
-- **Build Tool**: Vite (for fast development and builds)
-- **Styling**: Tailwind CSS (mobile-first, responsive design)
-- **Routing**: React Router v6
-- **Backend**: Supabase
-  - PostgreSQL database
-  - Authentication (email, Google, Apple)
-  - Real-time subscriptions
-  - Row-level security
-- **Date Handling**: date-fns
-- **Form Management**: react-hook-form
-- **State Management**: Zustand (simpler than Redux)
-- **Deployment**: Vercel (frontend) + Supabase (backend)
+- Node.js 18+ and npm
+- Supabase account (free tier is fine)
+- Modern browser
 
-## 📁 Project Structure
+### 2. Supabase Setup
 
-```
-shift-calendar/
-├── src/
-│   ├── pages/              # Full page components (LoginPage, CalendarPage, etc.)
-│   ├── components/         # Reusable UI components (Button, Modal, etc.)
-│   ├── hooks/              # Custom React hooks (useAuth, useShifts, etc.)
-│   ├── services/           # API calls and business logic (authService, shiftService)
-│   ├── utils/              # Helper functions (date formatting, validation)
-│   ├── types/              # TypeScript type definitions
-│   ├── contexts/           # React context for global state
-│   ├── App.tsx             # Main app component with routing
-│   └── main.tsx            # Application entry point
-├── public/                 # Static assets (images, icons)
-├── supabase/               # Database migrations and schema
-├── README.md               # This file
-├── CLAUDE.md               # Development context for AI assistance
-├── CHANGELOG.md            # Version history
-└── ...config files
-```
+1. **Create a Supabase project** at https://supabase.com
 
-## 🚀 Getting Started
+2. **Run the database migration**:
+   - Go to Supabase Dashboard → SQL Editor
+   - Copy and paste the contents of `supabase/migrations/001_initial_schema.sql`
+   - Run the SQL
 
-### Prerequisites
-- Node.js v20 or higher
-- npm or yarn
-- Supabase account (free tier works for development)
+3. **Get your credentials**:
+   - Go to Project Settings → API
+   - Copy your Project URL and Anon/Public Key
 
-### Installation
+4. **Create `.env` file**:
+   ```bash
+   cp .env.example .env
+   ```
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/shift-calendar.git
-cd shift-calendar
-```
+5. **Add your Supabase credentials to `.env`**:
+   ```
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key-here
+   ```
 
-2. Install dependencies:
+### 3. Install Dependencies
+
 ```bash
 npm install
 ```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env.local
-```
+### 4. Run Development Server
 
-Edit `.env.local` and add your Supabase credentials:
-```
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-4. Run the development server:
 ```bash
 npm run dev
 ```
 
-5. Open your browser to `http://localhost:5173`
+App will be available at http://localhost:5173
 
-### Building for Production
+### 5. (Optional) Add Sound Files
 
-```bash
-npm run build
+For full experience, add these sound files to `public/sounds/`:
+- `heart-sent.mp3`
+- `heart-received.mp3`
+- `success.mp3`
+
+See `public/sounds/README.md` for recommendations.
+
+## Usage Flow
+
+### New User Flow
+
+1. **Sign Up** (`/signup`)
+   - Enter email and password
+   - Password must be 8+ characters
+
+2. **Create Profile** (`/create-profile`)
+   - Choose an animal avatar (penguin, bear, cat, dog, rabbit, fox, owl, panda)
+   - Pick a color (pink, blue, purple, green, yellow, peach)
+   - Set username (lowercase, 3-20 chars, letters/numbers/underscores)
+   - Optional: Set display name
+
+3. **Onboarding Tutorial** (shown once)
+   - 4-step walkthrough
+   - Can skip or go through
+   - Confetti celebration on completion
+
+4. **Home Page** (`/home`)
+   - See your avatar with hearts received
+   - Toggle "I'm on call today"
+   - View friends on call
+   - Send hearts to friends
+   - Track your streak
+
+5. **Add Friends** (`/friends`)
+   - Search by username
+   - Add friends
+   - View all friends
+   - See who's on call
+
+### Daily Usage Flow
+
+1. Toggle "I'm on call today" if on call
+2. Check which friends are on call
+3. Send hearts to support them
+4. Build your streak by sending daily
+5. Receive hearts when you're on call
+
+## Key Features Explained
+
+### Streaks
+- Send at least one heart per day to maintain streak
+- Database automatically tracks consecutive days
+- Displayed prominently on home page
+- "🔥 X-day streak!" badge
+
+### Hearts
+- Can only send to friends who are on call
+- One heart per friend per day (enforced by database)
+- Real-time updates when received
+- Displayed around avatar with floating animation
+- Counter shows total hearts received today
+
+### Onboarding
+- Shows once on first login
+- Explains how to use WhiteCall
+- Tracks completion in database
+- Skippable
+
+### Settings
+- Sound on/off
+- Haptic feedback on/off
+- Notifications on/off (future feature)
+- Accessible from profile (future)
+
+## Database Schema Overview
+
+### Tables
+- `profiles` - User profiles with avatar and streak data
+- `friendships` - Bidirectional friend relationships
+- `hearts` - Hearts sent between users
+- `user_settings` - User preferences
+- `user_badges` - Milestone badges (for V0.5+)
+
+### Key Database Features
+- Row-level security (RLS) for privacy
+- Automatic triggers for streak updates
+- Unique constraints prevent duplicate hearts
+- Real-time subscriptions for live updates
+
+## Tech Stack
+
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS
+- **Animations**: Framer Motion
+- **Backend**: Supabase (Auth + PostgreSQL + Realtime)
+- **State**: Zustand
+- **Routing**: React Router v6
+- **Confetti**: canvas-confetti
+
+## Project Structure
+
+```
+src/
+├── components/        # Reusable UI components
+│   ├── AvatarDisplay.tsx
+│   ├── AvatarSelector.tsx
+│   ├── HeartDisplay.tsx
+│   ├── HeartButton.tsx
+│   ├── StreakDisplay.tsx
+│   ├── OnboardingModal.tsx
+│   ├── FriendsList.tsx
+│   ├── AddFriendForm.tsx
+│   └── ...
+├── contexts/          # React contexts
+│   └── AuthContext.tsx
+├── hooks/             # Custom React hooks
+│   ├── useFriends.ts
+│   ├── useHearts.ts
+│   ├── useCallStatus.ts
+│   └── useSettings.ts
+├── lib/               # Core libraries
+│   ├── supabase.ts
+│   └── store.ts       # Zustand store
+├── pages/             # Page components
+│   ├── LoginPage.tsx
+│   ├── SignUpPage.tsx
+│   ├── CreateProfilePage.tsx
+│   ├── HomePage.tsx
+│   └── FriendsPage.tsx
+├── types/             # TypeScript types
+│   ├── database.ts
+│   ├── avatar.ts
+│   ├── friend.ts
+│   ├── heart.ts
+│   └── auth.ts
+├── utils/             # Utility functions
+│   ├── confetti.ts
+│   ├── feedback.ts    # Haptic & sound
+│   └── date.ts
+└── App.tsx            # Main app with routing
 ```
 
-The build output will be in the `dist/` directory.
+## Common Issues & Solutions
 
-## 🗄️ Database Schema
+### "Supabase credentials not found"
+- Make sure `.env` file exists in project root
+- Check that variables start with `VITE_`
+- Restart dev server after creating `.env`
 
-### Key Tables
-- `users`: User profiles (linked to Supabase auth)
-- `shift_templates`: User-defined shift types (e.g., "Day Shift", "Call")
-- `shifts`: Individual shift instances on the calendar
-- `groups`: User-created groups for schedule sharing
-- `group_members`: Membership relationships
-- `availability_requests`: Cached availability searches (performance optimization)
+### Profile not created after signup
+- Check SQL migration ran successfully
+- Look for errors in browser console
+- Verify RLS policies are enabled
 
-See `supabase/migrations/` for detailed schema definitions.
+### Hearts not updating in real-time
+- Check Supabase realtime is enabled for `hearts` table
+- Go to Database → Replication → Enable for `hearts`
 
-## 📱 Key Design Decisions
+### Sound not playing
+- User must interact with page first (browser requirement)
+- Check sound files exist in `public/sounds/`
+- Check console for errors
 
-1. **Web-first, then native apps**: Starting with a Progressive Web App (PWA) to validate product-market fit before investing in native iOS/Android apps
-2. **Calendar sync as premium feature**: The core value-add that justifies premium pricing
-3. **Mobile-first design**: Healthcare workers primarily use phones, so all UI is mobile-optimized
-4. **Simple freemium tiers**: Clear feature differentiation to drive conversions
-5. **No shift swapping in MVP**: Focusing on personal scheduling and group coordination first
-6. **Supabase over Firebase**: Better developer experience, PostgreSQL, and built-in auth
+### Haptic feedback not working
+- Only works on mobile devices with vibration support
+- Check browser permissions
+- iOS Safari requires user gesture first
 
-## 🎯 Competitive Advantages
+## Development Commands
 
-| Feature | MyDuty | NurseGrid | Amion | Shift Calendar |
-|---------|---------|-----------|-------|----------------|
-| Multi-day shifts | ❌ | ✅ | ✅ | ✅ |
-| Calendar sync | ❌ | ✅ (buggy) | ✅ | ✅ |
-| Group availability finder | ❌ | ❌ | ❌ | ✅ |
-| All healthcare workers | ✅ | Nurse-focused | Enterprise | ✅ |
-| Family sharing | ❌ | ✅ | ❌ | ✅ |
-| Price | $2.99/mo | Free + ads | $449/yr | Free + $4.99/mo |
+```bash
+# Start dev server
+npm run dev
 
-## 🧪 Development Workflow
+# Build for production
+npm run build
 
-1. **Feature planning**: Use CLAUDE.md to plan features before coding
-2. **Development**: Use Claude Code to build features iteratively
-3. **Testing**: Manual testing in browser (automated tests added later)
-4. **Commit**: Frequent, descriptive commits
-5. **Deploy**: Push to GitHub → Vercel auto-deploys
+# Preview production build
+npm run preview
 
-## 🤝 Contributing
+# Type check
+npm run lint
+```
 
-This is currently a solo project. Contributions may be accepted in the future.
+## Next Steps (V0.5)
 
-## 📄 License
+- [ ] Calendar integration
+- [ ] Automatic call shift detection
+- [ ] Message feed (see who sent hearts)
+- [ ] Weekly recap
+- [ ] Smart feed prioritization
+- [ ] Badge system
 
-[To be determined - likely MIT or proprietary depending on commercialization plans]
+## Testing Checklist
 
-## 📧 Contact
+### Manual Testing
+- [ ] Sign up new user
+- [ ] Create profile
+- [ ] Complete onboarding
+- [ ] Toggle call status
+- [ ] Add friend by username
+- [ ] Send heart to friend on call
+- [ ] Receive heart (test with 2 accounts)
+- [ ] Build streak (send hearts on consecutive days)
+- [ ] Test on mobile (320px width)
+- [ ] Test on tablet (768px)
+- [ ] Test on desktop (1024px+)
 
-[Your contact information when ready to share]
+### Edge Cases
+- [ ] Try to send heart twice to same friend
+- [ ] Add non-existent username
+- [ ] Add yourself as friend
+- [ ] Send heart to friend not on call
+- [ ] Username with invalid characters
 
-## 🗺️ Roadmap
+## Known Limitations (V0)
 
-**Phase 1 (Months 1-3)**: MVP Development
-- ✅ Project setup
-- ⏳ Authentication
-- ⏳ Calendar view with shift management
-- ⏳ Groups and group calendar view
-- ⏳ Availability finder
-- ⏳ Basic statistics
+- No calendar - users manually toggle call status
+- No groups yet
+- No profile editing (username is permanent)
+- No password reset
+- No push notifications
+- No analytics dashboard
+- Sounds require manual setup
 
-**Phase 2 (Months 4-6)**: Polish and Beta
-- Calendar sync (Google/Apple)
-- iCal feed generation
-- Payment integration (Stripe)
-- Beta testing with 20-50 healthcare workers
-- Bug fixes and UX improvements
+## Support & Resources
 
-**Phase 3 (Months 7-12)**: Launch and Growth
-- Public launch
-- Marketing to healthcare communities
-- Analytics and monitoring
-- Feature improvements based on feedback
-- Consider native mobile apps
+- **Spec**: See `WHITECALL.md` for full product vision
+- **Database Schema**: See `supabase/migrations/001_initial_schema.sql`
+- **Supabase Docs**: https://supabase.com/docs
+- **React Docs**: https://react.dev
+- **Tailwind Docs**: https://tailwindcss.com
+- **Framer Motion**: https://www.framer.com/motion/
 
-**Future Features (Post-MVP)**:
-- Shift swapping within groups
-- Push notifications
+## License
+
+[Add your license here]
 
 ---
 
-Built with ❤️ for healthcare workers who deserve better scheduling tools.
+**Built with ❤️ for healthcare workers who need support during call shifts.**
+
+🤍 Let's make call shifts a little less lonely.

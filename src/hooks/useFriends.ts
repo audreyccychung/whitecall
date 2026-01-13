@@ -114,6 +114,9 @@ export function useFriends(userId: string | undefined) {
       friend_username: username.trim(),
     });
 
+    // Debug: log actual response shape (remove after verifying fix)
+    console.log('add_friend RPC response:', JSON.stringify({ data, error, dataType: typeof data }));
+
     // Network or RPC error
     if (error) {
       return {
@@ -123,8 +126,21 @@ export function useFriends(userId: string | undefined) {
       };
     }
 
-    // DB function returns JSON with code field
-    const code = (data?.code as AddFriendCode) || 'UNKNOWN_ERROR';
+    // Normalize response: handle string, object, or unexpected shapes
+    let result: { code?: string };
+    if (typeof data === 'string') {
+      try {
+        result = JSON.parse(data);
+      } catch {
+        result = {};
+      }
+    } else if (data && typeof data === 'object') {
+      result = data;
+    } else {
+      result = {};
+    }
+
+    const code = (result.code as AddFriendCode) || 'UNKNOWN_ERROR';
     const message = ADD_FRIEND_MESSAGES[code];
 
     if (code === 'SUCCESS') {

@@ -61,15 +61,43 @@ export default function CreateProfilePage() {
 
     setError(null);
     setLoading(true);
-    console.log('Creating profile...');
+
+    // Debug: Check auth state before profile creation
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log('Debug - Creating profile:', {
+      userId: user.id,
+      sessionExists: !!sessionData.session,
+      sessionUserId: sessionData.session?.user?.id,
+      accessToken: sessionData.session?.access_token ? 'present' : 'missing',
+    });
 
     try {
+      // Check if user already has a profile (redirect if so)
+      // Note: Ignore errors here - if SELECT fails, we'll catch it on INSERT
+      const { data: myProfile, error: myProfileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      console.log('Profile check:', { myProfile, myProfileError });
+
+      if (myProfile) {
+        console.log('Profile already exists, redirecting to home');
+        await refreshProfile();
+        navigate('/home');
+        return;
+      }
+
       // Check if username is available
-      const { data: existingProfile } = await supabase
+      // Note: Ignore errors - if this fails, INSERT will catch duplicates
+      const { data: existingProfile, error: usernameCheckError } = await supabase
         .from('profiles')
         .select('id')
         .eq('username', trimmedUsername)
-        .single();
+        .maybeSingle();
+
+      console.log('Username check:', { existingProfile, usernameCheckError });
 
       if (existingProfile) {
         setError('Username already taken. Please choose another.');
@@ -95,7 +123,24 @@ export default function CreateProfilePage() {
         avatar_color: colorHex,
       });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        // Handle specific error codes
+        if (insertError.code === '23505') {
+          // Unique violation - either id or username already exists
+          if (insertError.message.includes('username')) {
+            setError('Username already taken. Please choose another.');
+          } else {
+            // Profile with this id exists - refresh and redirect
+            console.log('Profile already exists (conflict), redirecting');
+            await refreshProfile();
+            navigate('/home');
+            return;
+          }
+          setLoading(false);
+          return;
+        }
+        throw insertError;
+      }
 
       // Refresh profile in AuthContext so HomePage has it immediately
       await refreshProfile();

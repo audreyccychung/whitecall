@@ -1,4 +1,4 @@
-// Heart send button - icon-forward, pastel sky-blue palette
+// Heart send button - text button with sky blue background
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
@@ -25,38 +25,36 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
     }
   };
 
-  // Sent state: filled heart, muted colors
+  // Sent state: muted appearance
   if (alreadySent) {
     return (
       <button
         disabled
-        aria-label="Heart already sent"
-        className="w-11 h-11 flex items-center justify-center rounded-full bg-sky-soft-50 cursor-default"
+        aria-label="White call already sent"
+        className="px-4 py-2 rounded-full bg-sky-soft-100 text-sky-soft-400 cursor-default text-sm font-medium"
       >
-        <span className="text-xl text-sky-soft-300">💙</span>
+        Sent 🤍
       </button>
     );
   }
 
-  // Active state: outline heart, interactive
+  // Active state: sky blue background, white text
   return (
     <motion.button
       onClick={handleClick}
       disabled={disabled || sending}
-      aria-label="Send heart"
-      whileTap={{ scale: 0.9 }}
-      whileHover={{ scale: 1.08 }}
-      animate={justSent ? { scale: [1, 1.25, 1] } : {}}
-      transition={{ duration: 0.25 }}
-      className={`w-11 h-11 flex items-center justify-center rounded-full transition-colors ${
+      aria-label="Send white call"
+      whileTap={{ scale: 0.95 }}
+      whileHover={{ scale: 1.02 }}
+      animate={justSent ? { scale: [1, 1.1, 1] } : {}}
+      transition={{ duration: 0.2 }}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
         disabled || sending
-          ? 'bg-gray-100 cursor-not-allowed'
-          : 'bg-sky-soft-100 hover:bg-sky-soft-200 shadow-sm hover:shadow-md'
+          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          : 'bg-sky-soft-500 hover:bg-sky-soft-600 text-white shadow-sm hover:shadow-md'
       }`}
     >
-      <span className={`text-xl ${disabled || sending ? 'text-gray-300' : 'text-sky-soft-500'}`}>
-        {sending ? '🤍' : '💙'}
-      </span>
+      {sending ? 'Sending...' : 'Send white call 🤍'}
     </motion.button>
   );
 }
