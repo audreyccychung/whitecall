@@ -7,10 +7,11 @@ import type { Friend } from '../types/friend';
 interface FriendsListProps {
   friends: Friend[];
   onSendHeart: (friendId: string) => Promise<void>;
+  onFriendClick?: (friend: Friend) => void;
   showOnlyOnCall?: boolean;
 }
 
-export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: FriendsListProps) {
+export function FriendsList({ friends, onSendHeart, onFriendClick, showOnlyOnCall = false }: FriendsListProps) {
   // Filter friends who are on call (derived from active shifts)
   const filteredFriends = showOnlyOnCall
     ? friends.filter((f) => f.is_on_call)
@@ -34,7 +35,10 @@ export function FriendsList({ friends, onSendHeart, showOnlyOnCall = false }: Fr
       {filteredFriends.map((friend) => (
         <div
           key={friend.id}
-          className="flex items-center justify-between p-4 bg-white rounded-xl shadow-soft hover:shadow-soft-lg transition-shadow"
+          onClick={() => onFriendClick?.(friend)}
+          className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-soft hover:shadow-soft-lg transition-shadow ${
+            onFriendClick ? 'cursor-pointer' : ''
+          }`}
         >
           <div className="flex items-center gap-3">
             <AvatarDisplay

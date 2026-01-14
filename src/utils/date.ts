@@ -42,6 +42,19 @@ export const isToday = (dateString: string): boolean => {
   );
 };
 
+export const formatCallDateList = (dateString: string): string => {
+  // Parse as local date (YYYY-MM-DD format)
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+
+  // Format as "Mon, Jan 15"
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+};
+
 export const formatCallDateBadge = (dateString: string): string => {
   // Parse as local date (YYYY-MM-DD format)
   const [year, month, day] = dateString.split('-').map(Number);

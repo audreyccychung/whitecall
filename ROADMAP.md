@@ -49,9 +49,43 @@
 - Group names: 3-30 characters
 - Self-healing for I11 invariant (creator always member)
 
+### Bug Fixes (Post-Release)
+- [x] Migration 010: Fix `group_members` RLS circular dependency (first attempt)
+- [x] Migration 011: Fix `groups` RLS infinite recursion (owner-only simplification)
+- [x] Migration 012: Restore owner visibility of group members
+
+**Current V0.6 Limitations:**
+- Non-owner members cannot see groups they belong to (V1 fix: `get_my_groups()` RPC)
+- Non-owner members cannot see other members (V1 fix: `get_group_members()` RPC)
+
 ---
 
-## V0.9 - Group Calendar + Find Free Day (NEXT)
+## V0.7 - Friend Profile Modal ✓ COMPLETE
+
+**Scope**: View a friend's upcoming call schedule
+
+### Feature
+- [x] Tap friend card → slide-up modal (bottom sheet)
+- [x] Show friend avatar, display name, username
+- [x] List upcoming calls (next 30 days, future only)
+- [x] Highlight next upcoming call
+- [x] Truncate to ~6 dates with "+N more" if needed
+- [x] Empty state: "No upcoming calls scheduled"
+
+### Implementation
+- [x] `FriendProfileModal` component
+- [x] `useFriendCalls(friendId)` hook - fetch calls for next 30 days
+- [x] No DB changes needed (RLS already allows friend call access)
+
+### Explicit Non-Goals
+- No calendar grid or month view
+- No date picker or editing
+- No group logic
+- No past calls
+
+---
+
+## V0.9 - Group Calendar + Find Free Day
 
 **Scope**: See all members' calls and find common free days
 
@@ -84,6 +118,8 @@ type GroupCalendarDay = {
 ### Features
 - [ ] Group invites (share link)
 - [ ] Leave group functionality
+- [ ] `get_my_groups()` RPC - let non-owner members see groups they belong to
+- [ ] `get_group_members()` RPC - let non-owner members see other members
 - [x] Delete group (creator only) - done in V0.6
 
 ### Quality

@@ -1,4 +1,5 @@
 // Friends management page
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,11 +7,14 @@ import { useFriends } from '../hooks/useFriends';
 import { useHearts } from '../hooks/useHearts';
 import { AddFriendForm } from '../components/AddFriendForm';
 import { FriendsList } from '../components/FriendsList';
+import { FriendProfileModal } from '../components/FriendProfileModal';
+import type { Friend } from '../types/friend';
 
 export default function FriendsPage() {
   const { user } = useAuth();
   const { friends, loading, addFriend } = useFriends(user?.id);
   const { sendHeart } = useHearts(user?.id);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
   const handleSendHeart = async (friendId: string) => {
     await sendHeart(friendId);
@@ -18,6 +22,14 @@ export default function FriendsPage() {
 
   const handleAddFriend = async (username: string) => {
     return addFriend(username);
+  };
+
+  const handleFriendClick = (friend: Friend) => {
+    setSelectedFriend(friend);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedFriend(null);
   };
 
   return (
@@ -65,7 +77,7 @@ export default function FriendsPage() {
               <p className="text-gray-600">Loading friends...</p>
             </div>
           ) : (
-            <FriendsList friends={friends} onSendHeart={handleSendHeart} />
+            <FriendsList friends={friends} onSendHeart={handleSendHeart} onFriendClick={handleFriendClick} />
           )}
         </motion.div>
 
@@ -84,10 +96,13 @@ export default function FriendsPage() {
               <p className="text-gray-600">Loading...</p>
             </div>
           ) : (
-            <FriendsList friends={friends} onSendHeart={handleSendHeart} showOnlyOnCall />
+            <FriendsList friends={friends} onSendHeart={handleSendHeart} onFriendClick={handleFriendClick} showOnlyOnCall />
           )}
         </motion.div>
       </main>
+
+      {/* Friend Profile Modal */}
+      <FriendProfileModal friend={selectedFriend} onClose={handleCloseModal} />
     </div>
   );
 }
