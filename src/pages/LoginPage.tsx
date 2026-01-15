@@ -10,16 +10,16 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { signIn, user, loading: authLoading } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect if logged in with profile loaded
   useEffect(() => {
-    if (!authLoading && user) {
-      // User is logged in - redirect to home (ProtectedRoute will handle profile check)
+    if (!authLoading && user && profile) {
+      // User has profile - go to home
       navigate('/home', { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, profile, authLoading, navigate]);
 
   // Show loading while checking auth state
   if (authLoading) {
@@ -43,10 +43,9 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
       setLoading(false);
-    } else {
-      // Auth context will handle redirect based on profile state
-      navigate('/home');
     }
+    // Don't navigate here - let useEffect handle it after auth state updates
+    // This prevents race condition where we navigate before profile loads
   };
 
   return (
