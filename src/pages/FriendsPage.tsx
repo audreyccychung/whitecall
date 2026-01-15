@@ -12,12 +12,15 @@ import type { Friend } from '../types/friend';
 
 export default function FriendsPage() {
   const { user } = useAuth();
-  const { friends, loading, addFriend } = useFriends(user?.id);
+  const { friends, loading, addFriend, refreshFriends } = useFriends(user?.id);
   const { sendHeart } = useHearts(user?.id);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
   const handleSendHeart = async (friendId: string) => {
-    await sendHeart(friendId);
+    const result = await sendHeart(friendId);
+    if (result.success) {
+      await refreshFriends();
+    }
   };
 
   const handleAddFriend = async (username: string) => {

@@ -15,7 +15,7 @@ import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
 export default function HomePage() {
   const { user, profile, signOut } = useAuth();
   const { stats, sendHeart } = useHearts(user?.id);
-  const { friends, loading: friendsLoading } = useFriends(user?.id);
+  const { friends, loading: friendsLoading, refreshFriends } = useFriends(user?.id);
 
   // Load calls data (this syncs to global store)
   useCalls(user?.id);
@@ -29,7 +29,10 @@ export default function HomePage() {
   const isUserOnCall = isCallStatusLoaded && callDates.has(today);
 
   const handleSendHeart = async (friendId: string) => {
-    await sendHeart(friendId);
+    const result = await sendHeart(friendId);
+    if (result.success) {
+      await refreshFriends();
+    }
   };
 
   // Filter friends who are on call (derived from calls table)

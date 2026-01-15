@@ -30,18 +30,23 @@ import { getTodayDate } from '../utils/date';
 
 export function useFriends(userId: string | undefined) {
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Load friends with their active call status
   const loadFriends = async () => {
     if (!userId) {
-      setLoading(false);
+      setInitialLoading(false);
       return;
     }
 
+    // Only show loading spinner on initial load (no data yet)
+    const isInitialLoad = friends.length === 0;
+
     try {
-      setLoading(true);
+      if (isInitialLoad) {
+        setInitialLoading(true);
+      }
       setError(null);
 
       // Get friendships and join with profiles
@@ -119,7 +124,7 @@ export function useFriends(userId: string | undefined) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends');
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -223,7 +228,7 @@ export function useFriends(userId: string | undefined) {
 
   return {
     friends,
-    loading,
+    loading: initialLoading,
     error,
     addFriend,
     removeFriend,

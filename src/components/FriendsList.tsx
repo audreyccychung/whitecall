@@ -35,12 +35,12 @@ export function FriendsList({ friends, onSendHeart, onFriendClick, showOnlyOnCal
       {filteredFriends.map((friend) => (
         <div
           key={friend.id}
-          onClick={() => onFriendClick?.(friend)}
-          className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-soft hover:shadow-soft-lg transition-shadow ${
-            onFriendClick ? 'cursor-pointer' : ''
-          }`}
+          className="flex items-center justify-between p-4 bg-white rounded-xl shadow-soft hover:shadow-soft-lg transition-shadow"
         >
-          <div className="flex items-center gap-3">
+          <div
+            onClick={() => onFriendClick?.(friend)}
+            className={`flex items-center gap-3 ${onFriendClick ? 'cursor-pointer' : ''}`}
+          >
             <AvatarDisplay
               avatarType={friend.avatar_type}
               avatarColor={friend.avatar_color}
@@ -66,10 +66,12 @@ export function FriendsList({ friends, onSendHeart, onFriendClick, showOnlyOnCal
           </div>
 
           {friend.is_on_call && (
-            <HeartButton
-              onClick={() => onSendHeart(friend.id)}
-              alreadySent={!friend.can_send_heart}
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <HeartButton
+                onClick={() => onSendHeart(friend.id)}
+                alreadySent={!friend.can_send_heart}
+              />
+            </div>
           )}
         </div>
       ))}
