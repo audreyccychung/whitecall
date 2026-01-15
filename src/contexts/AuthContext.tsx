@@ -89,14 +89,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // Load profile in background - don't block with loading state
-        // This allows CreateProfilePage to render immediately after signup
-        loadUserData(session.user.id);
+        // On sign in, show loading and wait for profile before rendering
+        // This prevents false redirect to create-profile
+        if (event === 'SIGNED_IN') {
+          setLoading(true);
+          await loadUserData(session.user.id);
+          setLoading(false);
+        } else {
+          // For other events (TOKEN_REFRESHED, etc.), load in background
+          loadUserData(session.user.id);
+        }
       } else {
         setProfile(null);
         setStoreUser(null);
