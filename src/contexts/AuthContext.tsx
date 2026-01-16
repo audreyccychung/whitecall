@@ -6,11 +6,20 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types/database';
 
+// Explicit auth state machine - auth can NEVER get stuck in an indeterminate state
+// - 'initializing': checking session (only on mount, transitions exactly once)
+// - 'signed_out': no user
+// - 'signed_in': user present (profile may or may not exist yet)
+type AuthStatus = 'initializing' | 'signed_out' | 'signed_in';
+
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
-  loading: boolean;           // True during initial auth check
+  // Auth state machine - replaces boolean loading flag
+  authStatus: AuthStatus;
+  // Derived helpers for backwards compatibility
+  loading: boolean;           // True only during 'initializing'
   isLoadingProfile: boolean;  // True while profile is being fetched
   error: string | null;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -37,7 +46,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('initializing');
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,23 +84,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // Get initial session (handles page refresh and email confirmation redirect)
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        // Wait for profile to load before setting loading to false
-        await loadUserData(session.user.id);
-      } else {
-        // No user = no profile to load
+        if (session?.user) {
+          // Wait for profile to load before transitioning state
+          await loadUserData(session.user.id);
+          setAuthStatus('signed_in');
+        } else {
+          // No user = no profile to load
+          setIsLoadingProfile(false);
+          setAuthStatus('signed_out');
+        }
+      } catch {
+        // Network error or Supabase issue - treat as signed out
+        // User will see login page and can retry
         setIsLoadingProfile(false);
+        setAuthStatus('signed_out');
+      } finally {
+        // Mark initial load complete regardless of outcome
+        initialLoadComplete.current = true;
       }
+    };
 
-      // Mark initial load as complete BEFORE setting loading to false
-      // This prevents onAuthStateChange from triggering duplicate loads
-      initialLoadComplete.current = true;
-      setLoading(false);
-    });
+    initializeAuth();
 
     // Listen for auth changes (login, logout, token refresh)
     const {
@@ -105,20 +124,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Skip if initial load already handled this session
           // This prevents duplicate profile loads on email confirmation redirect
           if (!initialLoadComplete.current) {
-            return; // getSession() will handle the profile load
+            return; // initializeAuth() will handle the profile load and state transition
           }
-          // Only show loading for manual sign-ins after initial load
-          setLoading(true);
+          // Manual sign-in after initial load
           await loadUserData(session.user.id);
-          setLoading(false);
+          setAuthStatus('signed_in');
         } else {
           // For other events (TOKEN_REFRESHED, etc.), load in background
+          // Don't change authStatus - user is still signed in
           loadUserData(session.user.id);
         }
       } else {
+        // User signed out
         setProfile(null);
-        setLoading(false);
         setIsLoadingProfile(false);
+        setAuthStatus('signed_out');
       }
     });
 
@@ -165,12 +185,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Derive loading from authStatus for backwards compatibility
+  const loading = authStatus === 'initializing';
+
   return (
     <AuthContext.Provider
       value={{
         user,
         profile,
         session,
+        authStatus,
         loading,
         isLoadingProfile,
         error,
