@@ -135,6 +135,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // DEBUG: Log all auth events to identify what fires on tab switch
+      console.log('[AuthContext] onAuthStateChange:', {
+        event,
+        hasSession: !!session,
+        userId: session?.user?.id?.slice(0, 8),
+        initialLoadComplete: initialLoadComplete.current,
+        currentProfileStatus: profileStatus,
+      });
+
       setSession(session);
       setUser(session?.user ?? null);
 
