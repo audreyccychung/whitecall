@@ -1,5 +1,5 @@
 // Authentication context with Supabase
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../lib/store';
@@ -40,6 +40,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const { setUser: setStoreUser, setIsLoadingUser } = useStore();
 
+  // Track whether initial session check is complete to avoid duplicate loads
+  const initialLoadComplete = useRef(false);
+
   // Load user profile
   const loadUserData = async (userId: string) => {
     try {
@@ -70,7 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session (handles page refresh and email confirmation redirect)
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -82,11 +85,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoadingUser(false);
       }
 
-      // Only set loading to false AFTER profile is loaded
+      // Mark initial load as complete BEFORE setting loading to false
+      // This prevents onAuthStateChange from triggering duplicate loads
+      initialLoadComplete.current = true;
       setLoading(false);
     });
 
-    // Listen for auth changes
+    // Listen for auth changes (login, logout, token refresh)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -94,9 +99,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        // On sign in, show loading and wait for profile before rendering
-        // This prevents false redirect to create-profile
         if (event === 'SIGNED_IN') {
+          // Skip if initial load already handled this session
+          // This prevents duplicate profile loads on email confirmation redirect
+          if (!initialLoadComplete.current) {
+            return; // getSession() will handle the profile load
+          }
+          // Only show loading for manual sign-ins after initial load
           setLoading(true);
           await loadUserData(session.user.id);
           setLoading(false);
