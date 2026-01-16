@@ -9,7 +9,8 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
-  loading: boolean;
+  loading: boolean;           // True during initial auth check
+  isLoadingProfile: boolean;  // True while profile is being fetched
   error: string | null;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -36,6 +37,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { setUser: setStoreUser, setIsLoadingUser } = useStore();
@@ -45,6 +47,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Load user profile
   const loadUserData = async (userId: string) => {
+    setIsLoadingProfile(true);
     try {
       setError(null);
       const { data: profileData, error: profileError } = await supabase
@@ -68,6 +71,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const message = err instanceof Error ? err.message : 'Failed to load profile';
       setError(message);
     } finally {
+      setIsLoadingProfile(false);
       setIsLoadingUser(false);
     }
   };
@@ -82,6 +86,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Wait for profile to load before setting loading to false
         await loadUserData(session.user.id);
       } else {
+        // No user = no profile to load
+        setIsLoadingProfile(false);
         setIsLoadingUser(false);
       }
 
@@ -117,6 +123,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setProfile(null);
         setStoreUser(null);
         setLoading(false);
+        setIsLoadingProfile(false);
         setIsLoadingUser(false);
       }
     });
@@ -172,6 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         profile,
         session,
         loading,
+        isLoadingProfile,
         error,
         signUp,
         signIn,

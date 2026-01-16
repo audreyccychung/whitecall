@@ -15,11 +15,11 @@ export default function CreateProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { user, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading, isLoadingProfile, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
-  // If still loading auth, show loading state
-  if (authLoading) {
+  // Wait for both auth and profile loading to complete
+  if (authLoading || isLoadingProfile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center">
         <div className="text-center">
@@ -31,8 +31,14 @@ export default function CreateProfilePage() {
   }
 
   // If no user after loading, redirect to login
-  if (!authLoading && !user) {
+  if (!user) {
     navigate('/login');
+    return null;
+  }
+
+  // If user already has a profile, redirect to home
+  if (profile) {
+    navigate('/home');
     return null;
   }
 

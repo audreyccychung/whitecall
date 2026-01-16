@@ -1,4 +1,6 @@
 // Login page
+// NOTE: This page only checks authentication status.
+// Profile/onboarding checks are handled by ProtectedRoute (single source of truth).
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,16 +12,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { signIn, user, profile, loading: authLoading } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if logged in with profile loaded
+  // Redirect to /home if authenticated (ProtectedRoute will handle profile check)
   useEffect(() => {
-    if (!authLoading && user && profile) {
-      // User has profile - go to home
+    if (!authLoading && user) {
       navigate('/home', { replace: true });
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, authLoading, navigate]);
 
   // Show loading while checking auth state
   if (authLoading) {
