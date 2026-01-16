@@ -111,38 +111,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Get initial session (handles page refresh and email confirmation redirect)
     const initializeAuth = async () => {
-      console.log('[AuthContext] initializeAuth: starting');
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('[AuthContext] initializeAuth: got session', {
-          hasSession: !!session,
-          userId: session?.user?.id?.slice(0, 8),
-        });
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           // Wait for profile to load before transitioning state
-          console.log('[AuthContext] initializeAuth: loading profile...');
           await loadUserData(session.user.id);
-          console.log('[AuthContext] initializeAuth: profile loaded, setting signed_in');
           setAuthStatus('signed_in');
         } else {
           // No user = no profile to load, set profile status to idle
-          console.log('[AuthContext] initializeAuth: no session, setting signed_out');
           setProfileStatus('idle');
           setAuthStatus('signed_out');
         }
-      } catch (err) {
+      } catch {
         // Network error or Supabase issue - treat as signed out
         // User will see login page and can retry
-        console.log('[AuthContext] initializeAuth: error', err);
         setProfileStatus('idle');
         setAuthStatus('signed_out');
       } finally {
         // Mark initial load complete regardless of outcome
         initialLoadComplete.current = true;
-        console.log('[AuthContext] initializeAuth: complete');
       }
     };
 
@@ -152,16 +142,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // DEBUG: Log all auth events to identify what fires on tab switch
-      console.log('[AuthContext] onAuthStateChange:', {
-        event,
-        hasSession: !!session,
-        userId: session?.user?.id?.slice(0, 8),
-        initialLoadComplete: initialLoadComplete.current,
-        currentAuthStatus: authStatusRef.current,
-        currentProfileStatus: profileStatusRef.current,
-      });
-
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -176,7 +156,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Skip if we're already signed in with a loaded profile
           // This handles cross-tab login broadcasts - other tabs don't need to re-authenticate
           if (authStatusRef.current === 'signed_in' && profileStatusRef.current === 'exists') {
-            console.log('[AuthContext] Ignoring cross-tab SIGNED_IN - already authenticated');
             return;
           }
 
