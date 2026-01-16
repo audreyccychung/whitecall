@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 
 // We need to test the cache behavior, so we'll test the logic directly
 // rather than mocking everything away
