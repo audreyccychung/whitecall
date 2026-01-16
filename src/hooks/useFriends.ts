@@ -31,32 +31,41 @@ import { getTodayDate } from '../utils/date';
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
 
+// Module-level cache to persist across component remounts
+// This allows instant navigation when data is fresh
+const friendsCache = {
+  data: [] as Friend[],
+  lastFetchedAt: 0,
+  userId: null as string | null,
+};
+
 export function useFriends(userId: string | undefined) {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
+  // Initialize from cache if same user and data is fresh
+  const hasFreshCache =
+    userId &&
+    friendsCache.userId === userId &&
+    Date.now() - friendsCache.lastFetchedAt < STALE_TIME_MS;
+
+  const [friends, setFriends] = useState<Friend[]>(hasFreshCache ? friendsCache.data : []);
+  const [isInitialLoad, setIsInitialLoad] = useState(!hasFreshCache); // Skip loading if cache hit
   const [error, setError] = useState<string | null>(null);
-  const lastFetchedAt = useRef<number>(0);
+  const lastFetchedAt = useRef<number>(hasFreshCache ? friendsCache.lastFetchedAt : 0);
 
   // Load friends with their active call status
   const loadFriends = async (options?: { force?: boolean }) => {
     const force = options?.force ?? false;
 
-    // Skip if data is fresh (unless forced)
+    // Skip if data is fresh (unless forced) - don't touch loading state
     if (!force && Date.now() - lastFetchedAt.current < STALE_TIME_MS) {
       return;
     }
+
     if (!userId) {
-      setInitialLoading(false);
+      setIsInitialLoad(false);
       return;
     }
 
-    // Only show loading spinner on initial load (no data yet)
-    const isInitialLoad = friends.length === 0;
-
     try {
-      if (isInitialLoad) {
-        setInitialLoading(true);
-      }
       setError(null);
 
       // Get friendships and join with profiles
@@ -135,10 +144,14 @@ export function useFriends(userId: string | undefined) {
 
       setFriends(friendsList);
       lastFetchedAt.current = Date.now();
+      // Update module-level cache for instant remounts
+      friendsCache.data = friendsList;
+      friendsCache.lastFetchedAt = lastFetchedAt.current;
+      friendsCache.userId = userId;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends');
     } finally {
-      setInitialLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -243,15 +256,20 @@ export function useFriends(userId: string | undefined) {
   };
 
   // Update a single friend's can_send_heart status locally (for optimistic UI)
+  // Also updates cache to keep remounts consistent
   const updateFriendHeartStatus = (friendId: string, canSendHeart: boolean) => {
-    setFriends((prev) =>
-      prev.map((f) => (f.id === friendId ? { ...f, can_send_heart: canSendHeart } : f))
-    );
+    setFriends((prev) => {
+      const updated = prev.map((f) =>
+        f.id === friendId ? { ...f, can_send_heart: canSendHeart } : f
+      );
+      friendsCache.data = updated;
+      return updated;
+    });
   };
 
   return {
     friends,
-    loading: initialLoading,
+    loading: isInitialLoad, // Only true until first successful load
     error,
     addFriend,
     removeFriend,

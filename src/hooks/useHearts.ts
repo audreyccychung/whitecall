@@ -19,34 +19,43 @@ const SEND_HEART_MESSAGES: Record<SendHeartCode, string> = {
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
 
+// Module-level cache to persist across component remounts
+const heartsCache = {
+  stats: { total_received: 0, total_sent: 0, received_today: 0, sent_today: 0 } as HeartStats,
+  lastFetchedAt: 0,
+  userId: null as string | null,
+};
+
 export function useHearts(userId: string | undefined) {
+  // Initialize from cache if same user and data is fresh
+  const hasFreshCache =
+    userId &&
+    heartsCache.userId === userId &&
+    Date.now() - heartsCache.lastFetchedAt < STALE_TIME_MS;
+
   const [heartsReceived, setHeartsReceived] = useState<HeartWithSender[]>([]);
   const [heartsSent, setHeartsSent] = useState<HeartWithSender[]>([]);
-  const [stats, setStats] = useState<HeartStats>({
-    total_received: 0,
-    total_sent: 0,
-    received_today: 0,
-    sent_today: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const lastFetchedAt = useRef<number>(0);
+  const [stats, setStats] = useState<HeartStats>(
+    hasFreshCache ? heartsCache.stats : { total_received: 0, total_sent: 0, received_today: 0, sent_today: 0 }
+  );
+  const [isInitialLoad, setIsInitialLoad] = useState(!hasFreshCache);
+  const lastFetchedAt = useRef<number>(hasFreshCache ? heartsCache.lastFetchedAt : 0);
 
   // Load hearts
   const loadHearts = async (options?: { force?: boolean }) => {
     const force = options?.force ?? false;
 
-    // Skip if data is fresh (unless forced)
+    // Skip if data is fresh (unless forced) - don't touch loading state
     if (!force && Date.now() - lastFetchedAt.current < STALE_TIME_MS) {
       return;
     }
 
     if (!userId) {
-      setLoading(false);
+      setIsInitialLoad(false);
       return;
     }
 
     try {
-      setLoading(true);
       const today = getTodayDate();
 
       // Load hearts received
@@ -103,17 +112,22 @@ export function useHearts(userId: string | undefined) {
       const receivedToday = received.filter((h) => h.shift_date === today).length;
       const sentToday = sent.filter((h) => h.shift_date === today).length;
 
-      setStats({
+      const newStats = {
         total_received: received.length,
         total_sent: sent.length,
         received_today: receivedToday,
         sent_today: sentToday,
-      });
+      };
+      setStats(newStats);
       lastFetchedAt.current = Date.now();
+      // Update module-level cache for instant remounts
+      heartsCache.stats = newStats;
+      heartsCache.lastFetchedAt = lastFetchedAt.current;
+      heartsCache.userId = userId;
     } catch {
       // Silent fail - stats will show 0
     } finally {
-      setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -133,13 +147,21 @@ export function useHearts(userId: string | undefined) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [userId]);
 
-  // Optimistically update sent_today count
+  // Optimistically update sent_today count (also update cache for consistency)
   const incrementSentToday = () => {
-    setStats((prev) => ({ ...prev, sent_today: prev.sent_today + 1 }));
+    setStats((prev) => {
+      const newStats = { ...prev, sent_today: prev.sent_today + 1 };
+      heartsCache.stats = newStats;
+      return newStats;
+    });
   };
 
   const decrementSentToday = () => {
-    setStats((prev) => ({ ...prev, sent_today: Math.max(0, prev.sent_today - 1) }));
+    setStats((prev) => {
+      const newStats = { ...prev, sent_today: Math.max(0, prev.sent_today - 1) };
+      heartsCache.stats = newStats;
+      return newStats;
+    });
   };
 
   // Send heart to friend - uses optimistic UI pattern
@@ -197,7 +219,7 @@ export function useHearts(userId: string | undefined) {
     heartsReceived,
     heartsSent,
     stats,
-    loading,
+    loading: isInitialLoad, // Only true until first successful load
     sendHeart,
     refreshHearts: loadHearts,
   };
