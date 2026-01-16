@@ -12,15 +12,21 @@ import type { Friend } from '../types/friend';
 
 export default function FriendsPage() {
   const { user } = useAuth();
-  const { friends, loading, addFriend, refreshFriends } = useFriends(user?.id);
+  const { friends, loading, addFriend, updateFriendHeartStatus } = useFriends(user?.id);
   const { sendHeart } = useHearts(user?.id);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
   const handleSendHeart = async (friendId: string) => {
+    // Optimistic update: immediately show "Sent" state
+    updateFriendHeartStatus(friendId, false);
+
     const result = await sendHeart(friendId);
-    if (result.success) {
-      await refreshFriends();
+
+    if (!result.success) {
+      // Rollback on failure
+      updateFriendHeartStatus(friendId, true);
     }
+    // No refreshFriends() - optimistic update is sufficient
   };
 
   const handleAddFriend = async (username: string) => {

@@ -1,5 +1,5 @@
-// Heart management hook - refetch on focus/action (no realtime)
-import { useState, useEffect } from 'react';
+// Heart management hook - refetch on visibility change (no realtime)
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type { HeartWithSender, SendHeartResult, SendHeartCode, HeartStats } from '../types/heart';
 import { getTodayDate } from '../utils/date';
@@ -16,6 +16,9 @@ const SEND_HEART_MESSAGES: Record<SendHeartCode, string> = {
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 
+// Stale time: don't refetch if data is less than 30 seconds old
+const STALE_TIME_MS = 30_000;
+
 export function useHearts(userId: string | undefined) {
   const [heartsReceived, setHeartsReceived] = useState<HeartWithSender[]>([]);
   const [heartsSent, setHeartsSent] = useState<HeartWithSender[]>([]);
@@ -26,9 +29,17 @@ export function useHearts(userId: string | undefined) {
     sent_today: 0,
   });
   const [loading, setLoading] = useState(true);
+  const lastFetchedAt = useRef<number>(0);
 
   // Load hearts
-  const loadHearts = async () => {
+  const loadHearts = async (options?: { force?: boolean }) => {
+    const force = options?.force ?? false;
+
+    // Skip if data is fresh (unless forced)
+    if (!force && Date.now() - lastFetchedAt.current < STALE_TIME_MS) {
+      return;
+    }
+
     if (!userId) {
       setLoading(false);
       return;
@@ -98,6 +109,7 @@ export function useHearts(userId: string | undefined) {
         received_today: receivedToday,
         sent_today: sentToday,
       });
+      lastFetchedAt.current = Date.now();
     } catch {
       // Silent fail - stats will show 0
     } finally {
@@ -106,32 +118,47 @@ export function useHearts(userId: string | undefined) {
   };
 
   useEffect(() => {
-    loadHearts();
+    loadHearts({ force: true }); // Force on mount/userId change
   }, [userId]);
 
-  // Refetch on window focus (instead of realtime subscriptions)
+  // Refetch on visibility change (more reliable than focus for mobile/PWA)
   useEffect(() => {
-    const handleFocus = () => {
-      loadHearts();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadHearts(); // Stale-time check happens inside
+      }
     };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [userId]);
 
-  // Send heart to friend - calls DB function, no app-level validation
+  // Optimistically update sent_today count
+  const incrementSentToday = () => {
+    setStats((prev) => ({ ...prev, sent_today: prev.sent_today + 1 }));
+  };
+
+  const decrementSentToday = () => {
+    setStats((prev) => ({ ...prev, sent_today: Math.max(0, prev.sent_today - 1) }));
+  };
+
+  // Send heart to friend - uses optimistic UI pattern
   const sendHeart = async (
     recipientId: string,
     message: string = 'wishes you a white call!'
   ): Promise<SendHeartResult> => {
+    // Optimistic update: increment sent count immediately
+    incrementSentToday();
+
     // Call the single source of truth: send_heart DB function
     const { data, error } = await supabase.rpc('send_heart', {
       p_recipient_id: recipientId,
       p_message: message,
     });
 
-    // Network or RPC error
+    // Network or RPC error - rollback
     if (error) {
+      decrementSentToday();
       return {
         success: false,
         code: 'UNKNOWN_ERROR',
@@ -157,11 +184,12 @@ export function useHearts(userId: string | undefined) {
     const errorMessage = SEND_HEART_MESSAGES[code];
 
     if (code === 'SUCCESS') {
-      // Refetch hearts to update counts (no state guessing)
-      await loadHearts();
+      // Success - optimistic update was correct, no refetch needed
       return { success: true, code, heart_id: result.heart_id };
     }
 
+    // Failure - rollback optimistic update
+    decrementSentToday();
     return { success: false, code, error: errorMessage };
   };
 

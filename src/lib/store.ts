@@ -1,19 +1,12 @@
 // Global state management with Zustand
+// NOTE: Profile/user state is managed by AuthContext (single source of truth).
+// This store is only for cross-component data that needs to sync without prop drilling.
 import { create } from 'zustand';
-import type { Profile } from '../types/database';
 
 interface AppState {
-  // User state
-  user: Profile | null;
-  isLoadingUser: boolean;
-
-  // Call status - global so it updates everywhere
+  // Call status - global so it updates everywhere (e.g., HomePage reads, CallsPage writes)
   callDates: Set<string>; // Set of YYYY-MM-DD strings
   isCallStatusLoaded: boolean;
-
-  // Actions
-  setUser: (user: Profile | null) => void;
-  setIsLoadingUser: (loading: boolean) => void;
 
   // Call status actions
   setCallDates: (dates: string[]) => void;
@@ -23,14 +16,8 @@ interface AppState {
 
 export const useStore = create<AppState>((set, get) => ({
   // Initial state
-  user: null,
-  isLoadingUser: true,
   callDates: new Set(),
   isCallStatusLoaded: false,
-
-  // Actions
-  setUser: (user) => set({ user }),
-  setIsLoadingUser: (loading) => set({ isLoadingUser: loading }),
 
   // Call status actions
   setCallDates: (dates) => {

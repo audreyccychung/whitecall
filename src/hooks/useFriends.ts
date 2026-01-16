@@ -1,5 +1,5 @@
 // Friend management hook
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import type {
   Friend,
@@ -28,13 +28,23 @@ const REMOVE_FRIEND_MESSAGES: Record<RemoveFriendCode, string> = {
 };
 import { getTodayDate } from '../utils/date';
 
+// Stale time: don't refetch if data is less than 30 seconds old
+const STALE_TIME_MS = 30_000;
+
 export function useFriends(userId: string | undefined) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchedAt = useRef<number>(0);
 
   // Load friends with their active call status
-  const loadFriends = async () => {
+  const loadFriends = async (options?: { force?: boolean }) => {
+    const force = options?.force ?? false;
+
+    // Skip if data is fresh (unless forced)
+    if (!force && Date.now() - lastFetchedAt.current < STALE_TIME_MS) {
+      return;
+    }
     if (!userId) {
       setInitialLoading(false);
       return;
@@ -63,49 +73,52 @@ export function useFriends(userId: string | undefined) {
       }
 
       const friendIds = friendshipsData.map((f) => f.friend_id);
-
-      // Get friend profiles
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color')
-        .in('id', friendIds);
-
-      if (profilesError) throw profilesError;
-
-      // Get friends who have a call today (date-based, no time)
       const today = getTodayDate();
-      const { data: activeCalls } = await supabase
-        .from('calls')
-        .select('user_id')
-        .in('user_id', friendIds)
-        .eq('call_date', today);
 
-      const friendsOnCall = new Set(activeCalls?.map((c) => c.user_id) || []);
+      // Fetch all supplementary data in parallel (profiles, calls, hearts)
+      const [profilesResult, activeCallsResult, upcomingCallsResult, heartsResult] =
+        await Promise.all([
+          // Get friend profiles
+          supabase
+            .from('profiles')
+            .select('id, username, display_name, avatar_type, avatar_color')
+            .in('id', friendIds),
+          // Get friends who have a call today
+          supabase
+            .from('calls')
+            .select('user_id')
+            .in('user_id', friendIds)
+            .eq('call_date', today),
+          // Get each friend's next call date (today or future)
+          supabase
+            .from('calls')
+            .select('user_id, call_date')
+            .in('user_id', friendIds)
+            .gte('call_date', today)
+            .order('call_date', { ascending: true }),
+          // Get hearts sent today to each friend
+          supabase
+            .from('hearts')
+            .select('recipient_id')
+            .eq('sender_id', userId)
+            .eq('shift_date', today),
+        ]);
 
-      // Get each friend's next call date (today or future, within 7 days)
-      const { data: upcomingCalls } = await supabase
-        .from('calls')
-        .select('user_id, call_date')
-        .in('user_id', friendIds)
-        .gte('call_date', today)
-        .order('call_date', { ascending: true });
+      // Check for errors (only profiles is critical)
+      if (profilesResult.error) throw profilesResult.error;
+
+      const profilesData = profilesResult.data;
+      const friendsOnCall = new Set(activeCallsResult.data?.map((c) => c.user_id) || []);
 
       // Map friend ID to their next call date (first occurrence)
       const nextCallByFriend = new Map<string, string>();
-      for (const call of upcomingCalls || []) {
+      for (const call of upcomingCallsResult.data || []) {
         if (!nextCallByFriend.has(call.user_id)) {
           nextCallByFriend.set(call.user_id, call.call_date);
         }
       }
 
-      // Get hearts sent today to each friend
-      const { data: heartsData } = await supabase
-        .from('hearts')
-        .select('recipient_id')
-        .eq('sender_id', userId)
-        .eq('shift_date', today);
-
-      const heartsSentTo = new Set(heartsData?.map((h) => h.recipient_id) || []);
+      const heartsSentTo = new Set(heartsResult.data?.map((h) => h.recipient_id) || []);
 
       // Combine data
       const friendsList: Friend[] =
@@ -121,6 +134,7 @@ export function useFriends(userId: string | undefined) {
         }) || [];
 
       setFriends(friendsList);
+      lastFetchedAt.current = Date.now();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends');
     } finally {
@@ -129,17 +143,19 @@ export function useFriends(userId: string | undefined) {
   };
 
   useEffect(() => {
-    loadFriends();
+    loadFriends({ force: true }); // Force on mount/userId change
   }, [userId]);
 
-  // Refetch on window focus
+  // Refetch on visibility change (more reliable than focus for mobile/PWA)
   useEffect(() => {
-    const handleFocus = () => {
-      loadFriends();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadFriends(); // Stale-time check happens inside
+      }
     };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [userId]);
 
   // Add friend by username - calls DB function, no app-level validation
@@ -177,7 +193,7 @@ export function useFriends(userId: string | undefined) {
 
     if (code === 'SUCCESS') {
       // Refetch friends list to get real data (is_on_call, can_send_heart)
-      await loadFriends();
+      await loadFriends({ force: true });
       return { success: true, code };
     }
 
@@ -219,11 +235,18 @@ export function useFriends(userId: string | undefined) {
 
     if (code === 'SUCCESS') {
       // Refetch friends list to confirm deletion (no state guessing)
-      await loadFriends();
+      await loadFriends({ force: true });
       return { success: true, code };
     }
 
     return { success: false, code, error: message };
+  };
+
+  // Update a single friend's can_send_heart status locally (for optimistic UI)
+  const updateFriendHeartStatus = (friendId: string, canSendHeart: boolean) => {
+    setFriends((prev) =>
+      prev.map((f) => (f.id === friendId ? { ...f, can_send_heart: canSendHeart } : f))
+    );
   };
 
   return {
@@ -233,5 +256,6 @@ export function useFriends(userId: string | undefined) {
     addFriend,
     removeFriend,
     refreshFriends: loadFriends,
+    updateFriendHeartStatus,
   };
 }

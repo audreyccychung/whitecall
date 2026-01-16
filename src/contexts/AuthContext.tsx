@@ -1,8 +1,9 @@
 // Authentication context with Supabase
+// NOTE: This is the SINGLE SOURCE OF TRUTH for user/profile state.
+// Do not duplicate profile state elsewhere (e.g., Zustand store).
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { useStore } from '../lib/store';
 import type { Profile } from '../types/database';
 
 interface AuthContextType {
@@ -40,8 +41,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { setUser: setStoreUser, setIsLoadingUser } = useStore();
-
   // Track whether initial session check is complete to avoid duplicate loads
   const initialLoadComplete = useRef(false);
 
@@ -66,13 +65,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       setProfile(profileData);
-      setStoreUser(profileData);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load profile';
       setError(message);
     } finally {
       setIsLoadingProfile(false);
-      setIsLoadingUser(false);
     }
   };
 
@@ -88,7 +85,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         // No user = no profile to load
         setIsLoadingProfile(false);
-        setIsLoadingUser(false);
       }
 
       // Mark initial load as complete BEFORE setting loading to false
@@ -121,10 +117,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } else {
         setProfile(null);
-        setStoreUser(null);
         setLoading(false);
         setIsLoadingProfile(false);
-        setIsLoadingUser(false);
       }
     });
 
@@ -163,7 +157,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
-    setStoreUser(null);
   };
 
   const refreshProfile = async () => {
