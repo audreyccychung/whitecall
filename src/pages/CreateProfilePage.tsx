@@ -15,11 +15,11 @@ export default function CreateProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { user, profile, loading: authLoading, isLoadingProfile, refreshProfile } = useAuth();
+  const { user, profile, authStatus, profileStatus, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
-  // Wait for both auth and profile loading to complete
-  if (authLoading || isLoadingProfile) {
+  // Wait for auth and profile status to resolve
+  if (authStatus === 'initializing' || profileStatus === 'idle' || profileStatus === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center">
         <div className="text-center">
@@ -31,13 +31,13 @@ export default function CreateProfilePage() {
   }
 
   // If no user after loading, redirect to login
-  if (!user) {
+  if (authStatus === 'signed_out' || !user) {
     navigate('/login');
     return null;
   }
 
   // If user already has a profile, redirect to home
-  if (profile) {
+  if (profileStatus === 'exists' || profile) {
     navigate('/home');
     return null;
   }

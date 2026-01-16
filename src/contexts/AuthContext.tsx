@@ -12,15 +12,24 @@ import type { Profile } from '../types/database';
 // - 'signed_in': user present (profile may or may not exist yet)
 type AuthStatus = 'initializing' | 'signed_out' | 'signed_in';
 
+// Explicit profile state machine - profile can NEVER be ambiguous
+// - 'idle': no user signed in, profile not applicable
+// - 'loading': fetching profile from database
+// - 'exists': profile confirmed to exist
+// - 'missing': profile confirmed to NOT exist (new user needs onboarding)
+type ProfileStatus = 'idle' | 'loading' | 'exists' | 'missing';
+
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   session: Session | null;
   // Auth state machine - replaces boolean loading flag
   authStatus: AuthStatus;
+  // Profile state machine - explicit status instead of boolean
+  profileStatus: ProfileStatus;
   // Derived helpers for backwards compatibility
   loading: boolean;           // True only during 'initializing'
-  isLoadingProfile: boolean;  // True while profile is being fetched
+  isLoadingProfile: boolean;  // True only during 'loading' profile status
   error: string | null;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -47,15 +56,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [authStatus, setAuthStatus] = useState<AuthStatus>('initializing');
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus>('idle');
   const [error, setError] = useState<string | null>(null);
 
   // Track whether initial session check is complete to avoid duplicate loads
   const initialLoadComplete = useRef(false);
 
-  // Load user profile
-  const loadUserData = async (userId: string) => {
-    setIsLoadingProfile(true);
+  // Load user profile - returns whether profile exists
+  const loadUserData = async (userId: string): Promise<boolean> => {
+    setProfileStatus('loading');
     try {
       setError(null);
       const { data: profileData, error: profileError } = await supabase
@@ -68,17 +77,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // PGRST116 = no rows found, which is expected for new users who haven't created a profile yet
         if (profileError.code === 'PGRST116') {
           setProfile(null);
-          return;
+          setProfileStatus('missing');
+          return false;
         }
         throw profileError;
       }
 
       setProfile(profileData);
+      setProfileStatus('exists');
+      return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load profile';
       setError(message);
-    } finally {
-      setIsLoadingProfile(false);
+      // On error, treat as missing to avoid infinite loading
+      setProfileStatus('missing');
+      return false;
     }
   };
 
@@ -95,14 +108,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await loadUserData(session.user.id);
           setAuthStatus('signed_in');
         } else {
-          // No user = no profile to load
-          setIsLoadingProfile(false);
+          // No user = no profile to load, set profile status to idle
+          setProfileStatus('idle');
           setAuthStatus('signed_out');
         }
       } catch {
         // Network error or Supabase issue - treat as signed out
         // User will see login page and can retry
-        setIsLoadingProfile(false);
+        setProfileStatus('idle');
         setAuthStatus('signed_out');
       } finally {
         // Mark initial load complete regardless of outcome
@@ -127,8 +140,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return; // initializeAuth() will handle the profile load and state transition
           }
           // Manual sign-in after initial load
-          await loadUserData(session.user.id);
+          // CRITICAL: Set profileStatus to 'loading' BEFORE any async work
+          // This prevents race condition where ProtectedRoute sees user but not loading
+          setProfileStatus('loading');
           setAuthStatus('signed_in');
+          await loadUserData(session.user.id);
         } else {
           // For other events (TOKEN_REFRESHED, etc.), load in background
           // Don't change authStatus - user is still signed in
@@ -137,7 +153,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         // User signed out
         setProfile(null);
-        setIsLoadingProfile(false);
+        setProfileStatus('idle');
         setAuthStatus('signed_out');
       }
     });
@@ -185,8 +201,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Derive loading from authStatus for backwards compatibility
+  // Derive loading flags for backwards compatibility
   const loading = authStatus === 'initializing';
+  const isLoadingProfile = profileStatus === 'loading';
 
   return (
     <AuthContext.Provider
@@ -195,6 +212,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         profile,
         session,
         authStatus,
+        profileStatus,
         loading,
         isLoadingProfile,
         error,

@@ -9,11 +9,10 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, profile, loading, isLoadingProfile } = useAuth();
+  const { user, profile, authStatus, profileStatus } = useAuth();
 
-  // Wait for both auth AND profile loading to complete before making routing decisions
-  // This prevents premature redirects to /create-profile while profile is still loading
-  if (loading || isLoadingProfile) {
+  // Wait for auth to resolve
+  if (authStatus === 'initializing') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white-call-200">
         <div className="text-center">
@@ -24,14 +23,30 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!user) {
+  // Not signed in - redirect to login
+  if (authStatus === 'signed_out' || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // User is logged in but confirmed to have no profile - send to profile creation
-  if (!profile) {
+  // Signed in but profile status not yet resolved - wait
+  // This is CRITICAL: we must wait until profileStatus is 'exists' or 'missing'
+  // to avoid premature redirects to /create-profile
+  if (profileStatus === 'idle' || profileStatus === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white-call-200">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Profile confirmed to NOT exist - send to profile creation
+  if (profileStatus === 'missing' || !profile) {
     return <Navigate to="/create-profile" replace />;
   }
 
+  // profileStatus === 'exists' && profile !== null
   return <>{children}</>;
 }
