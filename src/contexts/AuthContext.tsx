@@ -63,8 +63,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const initialLoadComplete = useRef(false);
 
   // Load user profile - returns whether profile exists
-  const loadUserData = async (userId: string): Promise<boolean> => {
-    setProfileStatus('loading');
+  // Options:
+  //   showLoading: true (default) - sets profileStatus to 'loading' (shows spinner)
+  //   showLoading: false - silent background refresh (no spinner)
+  const loadUserData = async (userId: string, options?: { showLoading?: boolean }): Promise<boolean> => {
+    const showLoading = options?.showLoading ?? true;
+    if (showLoading) {
+      setProfileStatus('loading');
+    }
     try {
       setError(null);
       const { data: profileData, error: profileError } = await supabase
@@ -146,9 +152,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setAuthStatus('signed_in');
           await loadUserData(session.user.id);
         } else {
-          // For other events (TOKEN_REFRESHED, etc.), load in background
-          // Don't change authStatus - user is still signed in
-          loadUserData(session.user.id);
+          // For other events (TOKEN_REFRESHED, etc.), load in background silently
+          // Don't change authStatus or show loading spinner - user is still signed in
+          loadUserData(session.user.id, { showLoading: false });
         }
       } else {
         // User signed out
