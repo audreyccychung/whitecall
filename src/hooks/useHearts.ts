@@ -27,19 +27,22 @@ const heartsCache = {
 };
 
 export function useHearts(userId: string | undefined) {
-  // Initialize from cache if same user and data is fresh
-  const hasFreshCache =
+  // Initialize from cache if same user (regardless of staleness for initial render)
+  // This prevents loading spinner on remounts - we show cached data immediately
+  // and refresh in background if stale
+  const hasCachedData =
     userId &&
     heartsCache.userId === userId &&
-    Date.now() - heartsCache.lastFetchedAt < STALE_TIME_MS;
+    heartsCache.lastFetchedAt > 0; // Any cached data exists
 
   const [heartsReceived, setHeartsReceived] = useState<HeartWithSender[]>([]);
   const [heartsSent, setHeartsSent] = useState<HeartWithSender[]>([]);
   const [stats, setStats] = useState<HeartStats>(
-    hasFreshCache ? heartsCache.stats : { total_received: 0, total_sent: 0, received_today: 0, sent_today: 0 }
+    hasCachedData ? heartsCache.stats : { total_received: 0, total_sent: 0, received_today: 0, sent_today: 0 }
   );
-  const [isInitialLoad, setIsInitialLoad] = useState(!hasFreshCache);
-  const lastFetchedAt = useRef<number>(hasFreshCache ? heartsCache.lastFetchedAt : 0);
+  // Only show loading spinner if we have NO cached data at all
+  const [isInitialLoad, setIsInitialLoad] = useState(!hasCachedData);
+  const lastFetchedAt = useRef<number>(hasCachedData ? heartsCache.lastFetchedAt : 0);
 
   // Load hearts
   const loadHearts = async (options?: { force?: boolean }) => {
@@ -131,8 +134,20 @@ export function useHearts(userId: string | undefined) {
     }
   };
 
+  // Track previous userId to detect actual user changes vs remounts
+  const prevUserIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    loadHearts({ force: true }); // Force on mount/userId change
+    const isUserChange = prevUserIdRef.current !== userId;
+    prevUserIdRef.current = userId;
+
+    // Force refetch only on actual userId change (login/logout)
+    // On remount with same user, respect stale-time to preserve optimistic updates
+    if (isUserChange) {
+      loadHearts({ force: true });
+    } else {
+      loadHearts(); // Respects stale-time check
+    }
   }, [userId]);
 
   // Refetch on visibility change (more reliable than focus for mobile/PWA)

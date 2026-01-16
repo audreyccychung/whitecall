@@ -40,16 +40,19 @@ const friendsCache = {
 };
 
 export function useFriends(userId: string | undefined) {
-  // Initialize from cache if same user and data is fresh
-  const hasFreshCache =
+  // Initialize from cache if same user (regardless of staleness for initial render)
+  // This prevents loading spinner on remounts - we show cached data immediately
+  // and refresh in background if stale
+  const hasCachedData =
     userId &&
     friendsCache.userId === userId &&
-    Date.now() - friendsCache.lastFetchedAt < STALE_TIME_MS;
+    friendsCache.data.length > 0;
 
-  const [friends, setFriends] = useState<Friend[]>(hasFreshCache ? friendsCache.data : []);
-  const [isInitialLoad, setIsInitialLoad] = useState(!hasFreshCache); // Skip loading if cache hit
+  const [friends, setFriends] = useState<Friend[]>(hasCachedData ? friendsCache.data : []);
+  // Only show loading spinner if we have NO cached data at all
+  const [isInitialLoad, setIsInitialLoad] = useState(!hasCachedData);
   const [error, setError] = useState<string | null>(null);
-  const lastFetchedAt = useRef<number>(hasFreshCache ? friendsCache.lastFetchedAt : 0);
+  const lastFetchedAt = useRef<number>(hasCachedData ? friendsCache.lastFetchedAt : 0);
 
   // Load friends with their active call status
   const loadFriends = async (options?: { force?: boolean }) => {
@@ -78,6 +81,10 @@ export function useFriends(userId: string | undefined) {
 
       if (!friendshipsData || friendshipsData.length === 0) {
         setFriends([]);
+        lastFetchedAt.current = Date.now();
+        friendsCache.data = [];
+        friendsCache.lastFetchedAt = lastFetchedAt.current;
+        friendsCache.userId = userId;
         return;
       }
 
@@ -155,8 +162,20 @@ export function useFriends(userId: string | undefined) {
     }
   };
 
+  // Track previous userId to detect actual user changes vs remounts
+  const prevUserIdRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
-    loadFriends({ force: true }); // Force on mount/userId change
+    const isUserChange = prevUserIdRef.current !== userId;
+    prevUserIdRef.current = userId;
+
+    // Force refetch only on actual userId change (login/logout)
+    // On remount with same user, respect stale-time to preserve optimistic updates
+    if (isUserChange) {
+      loadFriends({ force: true });
+    } else {
+      loadFriends(); // Respects stale-time check
+    }
   }, [userId]);
 
   // Refetch on visibility change (more reliable than focus for mobile/PWA)
