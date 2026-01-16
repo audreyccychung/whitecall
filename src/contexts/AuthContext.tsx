@@ -62,6 +62,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Track whether initial session check is complete to avoid duplicate loads
   const initialLoadComplete = useRef(false);
 
+  // Track current auth/profile status via refs for use in onAuthStateChange closure
+  // (useState values get stale in the closure, refs always have current value)
+  const authStatusRef = useRef<AuthStatus>(authStatus);
+  const profileStatusRef = useRef<ProfileStatus>(profileStatus);
+  authStatusRef.current = authStatus;
+  profileStatusRef.current = profileStatus;
+
   // Load user profile - returns whether profile exists
   // Options:
   //   showLoading: true (default) - sets profileStatus to 'loading' (shows spinner)
@@ -141,7 +148,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         hasSession: !!session,
         userId: session?.user?.id?.slice(0, 8),
         initialLoadComplete: initialLoadComplete.current,
-        currentProfileStatus: profileStatus,
+        currentAuthStatus: authStatusRef.current,
+        currentProfileStatus: profileStatusRef.current,
       });
 
       setSession(session);
@@ -154,7 +162,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (!initialLoadComplete.current) {
             return; // initializeAuth() will handle the profile load and state transition
           }
-          // Manual sign-in after initial load
+
+          // Skip if we're already signed in with a loaded profile
+          // This handles cross-tab login broadcasts - other tabs don't need to re-authenticate
+          if (authStatusRef.current === 'signed_in' && profileStatusRef.current === 'exists') {
+            console.log('[AuthContext] Ignoring cross-tab SIGNED_IN - already authenticated');
+            return;
+          }
+
+          // Fresh sign-in in this tab
           // CRITICAL: Set profileStatus to 'loading' BEFORE any async work
           // This prevents race condition where ProtectedRoute sees user but not loading
           setProfileStatus('loading');
