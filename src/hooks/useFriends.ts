@@ -53,10 +53,17 @@ export function useFriends(userId: string | undefined) {
   const [isInitialLoad, setIsInitialLoad] = useState(!hasCachedData);
   const [error, setError] = useState<string | null>(null);
   const lastFetchedAt = useRef<number>(hasCachedData ? friendsCache.lastFetchedAt : 0);
+  // Mutation lock: prevents background refetch from overwriting optimistic updates
+  const pendingMutations = useRef<number>(0);
 
   // Load friends with their active call status
   const loadFriends = async (options?: { force?: boolean }) => {
     const force = options?.force ?? false;
+
+    // Skip if mutations are pending (prevents overwriting optimistic updates)
+    if (pendingMutations.current > 0 && !force) {
+      return;
+    }
 
     // Skip if data is fresh (unless forced) - don't touch loading state
     if (!force && Date.now() - lastFetchedAt.current < STALE_TIME_MS) {
@@ -286,6 +293,15 @@ export function useFriends(userId: string | undefined) {
     });
   };
 
+  // Mutation lock helpers - prevents background refetch from overwriting optimistic updates
+  const beginMutation = () => {
+    pendingMutations.current += 1;
+  };
+
+  const endMutation = () => {
+    pendingMutations.current = Math.max(0, pendingMutations.current - 1);
+  };
+
   return {
     friends,
     loading: isInitialLoad, // Only true until first successful load
@@ -294,5 +310,7 @@ export function useFriends(userId: string | undefined) {
     removeFriend,
     refreshFriends: loadFriends,
     updateFriendHeartStatus,
+    beginMutation,
+    endMutation,
   };
 }

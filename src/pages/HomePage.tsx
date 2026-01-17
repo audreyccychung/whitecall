@@ -14,7 +14,7 @@ import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
 export default function HomePage() {
   const { user, profile } = useAuth();
   const { stats, sendHeart } = useHearts(user?.id);
-  const { friends, loading: friendsLoading, updateFriendHeartStatus } = useFriends(user?.id);
+  const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
 
   // Load calls data (this syncs to global store)
   useCalls(user?.id);
@@ -28,16 +28,24 @@ export default function HomePage() {
   const isUserOnCall = isCallStatusLoaded && callDates.has(today);
 
   const handleSendHeart = async (friendId: string) => {
+    // Lock to prevent background refetch from overwriting optimistic update
+    beginMutation();
+
     // Optimistic update: immediately show "Sent" state
     updateFriendHeartStatus(friendId, false);
 
-    const result = await sendHeart(friendId);
+    try {
+      const result = await sendHeart(friendId);
 
-    if (!result.success) {
-      // Rollback on failure
-      updateFriendHeartStatus(friendId, true);
+      if (!result.success) {
+        // Rollback on failure
+        updateFriendHeartStatus(friendId, true);
+      }
+      // No refreshFriends() - optimistic update is sufficient
+    } finally {
+      // Release lock after mutation completes
+      endMutation();
     }
-    // No refreshFriends() - optimistic update is sufficient
   };
 
   // Filter friends who are on call (derived from calls table)
