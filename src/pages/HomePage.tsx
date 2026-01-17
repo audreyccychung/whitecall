@@ -1,5 +1,4 @@
 // Main home page - user's avatar, hearts, friends on call feed
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useHearts } from '../hooks/useHearts';
@@ -13,7 +12,7 @@ import { HeartButton } from '../components/HeartButton';
 import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
 
 export default function HomePage() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const { stats, sendHeart } = useHearts(user?.id);
   const { friends, loading: friendsLoading, updateFriendHeartStatus } = useFriends(user?.id);
 
@@ -56,34 +55,8 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">WhiteCall</h1>
-          <div className="flex items-center gap-1 sm:gap-3">
-            <Link
-              to="/calls"
-              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-sky-soft-600 font-semibold text-sm sm:text-base transition-colors"
-            >
-              My Calls
-            </Link>
-            <Link
-              to="/friends"
-              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-sky-soft-600 font-semibold text-sm sm:text-base transition-colors"
-            >
-              Friends
-            </Link>
-            <Link
-              to="/groups"
-              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-sky-soft-600 font-semibold text-sm sm:text-base transition-colors"
-            >
-              Groups
-            </Link>
-            <button
-              onClick={signOut}
-              className="px-2 py-1.5 sm:px-4 sm:py-2 text-gray-700 hover:text-red-600 font-semibold text-sm sm:text-base transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
         </div>
       </header>
 

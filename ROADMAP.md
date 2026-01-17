@@ -85,42 +85,51 @@
 
 ---
 
-## V0.9 - Group Calendar + Find Free Day
+## V0.9 - Group Calendar + Find Free Day ✓ COMPLETE
 
 **Scope**: See all members' calls and find common free days
 
 ### Backend
-- [ ] `useGroupCalls` hook - fetch calls for all members in date range
-- [ ] Free day calculation (client-side, from fetched data)
+- [x] `get_group_calls` RPC - fetch calls for all members in date range
+- [x] `get_my_groups` RPC - let non-owner members see groups
+- [x] `get_group_members` RPC - let non-owner members see other members
+- [x] Free day calculation (client-side, from fetched data)
 
 ### Frontend
-- [ ] GroupCalendarView component
-- [ ] 14-day grid showing member avatars on busy days
-- [ ] Green highlight on free days (no one on call)
-- [ ] "Next free day: Jan 20" summary at top
-- [ ] Click day to see who's on call
+- [x] GroupCalendarView component - 14-day horizontal scrollable grid
+- [x] Member avatars on busy days (stacked, max 3 shown)
+- [x] Green highlight on free days (no one on call)
+- [x] "Next free day: Jan 20" banner at top
+- [x] DayDetailModal - click day to see who's on call
+- [x] Tap member in modal → opens FriendProfileModal
 
 ### Data Structure
 ```typescript
 type GroupCalendarDay = {
   date: string;
-  membersOnCall: { id: string; username: string; avatar_type: string; avatar_color: string }[];
+  membersOnCall: { user_id: string; username: string; display_name: string | null; avatar_type: string; avatar_color: string }[];
   isFree: boolean;
 };
 ```
 
 ---
 
-## V1.0 - Polish & Launch
+## V1.0 - Polish & Launch (IN PROGRESS)
 
-**Scope**: Production-ready group scheduling
+**Scope**: Production-ready group scheduling with improved UX
 
-### Features
-- [ ] Group invites (share link)
-- [ ] Leave group functionality
-- [ ] `get_my_groups()` RPC - let non-owner members see groups they belong to
-- [ ] `get_group_members()` RPC - let non-owner members see other members
-- [x] Delete group (creator only) - done in V0.6
+### Features - COMPLETE
+- [x] Leave group functionality (`leave_group` RPC)
+- [x] Google Sign-In (OAuth alternative to email/password)
+- [x] Helpful login error: "Try signing in with Google instead"
+
+### Features - IN PROGRESS
+- [ ] Bottom Navigation Bar (persistent nav from all pages)
+- [ ] Profile Page (view/edit avatar, username, display name, sign out)
+
+### Features - PENDING
+- [ ] Group invite links (shareable join links)
+- [ ] `updateProfile` RPC (change username, avatar, display name)
 
 ### Quality
 - [x] Error handling for all group operations - done in V0.6

@@ -43,7 +43,11 @@ export default function LoginPage() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
+      // Add helpful hint for users who may have signed up with Google
+      const errorMessage = error.message.toLowerCase().includes('invalid')
+        ? `${error.message}. Try signing in with Google instead.`
+        : error.message;
+      setError(errorMessage);
       setLoading(false);
     }
     // Don't navigate here - let useEffect handle it after auth state updates

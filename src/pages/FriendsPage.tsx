@@ -1,6 +1,5 @@
 // Friends management page
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useFriends } from '../hooks/useFriends';
@@ -45,16 +44,8 @@ export default function FriendsPage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/home"
-              className="text-gray-600 hover:text-gray-800 font-semibold text-sm sm:text-base transition-colors"
-            >
-              ← Back
-            </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Friends</h1>
-          </div>
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Friends</h1>
         </div>
       </header>
 
