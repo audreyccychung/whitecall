@@ -36,7 +36,7 @@ export function useGroupMembers(groupId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load group members with profile data
+  // Load group members via RPC (allows all members to see each other)
   const loadMembers = async () => {
     if (!groupId) {
       setLoading(false);
@@ -47,46 +47,49 @@ export function useGroupMembers(groupId: string | undefined) {
       setLoading(true);
       setError(null);
 
-      // Get group members
-      const { data: membersData, error: membersError } = await supabase
-        .from('group_members')
-        .select('id, group_id, user_id, joined_at')
-        .eq('group_id', groupId)
-        .order('joined_at', { ascending: true });
+      // Use get_group_members RPC - returns all members for any group member
+      const { data, error: rpcError } = await supabase.rpc('get_group_members', {
+        p_group_id: groupId,
+      });
 
-      if (membersError) throw membersError;
+      if (rpcError) throw rpcError;
 
-      if (!membersData || membersData.length === 0) {
+      // Normalize response
+      const result = typeof data === 'string' ? JSON.parse(data) : data;
+
+      if (result.code === 'UNAUTHORIZED') {
+        setError('Please log in to view members.');
         setMembers([]);
         return;
       }
 
-      // Get profiles for all members
-      const userIds = membersData.map((m) => m.user_id);
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, display_name, avatar_type, avatar_color')
-        .in('id', userIds);
+      if (result.code === 'GROUP_NOT_FOUND') {
+        setError('Group not found.');
+        setMembers([]);
+        return;
+      }
 
-      if (profilesError) throw profilesError;
+      if (result.code === 'NOT_A_MEMBER') {
+        setError('You are not a member of this group.');
+        setMembers([]);
+        return;
+      }
 
-      // Create a map for quick lookup
-      const profileMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+      if (result.code === 'UNKNOWN_ERROR') {
+        throw new Error(result.detail || 'Failed to load members');
+      }
 
-      // Combine data
-      const membersList: GroupMember[] = membersData
-        .map((member) => {
-          const profile = profileMap.get(member.user_id);
-          if (!profile) return null;
-          return {
-            ...member,
-            username: profile.username,
-            display_name: profile.display_name,
-            avatar_type: profile.avatar_type,
-            avatar_color: profile.avatar_color,
-          };
-        })
-        .filter((m): m is GroupMember => m !== null);
+      // SUCCESS - set members from RPC response
+      const membersList: GroupMember[] = (result.members || []).map((m: GroupMember) => ({
+        id: m.id,
+        group_id: m.group_id,
+        user_id: m.user_id,
+        joined_at: m.joined_at,
+        username: m.username,
+        display_name: m.display_name,
+        avatar_type: m.avatar_type,
+        avatar_color: m.avatar_color,
+      }));
 
       setMembers(membersList);
     } catch (err) {

@@ -86,3 +86,27 @@ export type GetMyGroupsCode =
   | 'SUCCESS'
   | 'UNAUTHORIZED'
   | 'UNKNOWN_ERROR';
+
+// Result codes from get_group_calls RPC
+export type GetGroupCallsCode =
+  | 'SUCCESS'
+  | 'UNAUTHORIZED'
+  | 'GROUP_NOT_FOUND'
+  | 'NOT_A_MEMBER'
+  | 'INVALID_DATE_RANGE'
+  | 'UNKNOWN_ERROR';
+
+// Group calendar types
+export interface GroupMemberOnCall {
+  user_id: string;
+  username: string;
+  display_name: string | null;
+  avatar_type: string;
+  avatar_color: string;
+}
+
+export interface GroupCalendarDay {
+  date: string; // YYYY-MM-DD
+  membersOnCall: GroupMemberOnCall[];
+  isFree: boolean;
+}

@@ -44,13 +44,10 @@ export function useGroups(userId: string | undefined) {
       // Use get_my_groups RPC - returns all groups user is a member of
       const { data, error: rpcError } = await supabase.rpc('get_my_groups');
 
-      console.log('[useGroups] RPC response:', { data, rpcError });
-
       if (rpcError) throw rpcError;
 
       // Normalize response (RPC returns JSON)
       const result = typeof data === 'string' ? JSON.parse(data) : data;
-      console.log('[useGroups] Parsed result:', result);
 
       if (result.code === 'UNAUTHORIZED') {
         setError('Please log in to view groups.');
