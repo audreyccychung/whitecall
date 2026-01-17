@@ -124,9 +124,7 @@ export default function HomePage() {
                       <p className="font-medium text-gray-800 truncate">
                         {friend.display_name || friend.username}
                       </p>
-                      <p className="text-sm text-gray-400 truncate">
-                        @{friend.username} · <span className="text-green-600">on call today</span>
-                      </p>
+                      <p className="text-sm text-gray-400 truncate">@{friend.username}</p>
                     </div>
                   </div>
 
