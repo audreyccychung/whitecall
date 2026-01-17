@@ -45,7 +45,7 @@ export default function FriendsPage() {
     const username = profile?.username;
     if (!username) return;
 
-    const shareText = `Add me on WhiteCall! My username is: ${username}`;
+    const shareText = `Add me on WhiteCall 🤍\nMy username: ${username}\nhttps://whitecall-ok4n.vercel.app`;
 
     // Try native share API first (works on mobile)
     if (navigator.share) {
@@ -60,9 +60,9 @@ export default function FriendsPage() {
       }
     }
 
-    // Fallback: copy to clipboard
+    // Fallback: copy to clipboard (copy full message, not just username)
     try {
-      await navigator.clipboard.writeText(username);
+      await navigator.clipboard.writeText(shareText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
