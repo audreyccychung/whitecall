@@ -63,10 +63,10 @@ export function DayDetailModal({ day, onClose, onMemberClick }: DayDetailModalPr
                 <div className="py-8 text-center">
                   <span className="text-4xl mb-3 block">✓</span>
                   <p className="text-lg font-medium text-green-600 mb-1">
-                    Everyone's free!
+                    No one's on call!
                   </p>
                   <p className="text-sm text-gray-500">
-                    No one is on call this day.
+                    Everyone's free this day.
                   </p>
                 </div>
               ) : (
