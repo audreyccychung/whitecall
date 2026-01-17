@@ -30,8 +30,8 @@ export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimation
       };
     } else if (count === 0) {
       return {
-        line1: 'No white calls yet',
-        line2: 'Send your friends a reminder?',
+        line1: "You're on call today 🤍",
+        line2: 'Friends can send you white calls for support.',
       };
     } else if (count === 1) {
       return { line1: '1 friend is thinking of you today' };
