@@ -1,6 +1,6 @@
 // Friends management page
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useFriends } from '../hooks/useFriends';
 import { useHearts } from '../hooks/useHearts';
@@ -14,6 +14,7 @@ export default function FriendsPage() {
   const { friends, loading, addFriend, updateFriendHeartStatus } = useFriends(user?.id);
   const { sendHeart } = useHearts(user?.id);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const handleSendHeart = async (friendId: string) => {
     // Optimistic update: immediately show "Sent" state
@@ -29,7 +30,11 @@ export default function FriendsPage() {
   };
 
   const handleAddFriend = async (username: string) => {
-    return addFriend(username);
+    const result = await addFriend(username);
+    if (result.success) {
+      setShowAddForm(false);
+    }
+    return result;
   };
 
   const handleFriendClick = (friend: Friend) => {
@@ -42,61 +47,55 @@ export default function FriendsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
-      {/* Header */}
+      {/* Header with Add button */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Friends</h1>
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-sky-soft-100 text-sky-soft-600 hover:bg-sky-soft-200 transition-colors"
+            aria-label="Add friend"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Add Friend */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-soft-lg p-6"
-        >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Add New Friend</h2>
-          <AddFriendForm onAddFriend={handleAddFriend} />
-        </motion.div>
-
-        {/* Friends List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl shadow-soft-lg p-6"
-        >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
-            Your Friends ({friends.length})
-          </h2>
-
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-600">Loading friends...</p>
-            </div>
-          ) : (
-            <FriendsList friends={friends} onSendHeart={handleSendHeart} onFriendClick={handleFriendClick} />
+      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* Collapsible Add Friend Form */}
+        <AnimatePresence>
+          {showAddForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-white rounded-2xl shadow-soft p-4">
+                <AddFriendForm onAddFriend={handleAddFriend} />
+              </div>
+            </motion.div>
           )}
-        </motion.div>
+        </AnimatePresence>
 
-        {/* Friends on Call */}
+        {/* Unified Friends List */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-soft-lg p-6"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Friends on Call Today</h2>
-
           {loading ? (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-600">Loading...</p>
+            <div className="text-center py-12">
+              <div className="w-10 h-10 border-3 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+              <p className="text-gray-500 text-sm">Loading friends...</p>
             </div>
           ) : (
-            <FriendsList friends={friends} onSendHeart={handleSendHeart} onFriendClick={handleFriendClick} showOnlyOnCall />
+            <FriendsList
+              friends={friends}
+              onSendHeart={handleSendHeart}
+              onFriendClick={handleFriendClick}
+            />
           )}
         </motion.div>
       </main>
