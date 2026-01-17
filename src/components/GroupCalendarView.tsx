@@ -1,7 +1,9 @@
 // Group calendar view - 14-day horizontal grid showing who's on call
+import { useState } from 'react';
 import { useGroupCalls } from '../hooks/useGroupCalls';
 import { AvatarDisplay } from './AvatarDisplay';
-import type { GroupCalendarDay } from '../types/group';
+import { DayDetailModal } from './DayDetailModal';
+import type { GroupCalendarDay, GroupMemberOnCall } from '../types/group';
 
 // Format date for display (e.g., "Fri 17")
 function formatDayHeader(dateStr: string): { dayName: string; dayNum: string } {
@@ -79,6 +81,7 @@ function CalendarDayCell({ day, onClick }: CalendarDayCellProps) {
 
 interface GroupCalendarViewProps {
   groupId: string;
+  onMemberClick?: (member: GroupMemberOnCall) => void;
 }
 
 // Format date for banner display (e.g., "Mon, Jan 20")
@@ -87,8 +90,9 @@ function formatBannerDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-export function GroupCalendarView({ groupId }: GroupCalendarViewProps) {
+export function GroupCalendarView({ groupId, onMemberClick }: GroupCalendarViewProps) {
   const { calendarDays, nextFreeDay, loading, error } = useGroupCalls(groupId);
+  const [selectedDay, setSelectedDay] = useState<GroupCalendarDay | null>(null);
 
   if (loading) {
     return (
@@ -116,8 +120,12 @@ export function GroupCalendarView({ groupId }: GroupCalendarViewProps) {
   }
 
   const handleDayClick = (day: GroupCalendarDay) => {
-    // TODO: Step 8 - Open day detail modal
-    console.log('Day clicked:', day.date, day.membersOnCall);
+    setSelectedDay(day);
+  };
+
+  const handleMemberClick = (member: GroupMemberOnCall) => {
+    setSelectedDay(null); // Close day modal first
+    onMemberClick?.(member);
   };
 
   // Check if today is free
@@ -167,6 +175,13 @@ export function GroupCalendarView({ groupId }: GroupCalendarViewProps) {
       <p className="text-xs text-gray-400 text-center">
         Scroll to see more days
       </p>
+
+      {/* Day detail modal */}
+      <DayDetailModal
+        day={selectedDay}
+        onClose={() => setSelectedDay(null)}
+        onMemberClick={handleMemberClick}
+      />
     </div>
   );
 }
