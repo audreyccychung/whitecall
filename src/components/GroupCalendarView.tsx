@@ -1,5 +1,6 @@
 // Group calendar view - 14-day horizontal grid showing who's on call
 import { useGroupCalls } from '../hooks/useGroupCalls';
+import { AvatarDisplay } from './AvatarDisplay';
 import type { GroupCalendarDay } from '../types/group';
 
 // Format date for display (e.g., "Fri 17")
@@ -25,13 +26,15 @@ interface CalendarDayCellProps {
 function CalendarDayCell({ day, onClick }: CalendarDayCellProps) {
   const { dayName, dayNum } = formatDayHeader(day.date);
   const today = isToday(day.date);
-  const memberCount = day.membersOnCall.length;
+  const membersOnCall = day.membersOnCall;
+  const displayMembers = membersOnCall.slice(0, 3); // Show max 3 avatars
+  const extraCount = membersOnCall.length - 3;
 
   return (
     <button
       onClick={onClick}
       className={`
-        flex-shrink-0 w-12 flex flex-col items-center py-2 rounded-lg transition-colors
+        flex-shrink-0 w-14 flex flex-col items-center py-2 rounded-lg transition-colors
         ${today ? 'ring-2 ring-sky-soft-500' : ''}
         ${day.isFree ? 'bg-green-50 hover:bg-green-100' : 'bg-gray-50 hover:bg-gray-100'}
       `}
@@ -46,12 +49,28 @@ function CalendarDayCell({ day, onClick }: CalendarDayCellProps) {
         {dayNum}
       </span>
 
-      {/* Status indicator */}
-      <div className="mt-1 h-5 flex items-center justify-center">
+      {/* Status indicator - avatars or free */}
+      <div className="mt-1 min-h-[28px] flex flex-col items-center justify-center gap-0.5">
         {day.isFree ? (
           <span className="text-green-500 text-xs">Free</span>
         ) : (
-          <span className="text-xs text-gray-600 font-medium">{memberCount}</span>
+          <>
+            {/* Stack avatars vertically */}
+            <div className="flex flex-col items-center gap-0.5">
+              {displayMembers.map((member) => (
+                <AvatarDisplay
+                  key={member.user_id}
+                  avatarType={member.avatar_type}
+                  avatarColor={member.avatar_color}
+                  size="tiny"
+                />
+              ))}
+            </div>
+            {/* Show +N if more than 3 */}
+            {extraCount > 0 && (
+              <span className="text-xs text-gray-500">+{extraCount}</span>
+            )}
+          </>
         )}
       </div>
     </button>

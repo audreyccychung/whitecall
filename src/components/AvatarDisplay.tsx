@@ -4,11 +4,12 @@ import { getAvatarEmoji } from '../types/avatar';
 interface AvatarDisplayProps {
   avatarType: string;
   avatarColor: string;
-  size?: 'small' | 'medium' | 'large' | 'xl';
+  size?: 'tiny' | 'small' | 'medium' | 'large' | 'xl';
   className?: string;
 }
 
 const sizeClasses = {
+  tiny: 'w-6 h-6 text-xs',
   small: 'w-12 h-12 text-2xl',
   medium: 'w-16 h-16 text-4xl',
   large: 'w-24 h-24 text-6xl',
