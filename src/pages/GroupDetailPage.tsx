@@ -7,6 +7,7 @@ import { useGroups } from '../hooks/useGroups';
 import { useGroupMembers } from '../hooks/useGroupMembers';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
+import { GroupCalendarView } from '../components/GroupCalendarView';
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -125,6 +126,18 @@ export default function GroupDetailPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+        {/* Group Schedule Calendar */}
+        {id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-soft-lg p-6"
+          >
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Group Schedule</h2>
+            <GroupCalendarView groupId={id} />
+          </motion.div>
+        )}
+
         {/* Add Member (owner only) */}
         {isOwner && (
           <motion.div
