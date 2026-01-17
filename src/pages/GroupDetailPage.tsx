@@ -17,12 +17,15 @@ export default function GroupDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { groups, deleteGroup } = useGroups(user?.id);
-  const { members, loading: membersLoading, addMember, removeMember } = useGroupMembers(id);
+  const { members, loading: membersLoading, addMember, removeMember, leaveGroup } = useGroupMembers(id);
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Friend | null>(null);
+  const [leaving, setLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
 
   // Find the current group from loaded groups
   const group = groups.find((g) => g.id === id);
@@ -63,6 +66,21 @@ export default function GroupDetailPage() {
       setDeleting(false);
       setDeleteError(result.error ?? 'Failed to delete group');
       setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleLeaveGroup = async () => {
+    setLeaving(true);
+    setLeaveError(null);
+
+    const result = await leaveGroup();
+
+    if (result.success) {
+      navigate('/groups');
+    } else {
+      setLeaving(false);
+      setLeaveError(result.error ?? 'Failed to leave group');
+      setShowLeaveConfirm(false);
     }
   };
 
@@ -195,6 +213,59 @@ export default function GroupDetailPage() {
             />
           )}
         </motion.div>
+
+        {/* Leave Group (non-owner only) */}
+        {!isOwner && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl shadow-soft-lg p-6"
+          >
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Leave Group</h2>
+
+            {leaveError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg mb-4"
+              >
+                {leaveError}
+              </motion.div>
+            )}
+
+            {!showLeaveConfirm ? (
+              <button
+                onClick={() => setShowLeaveConfirm(true)}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Leave Group
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">
+                  Are you sure you want to leave this group?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleLeaveGroup}
+                    disabled={leaving}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                  >
+                    {leaving ? 'Leaving...' : 'Yes, Leave'}
+                  </button>
+                  <button
+                    onClick={() => setShowLeaveConfirm(false)}
+                    disabled={leaving}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Delete Group (owner only) */}
         {isOwner && (

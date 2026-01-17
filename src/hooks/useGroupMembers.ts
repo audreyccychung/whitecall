@@ -7,6 +7,8 @@ import type {
   AddMemberCode,
   RemoveMemberResult,
   RemoveMemberCode,
+  LeaveGroupResult,
+  LeaveGroupCode,
 } from '../types/group';
 
 // Exhaustive mapping: every code maps to exactly one message
@@ -28,6 +30,15 @@ const REMOVE_MEMBER_MESSAGES: Record<RemoveMemberCode, string> = {
   CANNOT_REMOVE_SELF: 'You cannot remove yourself. Delete the group instead.',
   MEMBER_NOT_FOUND: 'Member not found in this group.',
   UNAUTHORIZED: 'You must be logged in.',
+  UNKNOWN_ERROR: 'Something went wrong. Please try again.',
+};
+
+const LEAVE_GROUP_MESSAGES: Record<LeaveGroupCode, string> = {
+  SUCCESS: 'You left the group.',
+  UNAUTHORIZED: 'You must be logged in.',
+  GROUP_NOT_FOUND: 'Group not found.',
+  NOT_A_MEMBER: 'You are not a member of this group.',
+  OWNER_CANNOT_LEAVE: 'Group owners cannot leave. Delete the group instead.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 
@@ -199,12 +210,59 @@ export function useGroupMembers(groupId: string | undefined) {
     return { success: false, code, error: message };
   };
 
+  // Leave group - user removes themselves
+  const leaveGroup = async (): Promise<LeaveGroupResult> => {
+    if (!groupId) {
+      return {
+        success: false,
+        code: 'GROUP_NOT_FOUND',
+        error: LEAVE_GROUP_MESSAGES.GROUP_NOT_FOUND,
+      };
+    }
+
+    const { data, error } = await supabase.rpc('leave_group', {
+      p_group_id: groupId,
+    });
+
+    if (error) {
+      return {
+        success: false,
+        code: 'UNKNOWN_ERROR',
+        error: LEAVE_GROUP_MESSAGES.UNKNOWN_ERROR,
+      };
+    }
+
+    // Normalize response
+    let result: { code?: string };
+    if (typeof data === 'string') {
+      try {
+        result = JSON.parse(data);
+      } catch {
+        result = {};
+      }
+    } else if (data && typeof data === 'object') {
+      result = data;
+    } else {
+      result = {};
+    }
+
+    const code = (result.code as LeaveGroupCode) || 'UNKNOWN_ERROR';
+    const message = LEAVE_GROUP_MESSAGES[code];
+
+    if (code === 'SUCCESS') {
+      return { success: true, code };
+    }
+
+    return { success: false, code, error: message };
+  };
+
   return {
     members,
     loading,
     error,
     addMember,
     removeMember,
+    leaveGroup,
     refreshMembers: loadMembers,
   };
 }

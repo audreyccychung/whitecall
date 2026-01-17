@@ -110,3 +110,18 @@ export interface GroupCalendarDay {
   membersOnCall: GroupMemberOnCall[];
   isFree: boolean;
 }
+
+// Result codes from leave_group RPC
+export type LeaveGroupCode =
+  | 'SUCCESS'
+  | 'UNAUTHORIZED'
+  | 'GROUP_NOT_FOUND'
+  | 'NOT_A_MEMBER'
+  | 'OWNER_CANNOT_LEAVE'
+  | 'UNKNOWN_ERROR';
+
+export interface LeaveGroupResult {
+  success: boolean;
+  code: LeaveGroupCode;
+  error?: string;
+}
