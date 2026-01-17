@@ -37,6 +37,9 @@ const friendsCache = {
   data: [] as Friend[],
   lastFetchedAt: 0,
   userId: null as string | null,
+  // Mutation lock: shared across all hook instances to prevent
+  // background refetch from overwriting optimistic updates
+  pendingMutations: 0,
 };
 
 export function useFriends(userId: string | undefined) {
@@ -53,15 +56,14 @@ export function useFriends(userId: string | undefined) {
   const [isInitialLoad, setIsInitialLoad] = useState(!hasCachedData);
   const [error, setError] = useState<string | null>(null);
   const lastFetchedAt = useRef<number>(hasCachedData ? friendsCache.lastFetchedAt : 0);
-  // Mutation lock: prevents background refetch from overwriting optimistic updates
-  const pendingMutations = useRef<number>(0);
 
   // Load friends with their active call status
   const loadFriends = async (options?: { force?: boolean }) => {
     const force = options?.force ?? false;
 
     // Skip if mutations are pending (prevents overwriting optimistic updates)
-    if (pendingMutations.current > 0 && !force) {
+    // Uses module-level counter so all hook instances respect the lock
+    if (friendsCache.pendingMutations > 0 && !force) {
       return;
     }
 
@@ -293,13 +295,13 @@ export function useFriends(userId: string | undefined) {
     });
   };
 
-  // Mutation lock helpers - prevents background refetch from overwriting optimistic updates
+  // Mutation lock helpers - uses module-level counter so all hook instances respect the lock
   const beginMutation = () => {
-    pendingMutations.current += 1;
+    friendsCache.pendingMutations += 1;
   };
 
   const endMutation = () => {
-    pendingMutations.current = Math.max(0, pendingMutations.current - 1);
+    friendsCache.pendingMutations = Math.max(0, friendsCache.pendingMutations - 1);
   };
 
   return {
