@@ -8,6 +8,9 @@ import { useGroupMembers } from '../hooks/useGroupMembers';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
 import { GroupCalendarView } from '../components/GroupCalendarView';
+import { FriendProfileModal } from '../components/FriendProfileModal';
+import type { GroupMemberOnCall } from '../types/group';
+import type { Friend } from '../types/friend';
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +22,7 @@ export default function GroupDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<Friend | null>(null);
 
   // Find the current group from loaded groups
   const group = groups.find((g) => g.id === id);
@@ -30,6 +34,19 @@ export default function GroupDetailPage() {
 
   const handleRemoveMember = async (memberId: string) => {
     return removeMember(memberId);
+  };
+
+  // Convert GroupMemberOnCall to Friend for profile modal
+  const handleMemberClick = (member: GroupMemberOnCall) => {
+    const friendLike: Friend = {
+      id: member.user_id,
+      username: member.username,
+      display_name: member.display_name,
+      avatar_type: member.avatar_type,
+      avatar_color: member.avatar_color,
+      friendship_id: '', // Not used by modal, placeholder
+    };
+    setSelectedMember(friendLike);
   };
 
   const handleDeleteGroup = async () => {
@@ -134,7 +151,7 @@ export default function GroupDetailPage() {
             className="bg-white rounded-2xl shadow-soft-lg p-6"
           >
             <h2 className="text-xl font-bold text-gray-800 mb-4">Group Schedule</h2>
-            <GroupCalendarView groupId={id} />
+            <GroupCalendarView groupId={id} onMemberClick={handleMemberClick} />
           </motion.div>
         )}
 
@@ -232,6 +249,12 @@ export default function GroupDetailPage() {
           </motion.div>
         )}
       </main>
+
+      {/* Member profile modal */}
+      <FriendProfileModal
+        friend={selectedMember}
+        onClose={() => setSelectedMember(null)}
+      />
     </div>
   );
 }
