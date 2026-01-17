@@ -22,17 +22,25 @@ export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimation
   const increase = count - prevCount;
 
   // Generate message based on count and on-call status
-  const getMessage = () => {
+  const getMessage = (): { line1: string; line2?: string } => {
     if (!isOnCall) {
-      return "You're not on call today, yay! Wish a friend white call";
+      return {
+        line1: "You're not on call today",
+        line2: 'Want to support a friend?',
+      };
     } else if (count === 0) {
-      return 'No friends have wished you a white call yet, remind them now!';
+      return {
+        line1: 'No white calls yet',
+        line2: 'Send your friends a reminder?',
+      };
     } else if (count === 1) {
-      return '1 friend wished you a white call today!';
+      return { line1: '1 friend is thinking of you today' };
     } else {
-      return `${count} friends wished you a white call today!`;
+      return { line1: `${count} friends are thinking of you today` };
     }
   };
+
+  const message = getMessage();
 
   return (
     <div className="relative inline-block">
@@ -44,7 +52,10 @@ export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimation
         className="text-center"
       >
         {isOnCall && <div className="text-4xl font-bold text-gray-800 mb-1">{count}</div>}
-        <div className="text-sm text-gray-600 max-w-[200px]">{getMessage()}</div>
+        <div className="text-sm text-gray-600 max-w-[200px]">
+          <div>{message.line1}</div>
+          {message.line2 && <div>{message.line2}</div>}
+        </div>
       </motion.div>
 
       {/* Increase indicator */}
