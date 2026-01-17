@@ -91,7 +91,8 @@ export default function HomePage() {
 
         {/* Friends on Call */}
         <div className="bg-white rounded-2xl shadow-soft-lg p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Friends on Call Today</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-1">Friends on call today</h3>
+          <p className="text-sm text-gray-500 mb-4">Wish them a white call 🤍</p>
 
           {friendsLoading ? (
             <div className="text-center py-8">
@@ -105,32 +106,36 @@ export default function HomePage() {
               <p className="text-sm text-gray-500">Enjoy the quiet day!</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {friendsOnCall.map((friend) => (
                 <motion.div
                   key={friend.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between px-4 py-3 gap-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <AvatarDisplay
                       avatarType={friend.avatar_type}
                       avatarColor={friend.avatar_color}
                       size="medium"
                     />
-                    <div>
-                      <p className="font-medium text-gray-800">
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <p className="font-medium text-gray-800 truncate">
                         {friend.display_name || friend.username}
                       </p>
-                      <p className="text-sm text-gray-500">@{friend.username}</p>
+                      <p className="text-sm text-gray-400 truncate">
+                        @{friend.username} · <span className="text-green-600">on call today</span>
+                      </p>
                     </div>
                   </div>
 
-                  <HeartButton
-                    onClick={() => handleSendHeart(friend.id)}
-                    alreadySent={!friend.can_send_heart}
-                  />
+                  <div className="ml-3 flex-shrink-0">
+                    <HeartButton
+                      onClick={() => handleSendHeart(friend.id)}
+                      alreadySent={!friend.can_send_heart}
+                    />
+                  </div>
                 </motion.div>
               ))}
             </div>

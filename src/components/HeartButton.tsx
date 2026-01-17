@@ -25,20 +25,20 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
     }
   };
 
-  // Sent state: muted appearance
+  // Sent state: muted gray
   if (alreadySent) {
     return (
       <button
         disabled
         aria-label="White call already sent"
-        className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-sky-soft-100 text-sky-soft-400 cursor-default text-xs sm:text-sm font-semibold"
+        className="h-9 px-4 rounded-full bg-sky-soft-100 text-sky-soft-400 cursor-default text-sm font-medium whitespace-nowrap"
       >
         Sent 🤍
       </button>
     );
   }
 
-  // Active state: sky blue background, white text
+  // Active state: soft primary blue
   return (
     <motion.button
       onClick={handleClick}
@@ -48,13 +48,13 @@ export function HeartButton({ onClick, disabled = false, alreadySent = false }: 
       whileHover={{ scale: 1.02 }}
       animate={justSent ? { scale: [1, 1.1, 1] } : {}}
       transition={{ duration: 0.2 }}
-      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors ${
+      className={`h-9 px-4 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
         disabled || sending
           ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          : 'bg-sky-soft-500 hover:bg-sky-soft-600 text-white shadow-sm hover:shadow-md'
+          : 'bg-blue-500/90 hover:bg-blue-500 text-white'
       }`}
     >
-      {sending ? 'Sending...' : 'Send white call 🤍'}
+      {sending ? 'Sending...' : 'Send 🤍'}
     </motion.button>
   );
 }
