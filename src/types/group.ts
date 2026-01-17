@@ -80,3 +80,9 @@ export interface DeleteGroupResult {
   code: DeleteGroupCode;
   error?: string;
 }
+
+// Result codes from get_my_groups RPC
+export type GetMyGroupsCode =
+  | 'SUCCESS'
+  | 'UNAUTHORIZED'
+  | 'UNKNOWN_ERROR';

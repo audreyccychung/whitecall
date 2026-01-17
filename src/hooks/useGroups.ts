@@ -30,7 +30,7 @@ export function useGroups(userId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load user's groups with member counts
+  // Load user's groups via RPC (allows non-owners to see groups they belong to)
   const loadGroups = async () => {
     if (!userId) {
       setLoading(false);
@@ -41,37 +41,35 @@ export function useGroups(userId: string | undefined) {
       setLoading(true);
       setError(null);
 
-      // Get groups the user has access to (via RLS)
-      const { data: groupsData, error: groupsError } = await supabase
-        .from('groups')
-        .select('id, name, created_by, created_at')
-        .order('created_at', { ascending: false });
+      // Use get_my_groups RPC - returns all groups user is a member of
+      const { data, error: rpcError } = await supabase.rpc('get_my_groups');
 
-      if (groupsError) throw groupsError;
+      console.log('[useGroups] RPC response:', { data, rpcError });
 
-      if (!groupsData || groupsData.length === 0) {
+      if (rpcError) throw rpcError;
+
+      // Normalize response (RPC returns JSON)
+      const result = typeof data === 'string' ? JSON.parse(data) : data;
+      console.log('[useGroups] Parsed result:', result);
+
+      if (result.code === 'UNAUTHORIZED') {
+        setError('Please log in to view groups.');
         setGroups([]);
         return;
       }
 
-      // Get member counts for each group
-      const groupIds = groupsData.map((g) => g.id);
-      const { data: memberCounts } = await supabase
-        .from('group_members')
-        .select('group_id')
-        .in('group_id', groupIds);
-
-      // Count members per group
-      const countByGroup = new Map<string, number>();
-      for (const member of memberCounts || []) {
-        countByGroup.set(member.group_id, (countByGroup.get(member.group_id) || 0) + 1);
+      if (result.code === 'UNKNOWN_ERROR') {
+        throw new Error(result.detail || 'Failed to load groups');
       }
 
-      // Combine data
-      const groupsList: Group[] = groupsData.map((group) => ({
-        ...group,
-        member_count: countByGroup.get(group.id) || 0,
-        is_owner: group.created_by === userId,
+      // SUCCESS - set groups from RPC response
+      const groupsList: Group[] = (result.groups || []).map((g: Group) => ({
+        id: g.id,
+        name: g.name,
+        created_by: g.created_by,
+        created_at: g.created_at,
+        member_count: g.member_count || 0,
+        is_owner: g.is_owner || false,
       }));
 
       setGroups(groupsList);
