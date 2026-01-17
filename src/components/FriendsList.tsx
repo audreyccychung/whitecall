@@ -88,9 +88,14 @@ export function FriendsList({ friends, onSendHeart, onFriendClick }: FriendsList
     <div className="space-y-6">
       {/* On Call Today Section */}
       <section>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-1">
-          On Call Today {onCallFriends.length > 0 && `(${onCallFriends.length})`}
-        </h3>
+        <div className="mb-2 px-1">
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            On Call Today {onCallFriends.length > 0 && `(${onCallFriends.length})`}
+          </h3>
+          {onCallFriends.length > 0 && (
+            <p className="text-xs text-gray-400 mt-0.5">Wish them a white call 🤍</p>
+          )}
+        </div>
         {onCallFriends.length === 0 ? (
           <div className="py-4 px-4 bg-white rounded-xl">
             <p className="text-sm text-gray-400">No friends on call today</p>
