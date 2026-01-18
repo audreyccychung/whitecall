@@ -104,12 +104,16 @@ export default function CreateProfilePage() {
         peach: '#FFDAB9',
       }[avatarColor];
 
+      // Detect user's timezone automatically
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
       const { error: insertError } = await supabase.from('profiles').insert({
         id: user.id,
         username: trimmedUsername,
         display_name: displayName.trim() || null,
         avatar_type: avatarType,
         avatar_color: colorHex,
+        timezone: userTimezone,
       });
 
       if (insertError) {

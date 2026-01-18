@@ -26,7 +26,7 @@ const REMOVE_FRIEND_MESSAGES: Record<RemoveFriendCode, string> = {
   UNAUTHORIZED: 'You must be logged in to remove friends.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
-import { getTodayDate } from '../utils/date';
+// NOTE: No date imports - all date logic is handled by backend (timezone-aware)
 
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
@@ -98,63 +98,48 @@ export function useFriends(userId: string | undefined) {
       }
 
       const friendIds = friendshipsData.map((f) => f.friend_id);
-      const today = getTodayDate();
 
-      // Fetch all supplementary data in parallel (profiles, calls, hearts)
-      const [profilesResult, activeCallsResult, upcomingCallsResult, heartsResult] =
-        await Promise.all([
-          // Get friend profiles
-          supabase
-            .from('profiles')
-            .select('id, username, display_name, avatar_type, avatar_color')
-            .in('id', friendIds),
-          // Get friends who have a call today
-          supabase
-            .from('calls')
-            .select('user_id')
-            .in('user_id', friendIds)
-            .eq('call_date', today),
-          // Get each friend's next call date (today or future)
-          supabase
-            .from('calls')
-            .select('user_id, call_date')
-            .in('user_id', friendIds)
-            .gte('call_date', today)
-            .order('call_date', { ascending: true }),
-          // Get hearts sent today to each friend
-          supabase
-            .from('hearts')
-            .select('recipient_id')
-            .eq('sender_id', userId)
-            .eq('shift_date', today),
-        ]);
+      // Fetch profiles and timezone-aware status in parallel
+      // Status (is_on_call, can_send_heart, next_call_date) comes from DB function
+      // This ensures backend is single source of truth for all date calculations
+      const [profilesResult, statusResult] = await Promise.all([
+        // Get friend profiles
+        supabase
+          .from('profiles')
+          .select('id, username, display_name, avatar_type, avatar_color')
+          .in('id', friendIds),
+        // Get all friend status data from timezone-aware DB function
+        supabase.rpc('get_friends_with_status'),
+      ]);
 
       // Check for errors (only profiles is critical)
       if (profilesResult.error) throw profilesResult.error;
 
       const profilesData = profilesResult.data;
-      const friendsOnCall = new Set(activeCallsResult.data?.map((c) => c.user_id) || []);
 
-      // Map friend ID to their next call date (first occurrence)
-      const nextCallByFriend = new Map<string, string>();
-      for (const call of upcomingCallsResult.data || []) {
-        if (!nextCallByFriend.has(call.user_id)) {
-          nextCallByFriend.set(call.user_id, call.call_date);
-        }
+      // Build lookup map from status results
+      type FriendStatus = {
+        friend_id: string;
+        is_on_call: boolean;
+        can_send_heart: boolean;
+        next_call_date: string | null;
+      };
+      const statusByFriend = new Map<string, FriendStatus>();
+      for (const status of (statusResult.data || []) as FriendStatus[]) {
+        statusByFriend.set(status.friend_id, status);
       }
 
-      const heartsSentTo = new Set(heartsResult.data?.map((h) => h.recipient_id) || []);
-
-      // Combine data
+      // Combine data - all date-dependent fields come from backend
       const friendsList: Friend[] =
         profilesData?.map((profile) => {
           const friendship = friendshipsData.find((f) => f.friend_id === profile.id);
+          const status = statusByFriend.get(profile.id);
           return {
             ...profile,
             friendship_id: friendship?.id || '',
-            is_on_call: friendsOnCall.has(profile.id),
-            next_call_date: nextCallByFriend.get(profile.id),
-            can_send_heart: !heartsSentTo.has(profile.id),
+            is_on_call: status?.is_on_call ?? false,
+            next_call_date: status?.next_call_date ?? undefined,
+            can_send_heart: status?.can_send_heart ?? true,
           };
         }) || [];
 
