@@ -57,14 +57,14 @@ export function HeartDisplay({ count, maxVisible = 20 }: HeartDisplayProps) {
         >
           <motion.span
             animate={{
-              y: [0, -20, -40],
-              opacity: [1, 0.8, 0],
+              y: [0, -15, -30, -15, 0],
+              opacity: [1, 0.9, 0.7, 0.9, 1],
             }}
             transition={{
-              duration: 3,
+              duration: 4,
               repeat: Infinity,
-              ease: 'easeOut',
-              delay: heart.delay + Math.random() * 2,
+              ease: 'easeInOut',
+              delay: index * 0.3,
             }}
           >
             🤍

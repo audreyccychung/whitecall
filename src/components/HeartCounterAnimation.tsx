@@ -51,8 +51,7 @@ export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimation
         transition={{ duration: 0.3 }}
         className="text-center"
       >
-        {isOnCall && count > 0 && <div className="text-4xl font-bold text-gray-800 mb-1">{count}</div>}
-        <div className="text-sm text-gray-600 max-w-[200px]">
+        <div className="text-sm text-gray-800 max-w-[200px]">
           <div>{message.line1}</div>
           {message.line2 && <div>{message.line2}</div>}
         </div>
