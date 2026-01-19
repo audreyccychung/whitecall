@@ -69,29 +69,39 @@ export default function HomePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* User Status Card - compact horizontal layout */}
+        {/* User Status Card */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl shadow-soft p-4"
+          className="bg-white rounded-xl shadow-soft p-4 md:p-6"
         >
-          <div className="flex items-center gap-4">
-            {/* Avatar with Hearts */}
-            <div className="relative flex-shrink-0">
-              <AvatarDisplay
-                avatarType={profile.avatar_type}
-                avatarColor={profile.avatar_color}
-                size="medium"
-              />
-              <HeartDisplay count={stats.received_today} />
+          <div className="flex items-start gap-4">
+            {/* Left: Avatar (fixed width) */}
+            <div className="flex-shrink-0 w-14">
+              <div className="relative">
+                <AvatarDisplay
+                  avatarType={profile.avatar_type}
+                  avatarColor={profile.avatar_color}
+                  size="medium"
+                />
+                <HeartDisplay count={stats.received_today} />
+              </div>
             </div>
 
-            {/* User Info + Heart Counter */}
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-gray-800 truncate">
-                {profile.display_name || profile.username}
-              </p>
-              <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
+            {/* Right: Identity + Status */}
+            <div className="flex-1 min-w-0 space-y-2">
+              {/* Identity */}
+              <div className="flex flex-col gap-0.5">
+                <p className="font-bold text-gray-800 truncate">
+                  {profile.display_name || profile.username}
+                </p>
+                <p className="text-sm text-gray-400 truncate">@{profile.username}</p>
+              </div>
+
+              {/* Status */}
+              <div className="flex flex-col gap-1">
+                <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
+              </div>
             </div>
           </div>
         </motion.div>
