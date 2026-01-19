@@ -87,7 +87,7 @@ export default function HomePage() {
             </div>
 
             {/* User Info */}
-            <h2 className="text-xl font-bold text-gray-800 mb-1">
+            <h2 className="text-base font-bold text-gray-800 mb-0.5">
               {profile.display_name || profile.username}
             </h2>
             <p className="text-gray-500 text-sm mb-3">@{profile.username}</p>
