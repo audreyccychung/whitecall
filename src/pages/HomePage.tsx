@@ -91,10 +91,9 @@ export default function HomePage() {
             </div>
 
             {/* User Info */}
-            <h2 className="text-base font-bold text-gray-800 mb-0.5">
+            <h2 className="text-base font-bold text-gray-800 mb-2">
               {profile.display_name || profile.username}
             </h2>
-            <p className="text-gray-500 text-sm mb-2">@{profile.username}</p>
 
             {/* Heart Counter */}
             <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
