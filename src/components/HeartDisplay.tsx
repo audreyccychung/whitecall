@@ -5,9 +5,10 @@ import { useMemo } from 'react';
 interface HeartDisplayProps {
   count: number;
   maxVisible?: number;
+  pulse?: boolean; // Trigger a pulse animation
 }
 
-export function HeartDisplay({ count, maxVisible = 20 }: HeartDisplayProps) {
+export function HeartDisplay({ count, maxVisible = 20, pulse = false }: HeartDisplayProps) {
   // Generate random positions for hearts in a circle around the avatar
   const hearts = useMemo(() => {
     const visibleCount = Math.min(count, maxVisible);
@@ -45,13 +46,13 @@ export function HeartDisplay({ count, maxVisible = 20 }: HeartDisplayProps) {
           initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
           animate={{
             opacity: 1,
-            scale: heart.scale,
+            scale: pulse ? [heart.scale, heart.scale * 1.3, heart.scale] : heart.scale,
             x: heart.x,
-            y: heart.y,
+            y: pulse ? [heart.y, heart.y - 10, heart.y] : heart.y,
           }}
           transition={{
-            duration: 0.6,
-            delay: heart.delay,
+            duration: pulse ? 0.5 : 0.6,
+            delay: pulse ? index * 0.05 : heart.delay,
             ease: 'easeOut',
           }}
         >

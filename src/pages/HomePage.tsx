@@ -1,4 +1,5 @@
 // Main home page - user's avatar, hearts, friends on call feed
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useHearts } from '../hooks/useHearts';
@@ -15,6 +16,7 @@ import { HeartSendersList } from '../components/HeartSendersList';
 export default function HomePage() {
   const { user, profile } = useAuth();
   const { stats, sendHeart, heartsReceived } = useHearts(user?.id);
+  const [heartsPulse, setHeartsPulse] = useState(false);
   const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
 
   // Load calls data (this syncs to global store)
@@ -87,7 +89,7 @@ export default function HomePage() {
                 avatarColor={profile.avatar_color}
                 size="large"
               />
-              <HeartDisplay count={stats.received_today} />
+              <HeartDisplay count={stats.received_today} pulse={heartsPulse} />
             </div>
 
             {/* User Info */}
@@ -100,7 +102,13 @@ export default function HomePage() {
 
             {/* Who sent hearts - only show if on call and received hearts */}
             {isUserOnCall && heartsReceivedToday.length > 0 && (
-              <HeartSendersList hearts={heartsReceivedToday} />
+              <HeartSendersList
+                hearts={heartsReceivedToday}
+                onTap={() => {
+                  setHeartsPulse(true);
+                  setTimeout(() => setHeartsPulse(false), 600);
+                }}
+              />
             )}
           </div>
         </motion.div>

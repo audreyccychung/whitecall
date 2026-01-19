@@ -7,6 +7,7 @@ import type { HeartWithSender } from '../types/heart';
 interface HeartSendersListProps {
   hearts: HeartWithSender[];
   maxVisible?: number;
+  onTap?: () => void; // Callback when tapped (to trigger heart animation)
 }
 
 // Soft haptic feedback
@@ -16,45 +17,23 @@ const softHaptic = () => {
   }
 };
 
-export function HeartSendersList({ hearts, maxVisible = 5 }: HeartSendersListProps) {
+export function HeartSendersList({ hearts, maxVisible = 5, onTap }: HeartSendersListProps) {
   const [expanded, setExpanded] = useState(false);
-  const [floatingHearts, setFloatingHearts] = useState<number[]>([]);
 
   if (hearts.length === 0) return null;
 
   const visibleHearts = hearts.slice(0, maxVisible);
   const remainingCount = hearts.length - maxVisible;
 
-  // Tap to expand - triggers haptic and floating hearts
+  // Tap to expand - triggers haptic and heart pulse
   const handleTap = () => {
     softHaptic();
-
-    // Add floating hearts animation
-    const newHearts = Array.from({ length: 3 }, (_, i) => Date.now() + i);
-    setFloatingHearts(newHearts);
-    setTimeout(() => setFloatingHearts([]), 2000);
-
+    onTap?.(); // Trigger avatar hearts animation
     setExpanded(!expanded);
   };
 
   return (
     <div className="mt-3 relative">
-      {/* Floating hearts on tap */}
-      <AnimatePresence>
-        {floatingHearts.map((id, index) => (
-          <motion.div
-            key={id}
-            initial={{ opacity: 1, y: 0, x: (index - 1) * 20 }}
-            animate={{ opacity: 0, y: -40 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: 'easeOut' }}
-            className="absolute left-1/2 -translate-x-1/2 text-xl pointer-events-none"
-          >
-            🤍
-          </motion.div>
-        ))}
-      </AnimatePresence>
-
       {/* Avatars row - tap to expand */}
       <motion.button
         onClick={handleTap}
