@@ -206,7 +206,8 @@ export default function GroupDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-soft-lg p-6"
           >
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Add Member</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Add a friend</h2>
+            <p className="text-sm text-gray-500 mb-4">Invite someone to this group</p>
             <AddMemberForm onAddMember={handleAddMember} />
             <p className="text-xs text-gray-500 mt-3">
               {members.length}/20 members
