@@ -95,12 +95,10 @@ export function GroupMembersList({
               </p>
               <div className="flex items-center gap-2">
                 <p className="text-xs text-gray-400">@{member.username}</p>
-                {/* Call status badge */}
-                {member.is_on_call ? (
-                  <span className="text-xs text-green-600 font-medium">On call today</span>
-                ) : member.next_call_date ? (
+                {/* Next call date badge (only for members not on call) */}
+                {!member.is_on_call && member.next_call_date && (
                   <span className="text-xs text-gray-400">{formatCallDateBadge(member.next_call_date)}</span>
-                ) : null}
+                )}
               </div>
             </div>
           </div>
