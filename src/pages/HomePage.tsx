@@ -10,10 +10,11 @@ import { AvatarDisplay } from '../components/AvatarDisplay';
 import { HeartDisplay } from '../components/HeartDisplay';
 import { HeartButton } from '../components/HeartButton';
 import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
+import { HeartSendersList } from '../components/HeartSendersList';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
-  const { stats, sendHeart } = useHearts(user?.id);
+  const { stats, sendHeart, heartsReceived } = useHearts(user?.id);
   const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
 
   // Load calls data (this syncs to global store)
@@ -51,6 +52,9 @@ export default function HomePage() {
   // Filter friends who are on call (derived from calls table)
   const friendsOnCall = friends.filter((f) => f.is_on_call);
 
+  // Filter hearts received today for the senders list
+  const heartsReceivedToday = heartsReceived.filter((h) => h.shift_date === today);
+
   if (!profile || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -68,16 +72,16 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* User Status Card */}
+      <main className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        {/* User Status Card - Compact */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-soft-lg p-6"
+          className="bg-white rounded-2xl shadow-soft-lg p-4"
         >
           <div className="flex flex-col items-center">
             {/* Avatar with Hearts */}
-            <div className="relative mb-4">
+            <div className="relative mb-2">
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
@@ -90,10 +94,15 @@ export default function HomePage() {
             <h2 className="text-base font-bold text-gray-800 mb-0.5">
               {profile.display_name || profile.username}
             </h2>
-            <p className="text-gray-500 text-sm mb-3">@{profile.username}</p>
+            <p className="text-gray-500 text-sm mb-2">@{profile.username}</p>
 
             {/* Heart Counter */}
             <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
+
+            {/* Who sent hearts - only show if on call and received hearts */}
+            {isUserOnCall && heartsReceivedToday.length > 0 && (
+              <HeartSendersList hearts={heartsReceivedToday} />
+            )}
           </div>
         </motion.div>
 

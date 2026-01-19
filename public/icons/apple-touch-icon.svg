@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
+  <!-- Background with rounded corners for iOS -->
+  <rect x="0" y="0" width="180" height="180" rx="20" fill="#0ea5e9"/>
+
+  <!-- White heart shape -->
+  <path
+    d="M90 148c-4 0-7-1.5-10-4.5l-42-42C30 93.5 26 84 26 73c0-22 18-40 40-40 11 0 20 4 24 8 4-4 13-8 24-8 22 0 40 18 40 40 0 11-4 20.5-12 28.5l-42 42c-3 3-6 4.5-10 4.5z"
+    fill="white"
+    stroke="none"
+  />
+</svg>

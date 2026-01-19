@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Background circle with sky-soft-500 color -->
+  <circle cx="96" cy="96" r="96" fill="#0ea5e9"/>
+
+  <!-- White heart shape -->
+  <path
+    d="M96 160c-4 0-7.5-1.5-10.5-4.5l-45-45C32.5 102.5 28 92 28 80c0-24 19.5-44 44-44 12 0 24 6 24 6s12-6 24-6c24.5 0 44 20 44 44 0 12-4.5 22.5-12.5 30.5l-45 45c-3 3-6.5 4.5-10.5 4.5z"
+    fill="white"
+    stroke="none"
+  />
+</svg>
