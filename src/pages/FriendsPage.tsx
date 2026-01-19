@@ -53,7 +53,7 @@ export default function FriendsPage() {
     const username = profile?.username;
     if (!username) return;
 
-    const shareText = `Add me on WhiteCall 🤍\nMy username: ${username}\nhttps://whitecall-ok4n.vercel.app`;
+    const shareText = `Add me on WhiteCall 🤍\nMy username: ${username}\nhttps://whitecall.app`;
 
     // Try native share API first (works on mobile)
     if (navigator.share) {
