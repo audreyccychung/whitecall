@@ -68,32 +68,31 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* User's Avatar with Hearts */}
+      <main className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* User Status Card - compact horizontal layout */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-soft-lg p-8"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-soft p-4"
         >
-          <div className="flex flex-col items-center">
+          <div className="flex items-center gap-4">
             {/* Avatar with Hearts */}
-            <div className="relative mb-6">
+            <div className="relative flex-shrink-0">
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
-                size="xl"
+                size="medium"
               />
               <HeartDisplay count={stats.received_today} />
             </div>
 
-            {/* User Info */}
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {profile.display_name || profile.username}
-            </h2>
-            <p className="text-gray-600 mb-4">@{profile.username}</p>
-
-            {/* Heart Counter */}
-            <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
+            {/* User Info + Heart Counter */}
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-gray-800 truncate">
+                {profile.display_name || profile.username}
+              </p>
+              <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
+            </div>
           </div>
         </motion.div>
 
