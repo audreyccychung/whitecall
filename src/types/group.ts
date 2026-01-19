@@ -18,6 +18,8 @@ export interface GroupMember {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
+  is_on_call: boolean;
+  next_call_date: string | null; // YYYY-MM-DD or null if no upcoming calls
 }
 
 // Exhaustive result codes from create_group DB function

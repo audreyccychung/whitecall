@@ -100,6 +100,8 @@ export function useGroupMembers(groupId: string | undefined) {
         display_name: m.display_name,
         avatar_type: m.avatar_type,
         avatar_color: m.avatar_color,
+        is_on_call: m.is_on_call ?? false,
+        next_call_date: m.next_call_date ?? null,
       }));
 
       setMembers(membersList);

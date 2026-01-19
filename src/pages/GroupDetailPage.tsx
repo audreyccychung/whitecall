@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useGroups } from '../hooks/useGroups';
 import { useGroupMembers } from '../hooks/useGroupMembers';
+import { useHearts } from '../hooks/useHearts';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
 import { GroupCalendarView } from '../components/GroupCalendarView';
@@ -18,6 +19,7 @@ export default function GroupDetailPage() {
   const { user } = useAuth();
   const { groups, deleteGroup } = useGroups(user?.id);
   const { members, loading: membersLoading, addMember, removeMember, leaveGroup } = useGroupMembers(id);
+  const { sendHeart, heartsSent } = useHearts(user?.id);
 
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -26,6 +28,8 @@ export default function GroupDetailPage() {
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // Track which members we've sent hearts to (for optimistic UI)
+  const [sentHeartsLocal, setSentHeartsLocal] = useState<Set<string>>(new Set());
 
   // Find the current group from loaded groups
   const group = groups.find((g) => g.id === id);
@@ -38,6 +42,28 @@ export default function GroupDetailPage() {
   const handleRemoveMember = async (memberId: string) => {
     return removeMember(memberId);
   };
+
+  const handleSendHeart = async (memberId: string) => {
+    // Optimistic update - show as sent immediately
+    setSentHeartsLocal((prev) => new Set(prev).add(memberId));
+
+    const result = await sendHeart(memberId);
+
+    if (!result.success) {
+      // Rollback on failure
+      setSentHeartsLocal((prev) => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
+    }
+  };
+
+  // Combine hearts from backend (heartsSent) with local optimistic updates
+  const sentHeartsSet = new Set([
+    ...heartsSent.map((h) => h.recipient_id),
+    ...sentHeartsLocal,
+  ]);
 
   // Convert GroupMemberOnCall to Friend for profile modal
   const handleMemberClick = (member: GroupMemberOnCall) => {
@@ -210,6 +236,8 @@ export default function GroupDetailPage() {
               currentUserId={user?.id}
               isOwner={isOwner}
               onRemoveMember={handleRemoveMember}
+              onSendHeart={handleSendHeart}
+              sentHearts={sentHeartsSet}
             />
           )}
         </motion.div>

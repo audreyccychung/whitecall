@@ -36,9 +36,10 @@ export function AddMemberForm({ onAddMember }: AddMemberFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label htmlFor="member-username" className="block text-sm font-medium text-gray-700 mb-2">
-          Add Member by Username
+        <label htmlFor="member-username" className="block text-sm font-medium text-gray-700 mb-1">
+          Add a friend
         </label>
+        <p className="text-xs text-gray-500 mb-2">Invite someone to this group</p>
         <div className="flex gap-2">
           <input
             type="text"
