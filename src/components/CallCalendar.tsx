@@ -185,9 +185,12 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
                 ${isLoading ? 'opacity-60' : ''}
               `}
             >
-              {/* Show emoji for rated past calls, otherwise show day number */}
+              {/* Show date with emoji below for rated past calls, otherwise just date */}
               {isPast && hasCall && hasRating ? (
-                <span className="text-lg">{RATING_EMOJI[rating.rating]}</span>
+                <div className="flex flex-col items-center leading-none">
+                  <span>{format(day, 'd')}</span>
+                  <span className="text-xs">{RATING_EMOJI[rating.rating]}</span>
+                </div>
               ) : (
                 format(day, 'd')
               )}

@@ -7,19 +7,23 @@ import { useCalls } from '../hooks/useCalls';
 import { useCallRatings } from '../hooks/useCallRatings';
 import { CallCalendar } from '../components/CallCalendar';
 import { RateCallModal } from '../components/RateCallModal';
+import { AddPastCallModal } from '../components/AddPastCallModal';
 import type { CallRating } from '../types/database';
 
 export default function CallsPage() {
   const { user } = useAuth();
-  const { calls, loading, error, toggleCall } = useCalls(user?.id);
-  const { ratingsMap, isLoading: ratingsLoading } = useCallRatings(user?.id);
+  const { calls, loading, error, toggleCall, refreshCalls } = useCalls(user?.id);
+  const { ratingsMap, isLoading: ratingsLoading, refetch: refetchRatings } = useCallRatings(user?.id);
 
-  // Modal state for rating
+  // Modal state for rating existing call
   const [ratingModal, setRatingModal] = useState<{
     isOpen: boolean;
     callDate: string;
     existingRating?: CallRating;
   }>({ isOpen: false, callDate: '' });
+
+  // Modal state for adding past call
+  const [showAddPastCall, setShowAddPastCall] = useState(false);
 
   // Convert calls array to Set for O(1) lookup
   const callDates = useMemo(() => {
@@ -49,12 +53,26 @@ export default function CallsPage() {
     setRatingModal({ isOpen: false, callDate: '' });
   };
 
+  // Handle past call added - refetch both calls and ratings
+  const handlePastCallSaved = async () => {
+    await Promise.all([refreshCalls(), refetchRatings()]);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">My Calls</h1>
+          <button
+            onClick={() => setShowAddPastCall(true)}
+            className="p-2 bg-sky-soft-500 text-white rounded-lg hover:bg-sky-soft-600 transition-colors"
+            aria-label="Add past call"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -159,6 +177,16 @@ export default function CallsPage() {
             callDate={ratingModal.callDate}
             existingRating={ratingModal.existingRating}
             onClose={closeRatingModal}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Add Past Call Modal */}
+      <AnimatePresence>
+        {showAddPastCall && (
+          <AddPastCallModal
+            onClose={() => setShowAddPastCall(false)}
+            onSaved={handlePastCallSaved}
           />
         )}
       </AnimatePresence>
