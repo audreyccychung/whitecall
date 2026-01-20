@@ -12,15 +12,21 @@ interface FriendProfileModalProps {
   // Optional: for group member context where they may not be friends yet
   showAddFriend?: boolean;
   onAddFriend?: (username: string) => Promise<{ success: boolean; error?: string }>;
+  // Optional: for removing friends
+  showRemoveFriend?: boolean;
+  onRemoveFriend?: (friendId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const MAX_VISIBLE_CALLS = 6;
 
-export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend }: FriendProfileModalProps) {
+export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend, showRemoveFriend, onRemoveFriend }: FriendProfileModalProps) {
   const { calls, loading, error } = useFriendCalls(friend?.id || null);
   const [addingFriend, setAddingFriend] = useState(false);
   const [addFriendError, setAddFriendError] = useState<string | null>(null);
   const [addFriendSuccess, setAddFriendSuccess] = useState(false);
+  const [removingFriend, setRemovingFriend] = useState(false);
+  const [removeFriendError, setRemoveFriendError] = useState<string | null>(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
   const handleAddFriend = async () => {
     if (!friend || !onAddFriend) return;
@@ -37,6 +43,24 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
     }
 
     setAddingFriend(false);
+  };
+
+  const handleRemoveFriend = async () => {
+    if (!friend || !onRemoveFriend) return;
+
+    setRemovingFriend(true);
+    setRemoveFriendError(null);
+
+    const result = await onRemoveFriend(friend.id);
+
+    if (result.success) {
+      onClose(); // Close modal after successful removal
+    } else {
+      setRemoveFriendError(result.error || 'Failed to remove friend');
+    }
+
+    setRemovingFriend(false);
+    setShowRemoveConfirm(false);
   };
 
   const today = getTodayDate();
@@ -189,6 +213,46 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
                   </div>
                 )}
               </div>
+
+              {/* Remove Friend button */}
+              {showRemoveFriend && onRemoveFriend && (
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  {removeFriendError && (
+                    <p className="text-sm text-red-600 mb-2">{removeFriendError}</p>
+                  )}
+
+                  {!showRemoveConfirm ? (
+                    <button
+                      onClick={() => setShowRemoveConfirm(true)}
+                      className="w-full py-2.5 text-red-600 rounded-xl font-medium hover:bg-red-50 transition-colors"
+                    >
+                      Remove Friend
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 text-center mb-3">
+                        Remove {friend.display_name || friend.username} from your friends?
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setShowRemoveConfirm(false)}
+                          disabled={removingFriend}
+                          className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleRemoveFriend}
+                          disabled={removingFriend}
+                          className="flex-1 py-2.5 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 disabled:opacity-50 transition-colors"
+                        >
+                          {removingFriend ? 'Removing...' : 'Remove'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         </>

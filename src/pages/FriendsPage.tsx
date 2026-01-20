@@ -11,7 +11,7 @@ import type { Friend } from '../types/friend';
 
 export default function FriendsPage() {
   const { user, profile } = useAuth();
-  const { friends, loading, addFriend, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
+  const { friends, loading, addFriend, removeFriend, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
   const { sendHeart } = useHearts(user?.id);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [copied, setCopied] = useState(false);
@@ -156,7 +156,15 @@ export default function FriendsPage() {
       </main>
 
       {/* Friend Profile Modal */}
-      <FriendProfileModal friend={selectedFriend} onClose={handleCloseModal} />
+      <FriendProfileModal
+        friend={selectedFriend}
+        onClose={handleCloseModal}
+        showRemoveFriend={selectedFriend !== null}
+        onRemoveFriend={async (friendId) => {
+          const result = await removeFriend(friendId);
+          return { success: result.success, error: result.error };
+        }}
+      />
     </div>
   );
 }
