@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGroups } from '../hooks/useGroups';
 import { useGroupMembers } from '../hooks/useGroupMembers';
 import { useHearts } from '../hooks/useHearts';
+import { useGroupInvite } from '../hooks/useGroupInvite';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
 import { GroupCalendarView } from '../components/GroupCalendarView';
@@ -20,8 +21,12 @@ export default function GroupDetailPage() {
   const { groups, deleteGroup } = useGroups(user?.id);
   const { members, loading: membersLoading, addMember, removeMember, leaveGroup } = useGroupMembers(id);
   const { sendHeart, heartsSent } = useHearts(user?.id);
+  const { generateInviteCode, buildInviteUrl, isGenerating } = useGroupInvite();
 
   const [deleting, setDeleting] = useState(false);
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Friend | null>(null);
@@ -37,6 +42,55 @@ export default function GroupDetailPage() {
 
   const handleAddMember = async (username: string) => {
     return addMember(username);
+  };
+
+  const handleGenerateInviteLink = async () => {
+    if (!id) return;
+
+    setInviteError(null);
+    setInviteCopied(false);
+
+    const result = await generateInviteCode(id);
+
+    if (result.success && result.inviteCode) {
+      const url = buildInviteUrl(result.inviteCode);
+      setInviteLink(url);
+    } else {
+      setInviteError(result.message);
+    }
+  };
+
+  const handleCopyInviteLink = async () => {
+    if (!inviteLink) return;
+
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setInviteCopied(true);
+      setTimeout(() => setInviteCopied(false), 2000);
+    } catch {
+      // Fallback for browsers without clipboard API
+      setInviteError('Could not copy. Try selecting and copying manually.');
+    }
+  };
+
+  const handleShareInviteLink = async () => {
+    if (!inviteLink || !group) return;
+
+    // Use Web Share API if available (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Join ${group.name} on WhiteCall`,
+          text: `Join my group "${group.name}" on WhiteCall!`,
+          url: inviteLink,
+        });
+      } catch {
+        // User cancelled or share failed, ignore
+      }
+    } else {
+      // Fallback to copy
+      handleCopyInviteLink();
+    }
   };
 
   const handleRemoveMember = async (memberId: string) => {
@@ -206,8 +260,64 @@ export default function GroupDetailPage() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-soft-lg p-6"
           >
-            <h2 className="text-xl font-bold text-gray-800 mb-1">Add a friend</h2>
-            <p className="text-sm text-gray-500 mb-4">Invite someone to this group</p>
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Add members</h2>
+            <p className="text-sm text-gray-500 mb-4">Invite friends to this group</p>
+
+            {/* Invite Link Section */}
+            <div className="mb-6 p-4 bg-sky-soft-50 rounded-xl border border-sky-soft-200">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">🔗</span>
+                <span className="font-medium text-gray-800">Share invite link</span>
+              </div>
+
+              {inviteError && (
+                <p className="text-sm text-red-600 mb-2">{inviteError}</p>
+              )}
+
+              {!inviteLink ? (
+                <button
+                  onClick={handleGenerateInviteLink}
+                  disabled={isGenerating}
+                  className="w-full py-2.5 bg-sky-soft-500 text-white rounded-lg font-medium hover:bg-sky-soft-600 disabled:opacity-50 transition-colors"
+                >
+                  {isGenerating ? 'Creating link...' : 'Create invite link'}
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={inviteLink}
+                      readOnly
+                      className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 truncate"
+                    />
+                    <button
+                      onClick={handleCopyInviteLink}
+                      className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      {inviteCopied ? '✓ Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleShareInviteLink}
+                    className="w-full py-2.5 bg-sky-soft-500 text-white rounded-lg font-medium hover:bg-sky-soft-600 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span>📤</span> Share link
+                  </button>
+                  <p className="text-xs text-gray-500 text-center">
+                    Link expires in 7 days
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Or divider */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400 uppercase">or add by username</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+
             <AddMemberForm onAddMember={handleAddMember} />
             <p className="text-xs text-gray-500 mt-3">
               {members.length}/20 members

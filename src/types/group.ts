@@ -127,3 +127,43 @@ export interface LeaveGroupResult {
   code: LeaveGroupCode;
   error?: string;
 }
+
+// Result codes from generate_invite_code RPC
+export type GenerateInviteCodeCode =
+  | 'SUCCESS'
+  | 'UNAUTHORIZED'
+  | 'GROUP_NOT_FOUND'
+  | 'NOT_OWNER'
+  | 'UNKNOWN_ERROR';
+
+export interface GenerateInviteCodeResult {
+  success: boolean;
+  code: GenerateInviteCodeCode;
+  invite_code?: string;
+  expires_at?: string;
+}
+
+// Result codes from join_group_by_code RPC
+export type JoinGroupByCodeCode =
+  | 'SUCCESS'
+  | 'UNAUTHORIZED'
+  | 'INVALID_CODE'
+  | 'CODE_EXPIRED'
+  | 'ALREADY_MEMBER'
+  | 'GROUP_FULL'
+  | 'UNKNOWN_ERROR';
+
+export interface JoinGroupByCodeResult {
+  success: boolean;
+  code: JoinGroupByCodeCode;
+  group_id?: string;
+  group_name?: string;
+}
+
+// Result from get_invite_code_info RPC
+export interface InviteCodeInfo {
+  valid: boolean;
+  reason?: 'INVALID_CODE' | 'CODE_EXPIRED' | 'GROUP_FULL' | 'UNKNOWN_ERROR';
+  group_name?: string;
+  member_count?: number;
+}

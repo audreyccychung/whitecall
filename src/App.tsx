@@ -15,6 +15,7 @@ import GroupsPage from './pages/GroupsPage';
 import GroupDetailPage from './pages/GroupDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import JoinGroupPage from './pages/JoinGroupPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/create-profile" element={<CreateProfilePage />} />
+          <Route path="/join/:code" element={<JoinGroupPage />} />
 
           {/* Protected routes with bottom navigation */}
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
