@@ -19,10 +19,11 @@ import {
 interface CallCalendarProps {
   callDates: Set<string>; // Set of YYYY-MM-DD strings
   onToggleDate: (date: string) => Promise<void>;
+  onPastCallClick?: (date: string) => void; // Callback when clicking a past call date
   disabled?: boolean;
 }
 
-export function CallCalendar({ callDates, onToggleDate, disabled = false }: CallCalendarProps) {
+export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disabled = false }: CallCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loadingDate, setLoadingDate] = useState<string | null>(null);
 
@@ -37,12 +38,21 @@ export function CallCalendar({ callDates, onToggleDate, disabled = false }: Call
     if (disabled) return;
 
     const dateStr = format(date, 'yyyy-MM-dd');
+    const isPastDate = isBefore(date, startOfDay(new Date())) && !isToday(date);
+    const dateHasCall = callDates.has(dateStr);
 
-    // Don't allow toggling past dates (before today)
-    if (isBefore(date, startOfDay(new Date())) && !isToday(date)) {
+    // Past date without call - not clickable
+    if (isPastDate && !dateHasCall) {
       return;
     }
 
+    // Past date WITH call - trigger past call click handler (for rating)
+    if (isPastDate && dateHasCall) {
+      onPastCallClick?.(dateStr);
+      return;
+    }
+
+    // Future/today dates - toggle call on/off
     setLoadingDate(dateStr);
     try {
       await onToggleDate(dateStr);
@@ -121,32 +131,45 @@ export function CallCalendar({ callDates, onToggleDate, disabled = false }: Call
 
           if (!isCurrentMonth) {
             style.color = '#d1d5db'; // gray-300
-          } else if (hasCall) {
+          } else if (hasCall && !isPast) {
+            // Future/today calls: Blue filled circle
             style.backgroundColor = '#0ea5e9'; // sky-soft-500
             style.color = '#ffffff';
             style.boxShadow = '0 0 0 2px #0284c7, 0 0 0 4px #ffffff'; // ring effect
+          } else if (hasCall && isPast) {
+            // Past calls: Gray filled circle (clickable for rating)
+            style.backgroundColor = '#9ca3af'; // gray-400
+            style.color = '#ffffff';
           } else if (isPast) {
-            style.color = '#9ca3af'; // gray-400
+            // Past without call: Grayed out text
+            style.color = '#d1d5db'; // gray-300
           } else if (isTodayDate) {
             style.boxShadow = '0 0 0 2px #0ea5e9, 0 0 0 4px #ffffff'; // ring effect
           }
 
+          // Hover states
           if (!hasCall && !isPast && isCurrentMonth) {
             extraClasses = 'hover:bg-gray-100';
+          } else if (hasCall && isPast && isCurrentMonth) {
+            // Past calls get hover feedback for clickability
+            extraClasses = 'hover:bg-gray-500';
           }
+
+          // Past calls are clickable (for rating), past non-calls are not
+          const isClickable = !disabled && !isLoading && (!isPast || hasCall);
 
           return (
             <motion.button
               key={dateStr}
               onClick={() => handleDateClick(day)}
-              disabled={disabled || isPast || isLoading}
-              whileTap={!disabled && !isPast ? { scale: 0.95 } : undefined}
+              disabled={!isClickable}
+              whileTap={isClickable ? { scale: 0.95 } : undefined}
               style={style}
               className={`
                 relative aspect-square flex items-center justify-center rounded-full text-sm font-medium
                 transition-all min-h-[44px]
                 ${extraClasses}
-                ${disabled || isPast ? 'cursor-not-allowed' : 'cursor-pointer'}
+                ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}
                 ${isLoading ? 'opacity-60' : ''}
               `}
             >
@@ -162,10 +185,14 @@ export function CallCalendar({ callDates, onToggleDate, disabled = false }: Call
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-gray-600">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-sky-soft-500 rounded-full ring-2 ring-sky-soft-600 ring-offset-1" />
           <span>On call</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gray-400 rounded-full" />
+          <span>Past call</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 border-2 border-sky-soft-500 rounded-full" />

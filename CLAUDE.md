@@ -6,7 +6,7 @@
 **Stage**: V0 - Minimal viable social mechanic
 
 ## Production URLs
-- **App**: https://whitecall-ok4n.vercel.app/
+- **App**: https://whitecall.app/
 - **Supabase**: https://uerolgdehjywyjlfqymx.supabase.co
 
 ## Tech Stack
