@@ -124,34 +124,62 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Push notification handler (stub for future use)
+// Push notification handler
 // iOS 16.4+ requires the app to be installed to receive push notifications
 self.addEventListener('push', (event) => {
   console.log('[SW] Push received:', event);
 
-  // TODO: Implement push notification display
-  // const data = event.data?.json() ?? {};
-  // self.registration.showNotification(data.title, { ... });
+  if (!event.data) {
+    console.log('[SW] Push event has no data');
+    return;
+  }
+
+  let data;
+  try {
+    data = event.data.json();
+  } catch (e) {
+    console.error('[SW] Failed to parse push data:', e);
+    data = { title: 'WhiteCall', body: event.data.text() };
+  }
+
+  const options = {
+    body: data.body || 'You received a heart!',
+    icon: data.icon || '/icons/icon-192.svg',
+    badge: data.badge || '/icons/icon-192.svg',
+    tag: data.tag || 'heart-notification',
+    renotify: true,
+    data: data.data || {},
+    // Keep notifications simple for iOS compatibility
+    requireInteraction: false,
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'WhiteCall', options)
+  );
 });
 
-// Notification click handler (stub for future use)
+// Notification click handler
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification clicked:', event);
 
   event.notification.close();
 
-  // Open the app when notification is clicked
+  // Get the URL to open from notification data, default to /home
+  const urlToOpen = event.notification.data?.url || '/home';
+
   event.waitUntil(
-    self.clients.matchAll({ type: 'window' })
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clients) => {
-        // Focus existing window if open
+        // Focus existing window if available
         for (const client of clients) {
           if (client.url.includes(self.location.origin) && 'focus' in client) {
+            // Navigate to the target URL and focus
+            client.navigate(urlToOpen);
             return client.focus();
           }
         }
-        // Otherwise open new window
-        return self.clients.openWindow('/');
+        // No existing window, open new one
+        return self.clients.openWindow(urlToOpen);
       })
   );
 });

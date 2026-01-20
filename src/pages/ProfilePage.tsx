@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import { EditUsernameModal } from '../components/EditUsernameModal';
@@ -12,6 +13,26 @@ export default function ProfilePage() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
+
+  // Push notifications
+  const {
+    status: pushStatus,
+    loading: pushLoading,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    isSupported: pushSupported,
+    isSubscribed: pushSubscribed,
+    needsInstall: pushNeedsInstall,
+    isDenied: pushDenied,
+  } = usePushNotifications(user?.id);
+
+  const handlePushToggle = async () => {
+    if (pushSubscribed) {
+      await unsubscribePush();
+    } else {
+      await subscribePush();
+    }
+  };
 
   if (!profile || !user) {
     return (
@@ -129,6 +150,67 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Notifications Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Notifications</p>
+
+            {pushNeedsInstall ? (
+              // iOS but not installed as PWA
+              <div className="p-4 bg-amber-50 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">📲</span>
+                  <div>
+                    <p className="font-medium text-amber-800">Install app for notifications</p>
+                    <p className="text-sm text-amber-600 mt-1">
+                      Tap the share button below, then "Add to Home Screen" to enable push notifications.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : pushSupported ? (
+              // Push is supported
+              <button
+                onClick={handlePushToggle}
+                disabled={pushLoading || pushDenied}
+                className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{pushSubscribed ? '🔔' : '🔕'}</span>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800">Push Notifications</p>
+                    <p className="text-sm text-gray-500">
+                      {pushSubscribed && 'Enabled - you\'ll get heart alerts'}
+                      {pushStatus === 'granted' && 'Tap to enable heart alerts'}
+                      {pushStatus === 'prompt' && 'Tap to enable heart alerts'}
+                      {pushDenied && 'Blocked - enable in browser settings'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  {pushLoading ? (
+                    <div className="w-5 h-5 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <div className={`w-12 h-7 rounded-full transition-colors flex items-center ${
+                      pushSubscribed ? 'bg-green-500' : 'bg-gray-300'
+                    }`}>
+                      <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mx-1 ${
+                        pushSubscribed ? 'translate-x-5' : 'translate-x-0'
+                      }`} />
+                    </div>
+                  )}
+                </div>
+              </button>
+            ) : (
+              // Push not supported
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <p className="text-sm text-gray-500">
+                  Push notifications are not supported on this device or browser.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Sign Out Button */}
