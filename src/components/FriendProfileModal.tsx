@@ -1,4 +1,5 @@
 // Friend profile modal - bottom sheet showing upcoming calls
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarDisplay } from './AvatarDisplay';
 import { useFriendCalls } from '../hooks/useFriendCalls';
@@ -8,12 +9,35 @@ import type { Friend } from '../types/friend';
 interface FriendProfileModalProps {
   friend: Friend | null;
   onClose: () => void;
+  // Optional: for group member context where they may not be friends yet
+  showAddFriend?: boolean;
+  onAddFriend?: (username: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const MAX_VISIBLE_CALLS = 6;
 
-export function FriendProfileModal({ friend, onClose }: FriendProfileModalProps) {
+export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend }: FriendProfileModalProps) {
   const { calls, loading, error } = useFriendCalls(friend?.id || null);
+  const [addingFriend, setAddingFriend] = useState(false);
+  const [addFriendError, setAddFriendError] = useState<string | null>(null);
+  const [addFriendSuccess, setAddFriendSuccess] = useState(false);
+
+  const handleAddFriend = async () => {
+    if (!friend || !onAddFriend) return;
+
+    setAddingFriend(true);
+    setAddFriendError(null);
+
+    const result = await onAddFriend(friend.username);
+
+    if (result.success) {
+      setAddFriendSuccess(true);
+    } else {
+      setAddFriendError(result.error || 'Failed to add friend');
+    }
+
+    setAddingFriend(false);
+  };
 
   const today = getTodayDate();
   const visibleCalls = calls.slice(0, MAX_VISIBLE_CALLS);
@@ -57,7 +81,7 @@ export function FriendProfileModal({ friend, onClose }: FriendProfileModalProps)
             {/* Content */}
             <div className="px-6 pb-8 pt-2 modal-safe-bottom sm:pb-8">
               {/* Profile header */}
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-4 mb-4">
                 <AvatarDisplay
                   avatarType={friend.avatar_type}
                   avatarColor={friend.avatar_color}
@@ -70,6 +94,35 @@ export function FriendProfileModal({ friend, onClose }: FriendProfileModalProps)
                   <p className="text-sm text-gray-500">@{friend.username}</p>
                 </div>
               </div>
+
+              {/* Add Friend button (for group member context) */}
+              {showAddFriend && onAddFriend && !addFriendSuccess && (
+                <div className="mb-6">
+                  {addFriendError && (
+                    <p className="text-sm text-red-600 mb-2">{addFriendError}</p>
+                  )}
+                  <button
+                    onClick={handleAddFriend}
+                    disabled={addingFriend}
+                    className="w-full py-2.5 bg-sky-soft-500 text-white rounded-xl font-medium hover:bg-sky-soft-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {addingFriend ? (
+                      'Adding...'
+                    ) : (
+                      <>
+                        <span>👋</span> Add Friend
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Success message after adding */}
+              {addFriendSuccess && (
+                <div className="mb-6 p-3 bg-green-50 text-green-700 rounded-xl text-center">
+                  <span className="font-medium">Friend added!</span>
+                </div>
+              )}
 
               {/* Upcoming calls section */}
               <div>

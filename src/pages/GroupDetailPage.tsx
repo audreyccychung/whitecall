@@ -7,6 +7,7 @@ import { useGroups } from '../hooks/useGroups';
 import { useGroupMembers } from '../hooks/useGroupMembers';
 import { useHearts } from '../hooks/useHearts';
 import { useGroupInvite } from '../hooks/useGroupInvite';
+import { useFriends } from '../hooks/useFriends';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
 import { GroupCalendarView } from '../components/GroupCalendarView';
@@ -22,6 +23,7 @@ export default function GroupDetailPage() {
   const { members, loading: membersLoading, addMember, removeMember, leaveGroup } = useGroupMembers(id);
   const { sendHeart, heartsSent } = useHearts(user?.id);
   const { generateInviteCode, buildInviteUrl, isGenerating } = useGroupInvite();
+  const { friends, addFriend } = useFriends(user?.id);
 
   const [deleting, setDeleting] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
@@ -464,6 +466,16 @@ export default function GroupDetailPage() {
       <FriendProfileModal
         friend={selectedMember}
         onClose={() => setSelectedMember(null)}
+        // Show "Add Friend" button if member is not self and not already a friend
+        showAddFriend={
+          selectedMember !== null &&
+          selectedMember.id !== user?.id &&
+          !friends.some((f) => f.id === selectedMember.id)
+        }
+        onAddFriend={async (username) => {
+          const result = await addFriend(username);
+          return { success: result.success, error: result.error };
+        }}
       />
     </div>
   );
