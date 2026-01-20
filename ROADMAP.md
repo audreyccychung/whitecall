@@ -114,7 +114,26 @@ type GroupCalendarDay = {
 
 ---
 
-## V1.0 - Polish & Launch (IN PROGRESS)
+## V1.1 - Call Ratings & History ✓ COMPLETE
+
+**Scope**: Rate past calls and add manual entries
+
+### Features - COMPLETE
+- [x] Call ratings system (rough/okay/good/great with emoji)
+- [x] `save_call_rating` RPC (upsert with validation)
+- [x] `RateCallModal` component
+- [x] `CallHistoryList` component
+- [x] History page with past calls list
+- [x] Single calendar on Calls page (removed duplicate from History)
+- [x] Calendar shows emoji for rated past calls, gray for unrated
+- [x] Tap past call → rating modal
+- [x] Manual past call entry (+ button like Strava)
+- [x] `add_past_call_with_rating` RPC (atomic)
+- [x] `AddPastCallModal` component with date picker
+
+---
+
+## V1.2 - Polish & Launch (IN PROGRESS)
 
 **Scope**: Production-ready group scheduling with improved UX
 

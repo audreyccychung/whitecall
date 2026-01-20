@@ -8,13 +8,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned for V0.5 (Week 3-4)
-- Calendar and shift management
 - Automatic call detection from calendar
 - Message feed
 - **RETENTION: Weekly recap**
 - **RETENTION: Smart "who needs support" feed**
 - **RETENTION: "You made someone's day" feedback**
 - **RETENTION: Badge system foundation**
+
+---
+
+## [1.1.1] - 2026-01-21
+
+### Added - Call Ratings & History V1.1.1
+
+**Single Calendar with Rating Integration**:
+- Unified calendar on Calls page (removed duplicate from History page)
+- Future dates: tap to toggle on/off call
+- Past calls: show date number with emoji underneath for rated calls
+- Past calls: gray circle for unrated calls (tap to rate)
+- Legend updated: "On call", "Unrated", "Rated"
+
+**Manual Past Call Entry (+ button like Strava)**:
+- New `add_past_call_with_rating` RPC (atomic call + rating insert)
+- `AddPastCallModal` component with date picker + rating selection
+- + button in Calls page header
+- Date defaults to yesterday, max date is yesterday (no future dates)
+- Result codes: SUCCESS, UNAUTHORIZED, FUTURE_DATE_NOT_ALLOWED, INVALID_RATING, CALL_ALREADY_EXISTS
+
+**History Page Simplified**:
+- Removed duplicate calendar
+- List-only view of past calls
+- "Edit schedule" link to Calls page
+- Rating modal still works from list items
+
+**Files Changed**:
+- `CallCalendar.tsx` - added ratingsMap prop, emoji display for rated calls
+- `CallsPage.tsx` - integrated rating modal, + button, ratingsMap to calendar
+- `ProfilePage.tsx` - removed calendar, kept list-only view
+- `AddPastCallModal.tsx` - new component
+- `025_add_past_call_with_rating.sql` - new migration
 
 ---
 
