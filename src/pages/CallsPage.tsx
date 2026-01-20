@@ -1,14 +1,25 @@
 // Calls calendar page - mark days you're on call
-import { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, isBefore, startOfDay, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalls } from '../hooks/useCalls';
+import { useCallRatings } from '../hooks/useCallRatings';
 import { CallCalendar } from '../components/CallCalendar';
+import { RateCallModal } from '../components/RateCallModal';
+import type { CallRating } from '../types/database';
 
 export default function CallsPage() {
   const { user } = useAuth();
   const { calls, loading, error, toggleCall } = useCalls(user?.id);
+  const { ratingsMap, isLoading: ratingsLoading } = useCallRatings(user?.id);
+
+  // Modal state for rating
+  const [ratingModal, setRatingModal] = useState<{
+    isOpen: boolean;
+    callDate: string;
+    existingRating?: CallRating;
+  }>({ isOpen: false, callDate: '' });
 
   // Convert calls array to Set for O(1) lookup
   const callDates = useMemo(() => {
@@ -25,6 +36,17 @@ export default function CallsPage() {
 
   const handleToggleDate = async (date: string) => {
     await toggleCall(date);
+  };
+
+  // Handle click on past call in calendar (for rating)
+  const handlePastCallClick = (callDate: string) => {
+    const existingRating = ratingsMap.get(callDate);
+    setRatingModal({ isOpen: true, callDate, existingRating });
+  };
+
+  // Close modal
+  const closeRatingModal = () => {
+    setRatingModal({ isOpen: false, callDate: '' });
   };
 
   return (
@@ -64,8 +86,10 @@ export default function CallsPage() {
         >
           <CallCalendar
             callDates={callDates}
+            ratingsMap={ratingsMap}
             onToggleDate={handleToggleDate}
-            disabled={loading}
+            onPastCallClick={handlePastCallClick}
+            disabled={loading || ratingsLoading}
           />
         </motion.div>
 
@@ -127,6 +151,17 @@ export default function CallsPage() {
           )}
         </motion.div>
       </main>
+
+      {/* Rating Modal */}
+      <AnimatePresence>
+        {ratingModal.isOpen && (
+          <RateCallModal
+            callDate={ratingModal.callDate}
+            existingRating={ratingModal.existingRating}
+            onClose={closeRatingModal}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

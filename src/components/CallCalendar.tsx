@@ -15,15 +15,18 @@ import {
   isBefore,
   startOfDay,
 } from 'date-fns';
+import type { CallRating } from '../types/database';
+import { RATING_EMOJI } from '../types/database';
 
 interface CallCalendarProps {
   callDates: Set<string>; // Set of YYYY-MM-DD strings
+  ratingsMap?: Map<string, CallRating>; // Optional ratings lookup for past calls
   onToggleDate: (date: string) => Promise<void>;
   onPastCallClick?: (date: string) => void; // Callback when clicking a past call date
   disabled?: boolean;
 }
 
-export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disabled = false }: CallCalendarProps) {
+export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallClick, disabled = false }: CallCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loadingDate, setLoadingDate] = useState<string | null>(null);
 
@@ -125,6 +128,8 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
           const hasCall = callDates.has(dateStr);
           const isPast = isBefore(day, startOfDay(new Date())) && !isTodayDate;
           const isLoading = loadingDate === dateStr;
+          const rating = ratingsMap?.get(dateStr);
+          const hasRating = !!rating;
 
           // Determine styles based on state priority
           const style: React.CSSProperties = {};
@@ -137,8 +142,11 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
             style.backgroundColor = '#0ea5e9'; // sky-soft-500
             style.color = '#ffffff';
             style.boxShadow = '0 0 0 2px #0284c7, 0 0 0 4px #ffffff'; // ring effect
+          } else if (hasCall && isPast && hasRating) {
+            // Past calls with rating: Show emoji background
+            style.backgroundColor = '#f3f4f6'; // gray-100
           } else if (hasCall && isPast) {
-            // Past calls: Gray filled circle (clickable for rating)
+            // Past calls without rating: Gray filled circle (clickable for rating)
             style.backgroundColor = '#9ca3af'; // gray-400
             style.color = '#ffffff';
           } else if (isPast) {
@@ -153,7 +161,7 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
             extraClasses = 'hover:bg-gray-100';
           } else if (hasCall && isPast && isCurrentMonth) {
             // Past calls get hover feedback for clickability
-            extraClasses = 'hover:bg-gray-500';
+            extraClasses = hasRating ? 'hover:bg-gray-200' : 'hover:bg-gray-500';
           }
 
           // Past calls are always clickable (for rating), even when calendar is disabled
@@ -177,7 +185,12 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
                 ${isLoading ? 'opacity-60' : ''}
               `}
             >
-              {format(day, 'd')}
+              {/* Show emoji for rated past calls, otherwise show day number */}
+              {isPast && hasCall && hasRating ? (
+                <span className="text-lg">{RATING_EMOJI[rating.rating]}</span>
+              ) : (
+                format(day, 'd')
+              )}
               {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -196,11 +209,11 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-gray-400 rounded-full" />
-          <span>Past call</span>
+          <span>Unrated</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-sky-soft-500 rounded-full" />
-          <span>Today</span>
+          <span className="text-base">😊</span>
+          <span>Rated</span>
         </div>
       </div>
     </div>

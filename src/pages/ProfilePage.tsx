@@ -1,11 +1,10 @@
 // Profile page - transformed to call history view with settings gear
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalls } from '../hooks/useCalls';
 import { useCallRatings } from '../hooks/useCallRatings';
-import { CallCalendar } from '../components/CallCalendar';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
 import type { CallRating } from '../types/database';
@@ -21,17 +20,6 @@ export default function ProfilePage() {
     callDate: string;
     existingRating?: CallRating;
   }>({ isOpen: false, callDate: '' });
-
-  // Convert calls array to Set for O(1) lookup
-  const callDates = useMemo(() => {
-    return new Set(calls.map((c) => c.call_date));
-  }, [calls]);
-
-  // Handle click on past call in calendar
-  const handlePastCallClick = (callDate: string) => {
-    const existingRating = ratingsMap.get(callDate);
-    setRatingModal({ isOpen: true, callDate, existingRating });
-  };
 
   // Handle click on call in history list
   const handleHistoryItemClick = (callDate: string, existingRating?: CallRating) => {
@@ -88,30 +76,21 @@ export default function ProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Mini Calendar - Read-only overview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <CallCalendar
-            callDates={callDates}
-            onToggleDate={async () => {}} // No-op, use CallsPage to toggle
-            onPastCallClick={handlePastCallClick}
-            disabled={true} // Read-only in history view
-          />
-          <p className="text-center text-sm text-gray-500 mt-2">
-            Tap past calls to rate them · <Link to="/calls" className="text-sky-soft-600 hover:text-sky-soft-700">Edit schedule</Link>
-          </p>
-        </motion.div>
-
         {/* Past Calls List */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
           className="bg-white rounded-2xl shadow-soft-lg p-6"
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Past Calls</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-800">Past Calls</h2>
+            <Link
+              to="/calls"
+              className="text-sm text-sky-soft-600 hover:text-sky-soft-700"
+            >
+              Edit schedule
+            </Link>
+          </div>
 
           <CallHistoryList
             calls={calls}
