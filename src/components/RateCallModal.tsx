@@ -59,7 +59,7 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="bg-white w-full sm:w-auto sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6"
+        className="bg-white w-full sm:w-auto sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6 modal-safe-bottom sm:pb-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

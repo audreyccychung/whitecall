@@ -126,4 +126,14 @@
     min-width: 44px;
     min-height: 44px;
   }
+
+  /* Safe area utilities for PWA/mobile */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Bottom sheet modal padding - accounts for nav bar (64px) + safe area */
+  .modal-safe-bottom {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1.5rem);
+  }
 }

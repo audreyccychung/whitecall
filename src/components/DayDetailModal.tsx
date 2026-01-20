@@ -52,7 +52,7 @@ export function DayDetailModal({ day, onClose, onMemberClick }: DayDetailModalPr
             </button>
 
             {/* Content */}
-            <div className="px-6 pb-8 pt-2">
+            <div className="px-6 pb-8 pt-2 modal-safe-bottom sm:pb-8">
               {/* Date header */}
               <h2 className="text-xl font-bold text-gray-800 mb-4">
                 {formatDateHeader(day.date)}

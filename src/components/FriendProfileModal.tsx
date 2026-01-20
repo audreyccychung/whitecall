@@ -55,7 +55,7 @@ export function FriendProfileModal({ friend, onClose }: FriendProfileModalProps)
             </button>
 
             {/* Content */}
-            <div className="px-6 pb-8 pt-2">
+            <div className="px-6 pb-8 pt-2 modal-safe-bottom sm:pb-8">
               {/* Profile header */}
               <div className="flex items-center gap-4 mb-6">
                 <AvatarDisplay
