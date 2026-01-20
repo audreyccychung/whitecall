@@ -35,8 +35,6 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const handleDateClick = async (date: Date) => {
-    if (disabled) return;
-
     const dateStr = format(date, 'yyyy-MM-dd');
     const isPastDate = isBefore(date, startOfDay(new Date())) && !isToday(date);
     const dateHasCall = callDates.has(dateStr);
@@ -47,12 +45,15 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
     }
 
     // Past date WITH call - trigger past call click handler (for rating)
+    // This works even when calendar is disabled (read-only mode)
     if (isPastDate && dateHasCall) {
       onPastCallClick?.(dateStr);
       return;
     }
 
-    // Future/today dates - toggle call on/off
+    // Future/today dates - toggle call on/off (blocked when disabled)
+    if (disabled) return;
+
     setLoadingDate(dateStr);
     try {
       await onToggleDate(dateStr);
@@ -155,8 +156,11 @@ export function CallCalendar({ callDates, onToggleDate, onPastCallClick, disable
             extraClasses = 'hover:bg-gray-500';
           }
 
-          // Past calls are clickable (for rating), past non-calls are not
-          const isClickable = !disabled && !isLoading && (!isPast || hasCall);
+          // Past calls are always clickable (for rating), even when calendar is disabled
+          // Future dates are only clickable when calendar is not disabled
+          const isPastCallClickable = isPast && hasCall && !isLoading;
+          const isFutureDateClickable = !disabled && !isLoading && !isPast && isCurrentMonth;
+          const isClickable = isPastCallClickable || isFutureDateClickable;
 
           return (
             <motion.button
