@@ -146,12 +146,12 @@ export default function ProfilePage() {
           className="grid grid-cols-4 gap-2"
         >
           <StatCard label="Total Calls" value={stats.totalCalls} />
-          <StatCard label="Avg Mood" value={getMoodEmoji(stats.avgMoodScore)} />
-          <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
           <StatCard
             label="Hearts/Call"
             value={formatHeartsPerCall(stats.avgHeartsPerCall)}
           />
+          <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
+          <StatCard label="Avg Mood" value={getMoodEmoji(stats.avgMoodScore)} />
         </motion.div>
 
         {/* Trend Chart */}
