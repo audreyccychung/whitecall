@@ -75,12 +75,6 @@ export default function ProfilePage() {
     return `${hours.toFixed(1)}h`;
   };
 
-  // Format hearts per call
-  const formatHeartsPerCall = (avg: number | null) => {
-    if (avg === null) return '-';
-    return Math.round(avg).toString();
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header - Clean with just title */}
@@ -157,8 +151,8 @@ export default function ProfilePage() {
         >
           <StatCard label="Total Calls" value={stats.totalCalls} />
           <StatCard
-            label="Hearts/Call"
-            value={formatHeartsPerCall(stats.avgHeartsPerCall)}
+            label="Received"
+            value={stats.totalHeartsReceived}
           />
           <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
           <StatCard label="Avg Mood" value={getMoodEmoji(stats.avgMoodScore)} />

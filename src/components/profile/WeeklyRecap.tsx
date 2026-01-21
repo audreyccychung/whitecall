@@ -74,8 +74,8 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
 
         {/* Hearts Received */}
         <div>
-          <p className="text-2xl font-bold text-pink-600">{weekStats.heartsReceived}</p>
-          <p className="text-xs text-gray-500">Hearts</p>
+          <p className="text-2xl font-bold text-gray-800">{weekStats.heartsReceived}</p>
+          <p className="text-xs text-gray-500">Hearts Received</p>
         </div>
 
         {/* Avg Mood */}
