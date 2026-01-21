@@ -90,28 +90,31 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-soft-lg p-6 sm:p-8"
         >
-          {/* Hero Avatar - Tappable */}
-          <div className="flex flex-col items-center mb-8">
+          {/* Hero Avatar - Compact */}
+          <div className="flex items-center gap-4 mb-6">
             <button
               onClick={() => setShowAvatarModal(true)}
-              className="relative group focus:outline-none"
+              className="relative group focus:outline-none flex-shrink-0"
             >
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
-                size="xl"
+                size="medium"
               />
               {/* Hover overlay */}
-              <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                <span className="opacity-0 group-hover:opacity-100 text-white text-sm font-medium drop-shadow-md transition-opacity">
-                  Change
-                </span>
-              </div>
+              <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/10 transition-colors" />
             </button>
-            <p className="text-sm text-gray-500 mt-2">Tap to change</p>
-            <h2 className="text-xl font-bold text-gray-800 mt-3">
-              @{profile.username}
-            </h2>
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">
+                @{profile.username}
+              </h2>
+              <button
+                onClick={() => setShowAvatarModal(true)}
+                className="text-sm text-sky-soft-600 hover:text-sky-soft-700"
+              >
+                Change avatar
+              </button>
+            </div>
           </div>
 
           {/* Profile Settings - Compact */}
