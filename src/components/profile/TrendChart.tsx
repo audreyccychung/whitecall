@@ -1,158 +1,102 @@
-// Simple trend chart showing mood and sleep over recent calls
+// Bar-based trend chart: sleep bars with mood emoji overlay
+// Strava-inspired: calm, glanceable, mobile-first
 import type { TrendPoint } from '../../hooks/useProfileStats';
 
 interface TrendChartProps {
   data: TrendPoint[];
-  showSleep?: boolean;
 }
 
-// Mood emoji mapping
-const MOOD_EMOJI = ['', '😫', '😐', '😊', '✨'];
+// Mood emoji mapping (1-4 scale)
+const MOOD_EMOJI: Record<number, string> = {
+  1: '😫',
+  2: '😐',
+  3: '😊',
+  4: '✨',
+};
 
-export function TrendChart({ data, showSleep = true }: TrendChartProps) {
+// Bar color by mood (subtle tints)
+const MOOD_COLORS: Record<number, string> = {
+  1: 'bg-red-200',    // rough - muted red
+  2: 'bg-gray-300',   // okay - neutral gray
+  3: 'bg-emerald-200', // good - soft green
+  4: 'bg-emerald-300', // great - brighter green
+};
+
+// Max sleep hours for scale (bars are relative to this)
+const MAX_SLEEP = 10;
+
+export function TrendChart({ data }: TrendChartProps) {
   if (data.length < 3) {
     return (
-      <div className="bg-gray-50 rounded-xl p-4 text-center">
-        <p className="text-sm text-gray-500">
-          Rate {3 - data.length} more {3 - data.length === 1 ? 'call' : 'calls'} to see trends
-        </p>
+      <div className="bg-white rounded-2xl shadow-soft-lg p-5">
+        <h3 className="text-sm font-medium text-gray-500 mb-3">Recent Trends</h3>
+        <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <p className="text-sm text-gray-500">
+            Rate {3 - data.length} more {3 - data.length === 1 ? 'call' : 'calls'} to see trends
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Chart dimensions
-  const chartHeight = 80;
-  const padding = 8;
-  const pointRadius = 4;
-
-  // Calculate Y positions (mood: 1-4 scale, sleep: 0-12 scale)
-  const moodToY = (mood: number) => {
-    // Invert because SVG Y increases downward
-    const normalized = (mood - 1) / 3; // 0-1
-    return chartHeight - padding - normalized * (chartHeight - padding * 2);
+  // Format date for display (e.g., "Jan 5")
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
-
-  const sleepToY = (sleep: number) => {
-    const normalized = sleep / 12; // 0-1
-    return chartHeight - padding - normalized * (chartHeight - padding * 2);
-  };
-
-  // Calculate X positions (evenly spaced)
-  const getX = (index: number) => {
-    if (data.length === 1) return 50;
-    return padding + (index / (data.length - 1)) * (100 - padding * 2);
-  };
-
-  // Build path strings
-  const moodPath = data
-    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${moodToY(p.mood)}`)
-    .join(' ');
-
-  const sleepPath = data
-    .filter(p => p.sleep !== null)
-    .map((p, i) => {
-      const originalIndex = data.indexOf(p);
-      return `${i === 0 ? 'M' : 'L'} ${getX(originalIndex)} ${sleepToY(p.sleep!)}`;
-    })
-    .join(' ');
-
-  const hasSleepData = showSleep && data.some(p => p.sleep !== null);
 
   return (
-    <div className="bg-gray-50 rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-700">Recent Trends</h3>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-sky-soft-500" />
-            Mood
-          </span>
-          {hasSleepData && (
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-purple-400" />
-              Sleep
-            </span>
-          )}
+    <div className="bg-white rounded-2xl shadow-soft-lg p-5">
+      <h3 className="text-sm font-medium text-gray-500 mb-4">Recent Trends</h3>
+
+      {/* Bar chart container */}
+      <div className="flex items-end justify-between gap-2" style={{ height: 140 }}>
+        {/* Y-axis label */}
+        <div className="flex flex-col justify-between h-full text-xs text-gray-400 pr-1 pb-5">
+          <span>{MAX_SLEEP}h</span>
+          <span>0</span>
         </div>
+
+        {/* Bars */}
+        {data.map((point, i) => {
+          const sleepHours = point.sleep ?? 0;
+          const heightPercent = Math.min((sleepHours / MAX_SLEEP) * 100, 100);
+          const moodColor = MOOD_COLORS[point.mood] || 'bg-gray-300';
+          const emoji = MOOD_EMOJI[point.mood] || '😐';
+
+          return (
+            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              {/* Emoji above bar */}
+              <span className="text-base" title={`${MOOD_EMOJI[point.mood]} mood`}>
+                {emoji}
+              </span>
+
+              {/* Bar container (fixed height for alignment) */}
+              <div className="w-full flex flex-col justify-end" style={{ height: 80 }}>
+                {/* Sleep bar */}
+                <div
+                  className={`w-full rounded-t-md ${moodColor} transition-all duration-300`}
+                  style={{
+                    height: `${Math.max(heightPercent, 4)}%`,
+                    minHeight: sleepHours > 0 ? 4 : 0,
+                  }}
+                  title={`${sleepHours}h sleep`}
+                />
+              </div>
+
+              {/* Date label */}
+              <span className="text-xs text-gray-400 mt-1 truncate w-full text-center">
+                {formatDate(point.date)}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Chart */}
-      <div className="relative" style={{ height: chartHeight }}>
-        <svg
-          viewBox={`0 0 100 ${chartHeight}`}
-          preserveAspectRatio="none"
-          className="w-full h-full"
-        >
-          {/* Grid lines */}
-          <line
-            x1={padding}
-            y1={chartHeight / 2}
-            x2={100 - padding}
-            y2={chartHeight / 2}
-            stroke="#e5e7eb"
-            strokeWidth="0.5"
-          />
-
-          {/* Sleep line (if data exists) */}
-          {hasSleepData && sleepPath && (
-            <path
-              d={sleepPath}
-              fill="none"
-              stroke="#c084fc"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          )}
-
-          {/* Mood line */}
-          <path
-            d={moodPath}
-            fill="none"
-            stroke="#38bdf8"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            vectorEffect="non-scaling-stroke"
-          />
-
-          {/* Mood points */}
-          {data.map((p, i) => (
-            <circle
-              key={`mood-${i}`}
-              cx={getX(i)}
-              cy={moodToY(p.mood)}
-              r={pointRadius}
-              fill="#38bdf8"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-
-          {/* Sleep points */}
-          {hasSleepData && data.map((p, i) => (
-            p.sleep !== null && (
-              <circle
-                key={`sleep-${i}`}
-                cx={getX(i)}
-                cy={sleepToY(p.sleep)}
-                r={pointRadius}
-                fill="#c084fc"
-                vectorEffect="non-scaling-stroke"
-              />
-            )
-          ))}
-        </svg>
-      </div>
-
-      {/* X-axis labels (mood emojis) */}
-      <div className="flex justify-between mt-2 px-1">
-        {data.map((p, i) => (
-          <span key={i} className="text-sm" title={p.date}>
-            {MOOD_EMOJI[p.mood]}
-          </span>
-        ))}
-      </div>
+      {/* Subtle footer hint */}
+      <p className="text-xs text-gray-400 text-center mt-3">
+        Sleep hours · Mood emoji
+      </p>
     </div>
   );
 }
