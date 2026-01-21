@@ -7,9 +7,12 @@ import { useCalls } from '../hooks/useCalls';
 import { useCallRatings } from '../hooks/useCallRatings';
 import { useHearts } from '../hooks/useHearts';
 import { useProfileStats } from '../hooks/useProfileStats';
+import { useBadges } from '../hooks/useBadges';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { StatCard } from '../components/profile/StatCard';
 import { TrendChart } from '../components/profile/TrendChart';
+import { BadgesDisplay } from '../components/profile/BadgesDisplay';
+import { WeeklyRecap } from '../components/profile/WeeklyRecap';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
 import type { CallRating } from '../types/database';
@@ -18,10 +21,17 @@ export default function ProfilePage() {
   const { user, profile } = useAuth();
   const { calls, loading: callsLoading } = useCalls(user?.id);
   const { ratings, ratingsMap, isLoading: ratingsLoading } = useCallRatings(user?.id);
-  const { heartsReceived, loading: heartsLoading } = useHearts(user?.id);
+  const { heartsReceived, stats: heartStats, loading: heartsLoading } = useHearts(user?.id);
 
   // Compute stats
   const stats = useProfileStats(calls, ratings, heartsReceived);
+
+  // Compute badges from profile data
+  const badges = useBadges({
+    totalHeartsSent: heartStats.total_sent,
+    currentStreak: profile?.current_streak ?? 0,
+    longestStreak: profile?.longest_streak ?? 0,
+  });
 
   // Modal state for rating
   const [ratingModal, setRatingModal] = useState<{
@@ -161,6 +171,28 @@ export default function ProfilePage() {
           transition={{ delay: 0.1 }}
         >
           <TrendChart data={stats.trendData} />
+        </motion.div>
+
+        {/* Weekly Recap */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+        >
+          <WeeklyRecap
+            calls={calls}
+            ratings={ratings}
+            heartsReceived={heartsReceived}
+          />
+        </motion.div>
+
+        {/* Badges */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14 }}
+        >
+          <BadgesDisplay badges={badges} />
         </motion.div>
 
         {/* Past Calls List */}

@@ -69,6 +69,20 @@ export default function HomePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+        {/* Streak Banner - only show if streak > 0 */}
+        {profile.current_streak > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-orange-100 to-amber-100 rounded-xl px-4 py-2 flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">🔥</span>
+            <span className="font-semibold text-orange-700">
+              {profile.current_streak}-day streak!
+            </span>
+          </motion.div>
+        )}
+
         {/* User Status Card - Compact */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
