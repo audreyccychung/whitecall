@@ -22,8 +22,16 @@ const MOOD_COLORS: Record<number, string> = {
   4: 'bg-emerald-300', // great - brighter green
 };
 
-// Max sleep hours for scale (bars are relative to this)
-const MAX_SLEEP = 10;
+// Calculate dynamic ceiling based on max sleep in data
+// Rounds up to next "nice" number (5, 6, 7, 8, 10, 12)
+function calculateCeiling(maxSleep: number): number {
+  if (maxSleep <= 4) return 5;
+  if (maxSleep <= 5) return 6;
+  if (maxSleep <= 6) return 7;
+  if (maxSleep <= 7) return 8;
+  if (maxSleep <= 9) return 10;
+  return 12;
+}
 
 export function TrendChart({ data }: TrendChartProps) {
   if (data.length < 3) {
@@ -39,6 +47,10 @@ export function TrendChart({ data }: TrendChartProps) {
     );
   }
 
+  // Calculate dynamic Y-axis ceiling based on actual data
+  const maxSleepInData = Math.max(...data.map(p => p.sleep ?? 0));
+  const ceiling = calculateCeiling(maxSleepInData);
+
   // Format date for display (e.g., "Jan 5")
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr + 'T00:00:00');
@@ -53,14 +65,14 @@ export function TrendChart({ data }: TrendChartProps) {
       <div className="flex items-end justify-between gap-2" style={{ height: 140 }}>
         {/* Y-axis label */}
         <div className="flex flex-col justify-between h-full text-xs text-gray-400 pr-1 pb-5">
-          <span>{MAX_SLEEP}h</span>
+          <span>{ceiling}h</span>
           <span>0</span>
         </div>
 
         {/* Bars */}
         {data.map((point, i) => {
           const sleepHours = point.sleep ?? 0;
-          const heightPercent = Math.min((sleepHours / MAX_SLEEP) * 100, 100);
+          const heightPercent = Math.min((sleepHours / ceiling) * 100, 100);
           const moodColor = MOOD_COLORS[point.mood] || 'bg-gray-300';
           const emoji = MOOD_EMOJI[point.mood] || '😐';
 

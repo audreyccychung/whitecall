@@ -68,7 +68,7 @@ export default function ProfilePage() {
   // Format hearts per call
   const formatHeartsPerCall = (avg: number | null) => {
     if (avg === null) return '-';
-    return avg.toFixed(1);
+    return Math.round(avg).toString();
   };
 
   return (
