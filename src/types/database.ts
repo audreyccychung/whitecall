@@ -28,6 +28,7 @@ export interface CallRating {
   call_date: string; // YYYY-MM-DD format
   rating: CallRatingValue;
   notes: string | null;
+  hours_slept: number | null; // 0-12 in 0.5hr increments
   created_at: string;
   updated_at: string;
 }

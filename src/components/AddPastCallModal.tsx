@@ -15,8 +15,9 @@ interface AddPastCallModalProps {
 type AddPastCallCode =
   | 'SUCCESS'
   | 'UNAUTHORIZED'
-  | 'FUTURE_DATE_NOT_ALLOWED'
+  | 'DATE_NOT_IN_PAST'
   | 'INVALID_RATING'
+  | 'INVALID_HOURS_SLEPT'
   | 'CALL_ALREADY_EXISTS'
   | 'UNKNOWN_ERROR';
 
@@ -24,13 +25,20 @@ type AddPastCallCode =
 const ADD_PAST_CALL_MESSAGES: Record<AddPastCallCode, string> = {
   SUCCESS: 'Call added!',
   UNAUTHORIZED: 'You must be logged in.',
-  FUTURE_DATE_NOT_ALLOWED: 'Date must be in the past.',
+  DATE_NOT_IN_PAST: 'Date must be in the past.',
   INVALID_RATING: 'Invalid rating value.',
+  INVALID_HOURS_SLEPT: 'Hours slept must be between 0 and 12.',
   CALL_ALREADY_EXISTS: 'You already have a call on this date.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 
 const RATING_OPTIONS: CallRatingValue[] = ['rough', 'okay', 'good', 'great'];
+
+// Generate sleep hour options (0 to 12 in 0.5 increments)
+const SLEEP_OPTIONS: number[] = [];
+for (let i = 0; i <= 12; i += 0.5) {
+  SLEEP_OPTIONS.push(i);
+}
 
 export function AddPastCallModal({ onClose, onSaved }: AddPastCallModalProps) {
   // Default to yesterday
@@ -38,6 +46,7 @@ export function AddPastCallModal({ onClose, onSaved }: AddPastCallModalProps) {
     format(subDays(new Date(), 1), 'yyyy-MM-dd')
   );
   const [selectedRating, setSelectedRating] = useState<CallRatingValue | null>(null);
+  const [hoursSlept, setHoursSlept] = useState<number | null>(null);
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +75,7 @@ export function AddPastCallModal({ onClose, onSaved }: AddPastCallModalProps) {
         p_call_date: selectedDate,
         p_rating: selectedRating,
         p_notes: notes || null,
+        p_hours_slept: hoursSlept,
       });
 
       if (rpcError) throw rpcError;
@@ -152,6 +162,30 @@ export function AddPastCallModal({ onClose, onSaved }: AddPastCallModalProps) {
                 <span className="text-xs text-gray-600">{RATING_LABEL[rating]}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Hours Slept (optional) */}
+        <div className="mb-6">
+          <label htmlFor="hoursSlept" className="block text-sm font-medium text-gray-700 mb-2">
+            How much did you sleep? <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <div className="flex items-center gap-3">
+            <span className="text-xl">😴</span>
+            <select
+              id="hoursSlept"
+              value={hoursSlept ?? ''}
+              onChange={(e) => setHoursSlept(e.target.value === '' ? null : parseFloat(e.target.value))}
+              disabled={isSaving}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-soft-500 focus:border-transparent outline-none bg-white"
+            >
+              <option value="">Not recorded</option>
+              {SLEEP_OPTIONS.map((hours) => (
+                <option key={hours} value={hours}>
+                  {hours === 0 ? 'No sleep' : hours === 1 ? '1 hour' : `${hours} hours`}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

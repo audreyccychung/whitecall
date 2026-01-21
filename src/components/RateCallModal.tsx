@@ -23,8 +23,17 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
   const [selectedRating, setSelectedRating] = useState<CallRatingValue | null>(
     existingRating?.rating || null
   );
+  const [hoursSlept, setHoursSlept] = useState<number | null>(
+    existingRating?.hours_slept ?? null
+  );
   const [notes, setNotes] = useState(existingRating?.notes || '');
   const [error, setError] = useState<string | null>(null);
+
+  // Generate sleep hour options (0 to 12 in 0.5 increments)
+  const SLEEP_OPTIONS: number[] = [];
+  for (let i = 0; i <= 12; i += 0.5) {
+    SLEEP_OPTIONS.push(i);
+  }
 
   const formattedDate = format(parseISO(callDate), 'EEEE, MMMM d, yyyy');
   const isEditing = !!existingRating;
@@ -36,7 +45,7 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
     }
 
     setError(null);
-    const result = await saveRating(callDate, selectedRating, notes || null);
+    const result = await saveRating(callDate, selectedRating, notes || null, hoursSlept);
 
     if (result.success) {
       onSaved?.();
@@ -100,6 +109,30 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
                 <span className="text-xs text-gray-600">{RATING_LABEL[rating]}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Hours Slept (optional) */}
+        <div className="mb-6">
+          <label htmlFor="hoursSlept" className="block text-sm font-medium text-gray-700 mb-2">
+            How much did you sleep? <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <div className="flex items-center gap-3">
+            <span className="text-xl">😴</span>
+            <select
+              id="hoursSlept"
+              value={hoursSlept ?? ''}
+              onChange={(e) => setHoursSlept(e.target.value === '' ? null : parseFloat(e.target.value))}
+              disabled={isSaving}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-soft-500 focus:border-transparent outline-none bg-white"
+            >
+              <option value="">Not recorded</option>
+              {SLEEP_OPTIONS.map((hours) => (
+                <option key={hours} value={hours}>
+                  {hours === 0 ? 'No sleep' : hours === 1 ? '1 hour' : `${hours} hours`}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

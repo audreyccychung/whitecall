@@ -8,6 +8,7 @@ export type SaveRatingCode =
   | 'SUCCESS'
   | 'UNAUTHORIZED'
   | 'INVALID_RATING'
+  | 'INVALID_HOURS_SLEPT'
   | 'NO_CALL_ON_DATE'
   | 'UNKNOWN_ERROR';
 
@@ -22,6 +23,7 @@ const SAVE_RATING_MESSAGES: Record<SaveRatingCode, string> = {
   SUCCESS: 'Rating saved!',
   UNAUTHORIZED: 'You must be logged in to rate calls.',
   INVALID_RATING: 'Invalid rating value.',
+  INVALID_HOURS_SLEPT: 'Hours slept must be between 0 and 12.',
   NO_CALL_ON_DATE: 'You did not have a call on this date.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
@@ -107,7 +109,8 @@ export function useCallRatings(userId: string | undefined) {
   const saveRating = useCallback(async (
     callDate: string,
     rating: CallRatingValue,
-    notes?: string | null
+    notes?: string | null,
+    hoursSlept?: number | null
   ): Promise<SaveRatingResult> => {
     setIsSaving(true);
 
@@ -116,6 +119,7 @@ export function useCallRatings(userId: string | undefined) {
         p_call_date: callDate,
         p_rating: rating,
         p_notes: notes || null,
+        p_hours_slept: hoursSlept ?? null,
       });
 
       if (error) throw error;

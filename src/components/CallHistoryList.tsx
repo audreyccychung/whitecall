@@ -71,6 +71,7 @@ export function CallHistoryList({ calls, ratingsMap, onRateClick, isLoading }: C
                 {hasRating ? (
                   <p className="text-sm text-gray-500">
                     {RATING_EMOJI[rating.rating]} {RATING_LABEL[rating.rating]}
+                    {rating.hours_slept !== null && ` · 😴 ${rating.hours_slept}h`}
                     {rating.notes && ' · Has notes'}
                   </p>
                 ) : (
