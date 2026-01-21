@@ -11,29 +11,23 @@ import type { Friend } from '../types/friend';
 
 export default function FriendsPage() {
   const { user, profile } = useAuth();
-  const { friends, loading, addFriend, removeFriend, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
-  const { sendHeart } = useHearts(user?.id);
+  const { friends, loading, addFriend, removeFriend, updateFriendHeartStatus, beginMutation } = useFriends(user?.id);
+  const { sendHeartWithOptimism } = useHearts(user?.id);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleSendHeart = async (friendId: string) => {
-    // Lock to prevent background refetch from overwriting optimistic update
-    beginMutation();
-
-    // Optimistic update: immediately show "Sent" state
-    updateFriendHeartStatus(friendId, false);
+    // Token-based lock to prevent background refetch from overwriting optimistic update
+    const release = beginMutation();
 
     try {
-      const result = await sendHeart(friendId);
-
-      if (!result.success) {
-        // Rollback on failure
-        updateFriendHeartStatus(friendId, true);
-      }
-      // No refreshFriends() - optimistic update is sufficient
+      // Use consolidated optimistic heart sending
+      await sendHeartWithOptimism(friendId, {
+        onOptimisticUpdate: () => updateFriendHeartStatus(friendId, false),
+        onRollback: () => updateFriendHeartStatus(friendId, true),
+      });
     } finally {
-      // Release lock after mutation completes
-      endMutation();
+      release();
     }
   };
 

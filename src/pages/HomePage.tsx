@@ -15,9 +15,9 @@ import { HeartSendersList } from '../components/HeartSendersList';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
-  const { stats, sendHeart, heartsReceived } = useHearts(user?.id);
+  const { stats, sendHeartWithOptimism, heartsReceived } = useHearts(user?.id);
   const [heartsPulse, setHeartsPulse] = useState(false);
-  const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation, endMutation } = useFriends(user?.id);
+  const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation } = useFriends(user?.id);
 
   // Load calls data (this syncs to global store)
   useCalls(user?.id);
@@ -30,24 +30,18 @@ export default function HomePage() {
   const today = getTodayDate();
   const isUserOnCall = isCallStatusLoaded && callDates.has(today);
 
-  const handleSendHeart = async (friendId: string) => {
-    // Lock to prevent background refetch from overwriting optimistic update
-    beginMutation();
-
-    // Optimistic update: immediately show "Sent" state
-    updateFriendHeartStatus(friendId, false);
+  const handleSendHeart = async (friendId: string): Promise<void> => {
+    // Token-based lock to prevent background refetch from overwriting optimistic update
+    const release = beginMutation();
 
     try {
-      const result = await sendHeart(friendId);
-
-      if (!result.success) {
-        // Rollback on failure
-        updateFriendHeartStatus(friendId, true);
-      }
-      // No refreshFriends() - optimistic update is sufficient
+      // Use consolidated optimistic heart sending
+      await sendHeartWithOptimism(friendId, {
+        onOptimisticUpdate: () => updateFriendHeartStatus(friendId, false),
+        onRollback: () => updateFriendHeartStatus(friendId, true),
+      });
     } finally {
-      // Release lock after mutation completes
-      endMutation();
+      release();
     }
   };
 

@@ -37,6 +37,14 @@ const ratingsCache = {
   userId: null as string | null,
 };
 
+// Clear cache on logout (called from AuthContext)
+export function clearRatingsCache() {
+  ratingsCache.ratings = [];
+  ratingsCache.ratingsMap.clear();
+  ratingsCache.lastFetchedAt = 0;
+  ratingsCache.userId = null;
+}
+
 export function useCallRatings(userId: string | undefined) {
   const hasCachedData =
     userId &&
@@ -88,8 +96,8 @@ export function useCallRatings(userId: string | undefined) {
       ratingsCache.ratingsMap = newMap;
       ratingsCache.lastFetchedAt = Date.now();
       ratingsCache.userId = userId;
-    } catch (err) {
-      console.error('[useCallRatings] Failed to load ratings:', err);
+    } catch {
+      // Silent fail - cache will remain stale
     } finally {
       setIsLoading(false);
     }
@@ -125,8 +133,7 @@ export function useCallRatings(userId: string | undefined) {
         code,
         message: SAVE_RATING_MESSAGES[code] || SAVE_RATING_MESSAGES.UNKNOWN_ERROR,
       };
-    } catch (err) {
-      console.error('[useCallRatings] Failed to save rating:', err);
+    } catch {
       return {
         success: false,
         code: 'UNKNOWN_ERROR',

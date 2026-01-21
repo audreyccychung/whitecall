@@ -1,6 +1,7 @@
 // Group management hook
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { handleRpcResponse } from '../utils/rpc';
 import type {
   Group,
   CreateGroupResult,
@@ -46,8 +47,8 @@ export function useGroups(userId: string | undefined) {
 
       if (rpcError) throw rpcError;
 
-      // Normalize response (RPC returns JSON)
-      const result = typeof data === 'string' ? JSON.parse(data) : data;
+      // Use centralized RPC response handling
+      const result = handleRpcResponse<{ code: string; groups?: Group[]; detail?: string }>(data);
 
       if (result.code === 'UNAUTHORIZED') {
         setError('Please log in to view groups.');
@@ -95,22 +96,10 @@ export function useGroups(userId: string | undefined) {
       };
     }
 
-    // Normalize response
-    let result: { code?: string; group_id?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as CreateGroupCode) || 'UNKNOWN_ERROR';
-    const message = CREATE_GROUP_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string; group_id?: string }>(data);
+    const code = result.code as CreateGroupCode;
+    const message = CREATE_GROUP_MESSAGES[code] || CREATE_GROUP_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       await loadGroups();
@@ -134,22 +123,10 @@ export function useGroups(userId: string | undefined) {
       };
     }
 
-    // Normalize response
-    let result: { code?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as DeleteGroupCode) || 'UNKNOWN_ERROR';
-    const message = DELETE_GROUP_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string }>(data);
+    const code = result.code as DeleteGroupCode;
+    const message = DELETE_GROUP_MESSAGES[code] || DELETE_GROUP_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       await loadGroups();

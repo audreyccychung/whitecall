@@ -1,6 +1,7 @@
 // Friend management hook
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { handleRpcResponse } from '../utils/rpc';
 import type {
   Friend,
   AddFriendResult,
@@ -31,16 +32,30 @@ const REMOVE_FRIEND_MESSAGES: Record<RemoveFriendCode, string> = {
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
 
+// Mutation lock timeout: auto-release if mutation hangs
+const MUTATION_TIMEOUT_MS = 30_000;
+
 // Module-level cache to persist across component remounts
 // This allows instant navigation when data is fresh
 const friendsCache = {
   data: [] as Friend[],
   lastFetchedAt: 0,
   userId: null as string | null,
-  // Mutation lock: shared across all hook instances to prevent
-  // background refetch from overwriting optimistic updates
-  pendingMutations: 0,
+  // Mutation lock: token-based to prevent double-decrement bugs
+  // Each mutation gets a unique token, auto-cleaned after timeout
+  pendingMutations: new Set<string>(),
+  // Request deduplication: prevents duplicate fetches when multiple components mount
+  loadingPromise: null as Promise<void> | null,
 };
+
+// Clear cache on logout (called from AuthContext)
+export function clearFriendsCache() {
+  friendsCache.data = [];
+  friendsCache.lastFetchedAt = 0;
+  friendsCache.userId = null;
+  friendsCache.pendingMutations.clear();
+  friendsCache.loadingPromise = null;
+}
 
 export function useFriends(userId: string | undefined) {
   // Initialize from cache if same user (regardless of staleness for initial render)
@@ -58,12 +73,13 @@ export function useFriends(userId: string | undefined) {
   const lastFetchedAt = useRef<number>(hasCachedData ? friendsCache.lastFetchedAt : 0);
 
   // Load friends with their active call status
+  // Uses request deduplication to prevent duplicate fetches when multiple components mount
   const loadFriends = async (options?: { force?: boolean }) => {
     const force = options?.force ?? false;
 
     // Skip if mutations are pending (prevents overwriting optimistic updates)
-    // Uses module-level counter so all hook instances respect the lock
-    if (friendsCache.pendingMutations > 0 && !force) {
+    // Uses module-level Set so all hook instances respect the lock
+    if (friendsCache.pendingMutations.size > 0 && !force) {
       return;
     }
 
@@ -77,83 +93,95 @@ export function useFriends(userId: string | undefined) {
       return;
     }
 
-    try {
-      setError(null);
+    // Request deduplication: if a fetch is already in progress, wait for it
+    if (friendsCache.loadingPromise) {
+      return friendsCache.loadingPromise;
+    }
 
-      // Get friendships and join with profiles
-      const { data: friendshipsData, error: friendshipsError } = await supabase
-        .from('friendships')
-        .select('id, friend_id')
-        .eq('user_id', userId);
+    // Wrap the fetch in a promise and store it for deduplication
+    friendsCache.loadingPromise = (async () => {
+      try {
+        setError(null);
 
-      if (friendshipsError) throw friendshipsError;
+        // Get friendships and join with profiles
+        const { data: friendshipsData, error: friendshipsError } = await supabase
+          .from('friendships')
+          .select('id, friend_id')
+          .eq('user_id', userId);
 
-      if (!friendshipsData || friendshipsData.length === 0) {
-        setFriends([]);
+        if (friendshipsError) throw friendshipsError;
+
+        if (!friendshipsData || friendshipsData.length === 0) {
+          setFriends([]);
+          lastFetchedAt.current = Date.now();
+          friendsCache.data = [];
+          friendsCache.lastFetchedAt = lastFetchedAt.current;
+          friendsCache.userId = userId;
+          return;
+        }
+
+        const friendIds = friendshipsData.map((f) => f.friend_id);
+
+        // Fetch profiles and timezone-aware status in parallel
+        // Status (is_on_call, can_send_heart, next_call_date) comes from DB function
+        // This ensures backend is single source of truth for all date calculations
+        const [profilesResult, statusResult] = await Promise.all([
+          // Get friend profiles
+          supabase
+            .from('profiles')
+            .select('id, username, display_name, avatar_type, avatar_color')
+            .in('id', friendIds),
+          // Get all friend status data from timezone-aware DB function
+          supabase.rpc('get_friends_with_status'),
+        ]);
+
+        // Check for errors (only profiles is critical)
+        if (profilesResult.error) throw profilesResult.error;
+
+        const profilesData = profilesResult.data;
+
+        // Build lookup map from status results
+        type FriendStatus = {
+          friend_id: string;
+          is_on_call: boolean;
+          can_send_heart: boolean;
+          next_call_date: string | null;
+        };
+        const statusByFriend = new Map<string, FriendStatus>();
+        for (const status of (statusResult.data || []) as FriendStatus[]) {
+          statusByFriend.set(status.friend_id, status);
+        }
+
+        // Combine data - all date-dependent fields come from backend
+        const friendsList: Friend[] =
+          profilesData?.map((profile) => {
+            const friendship = friendshipsData.find((f) => f.friend_id === profile.id);
+            const status = statusByFriend.get(profile.id);
+            return {
+              ...profile,
+              friendship_id: friendship?.id || '',
+              is_on_call: status?.is_on_call ?? false,
+              next_call_date: status?.next_call_date ?? undefined,
+              can_send_heart: status?.can_send_heart ?? true,
+            };
+          }) || [];
+
+        setFriends(friendsList);
         lastFetchedAt.current = Date.now();
-        friendsCache.data = [];
+        // Update module-level cache for instant remounts
+        friendsCache.data = friendsList;
         friendsCache.lastFetchedAt = lastFetchedAt.current;
         friendsCache.userId = userId;
-        return;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load friends');
+      } finally {
+        setIsInitialLoad(false);
       }
+    })();
 
-      const friendIds = friendshipsData.map((f) => f.friend_id);
-
-      // Fetch profiles and timezone-aware status in parallel
-      // Status (is_on_call, can_send_heart, next_call_date) comes from DB function
-      // This ensures backend is single source of truth for all date calculations
-      const [profilesResult, statusResult] = await Promise.all([
-        // Get friend profiles
-        supabase
-          .from('profiles')
-          .select('id, username, display_name, avatar_type, avatar_color')
-          .in('id', friendIds),
-        // Get all friend status data from timezone-aware DB function
-        supabase.rpc('get_friends_with_status'),
-      ]);
-
-      // Check for errors (only profiles is critical)
-      if (profilesResult.error) throw profilesResult.error;
-
-      const profilesData = profilesResult.data;
-
-      // Build lookup map from status results
-      type FriendStatus = {
-        friend_id: string;
-        is_on_call: boolean;
-        can_send_heart: boolean;
-        next_call_date: string | null;
-      };
-      const statusByFriend = new Map<string, FriendStatus>();
-      for (const status of (statusResult.data || []) as FriendStatus[]) {
-        statusByFriend.set(status.friend_id, status);
-      }
-
-      // Combine data - all date-dependent fields come from backend
-      const friendsList: Friend[] =
-        profilesData?.map((profile) => {
-          const friendship = friendshipsData.find((f) => f.friend_id === profile.id);
-          const status = statusByFriend.get(profile.id);
-          return {
-            ...profile,
-            friendship_id: friendship?.id || '',
-            is_on_call: status?.is_on_call ?? false,
-            next_call_date: status?.next_call_date ?? undefined,
-            can_send_heart: status?.can_send_heart ?? true,
-          };
-        }) || [];
-
-      setFriends(friendsList);
-      lastFetchedAt.current = Date.now();
-      // Update module-level cache for instant remounts
-      friendsCache.data = friendsList;
-      friendsCache.lastFetchedAt = lastFetchedAt.current;
-      friendsCache.userId = userId;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load friends');
-    } finally {
-      setIsInitialLoad(false);
-    }
+    // Wait for the fetch, then clear the promise
+    await friendsCache.loadingPromise;
+    friendsCache.loadingPromise = null;
   };
 
   // Track previous userId to detect actual user changes vs remounts
@@ -200,22 +228,10 @@ export function useFriends(userId: string | undefined) {
       };
     }
 
-    // Normalize response: handle string, object, or unexpected shapes
-    let result: { code?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as AddFriendCode) || 'UNKNOWN_ERROR';
-    const message = ADD_FRIEND_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string }>(data);
+    const code = result.code as AddFriendCode;
+    const message = ADD_FRIEND_MESSAGES[code] || ADD_FRIEND_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       // Refetch friends list to get real data (is_on_call, can_send_heart)
@@ -242,22 +258,10 @@ export function useFriends(userId: string | undefined) {
       };
     }
 
-    // Normalize response: handle string, object, or unexpected shapes
-    let result: { code?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as RemoveFriendCode) || 'UNKNOWN_ERROR';
-    const message = REMOVE_FRIEND_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string }>(data);
+    const code = result.code as RemoveFriendCode;
+    const message = REMOVE_FRIEND_MESSAGES[code] || REMOVE_FRIEND_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       // Refetch friends list to confirm deletion (no state guessing)
@@ -280,13 +284,30 @@ export function useFriends(userId: string | undefined) {
     });
   };
 
-  // Mutation lock helpers - uses module-level counter so all hook instances respect the lock
-  const beginMutation = () => {
-    friendsCache.pendingMutations += 1;
-  };
+  /**
+   * Token-based mutation lock.
+   * Returns a release function that safely cleans up the lock.
+   * Auto-releases after timeout to prevent UI freezing if mutation hangs.
+   *
+   * Usage:
+   *   const release = beginMutation();
+   *   try { await mutation(); }
+   *   finally { release(); }
+   */
+  const beginMutation = (): (() => void) => {
+    const token = crypto.randomUUID();
+    friendsCache.pendingMutations.add(token);
 
-  const endMutation = () => {
-    friendsCache.pendingMutations = Math.max(0, friendsCache.pendingMutations - 1);
+    // Auto-release after timeout (safety net for hung mutations)
+    const timeoutId = setTimeout(() => {
+      friendsCache.pendingMutations.delete(token);
+    }, MUTATION_TIMEOUT_MS);
+
+    // Return release function
+    return () => {
+      clearTimeout(timeoutId);
+      friendsCache.pendingMutations.delete(token);
+    };
   };
 
   return {
@@ -298,6 +319,5 @@ export function useFriends(userId: string | undefined) {
     refreshFriends: loadFriends,
     updateFriendHeartStatus,
     beginMutation,
-    endMutation,
   };
 }

@@ -1,6 +1,7 @@
 // Hook to fetch group members' calls for calendar view
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { handleRpcResponse } from '../utils/rpc';
 import type { GroupCalendarDay, GroupMemberOnCall, GetGroupCallsCode } from '../types/group';
 
 // Error message mapping (1:1 with result codes)
@@ -84,9 +85,13 @@ export function useGroupCalls(
 
       if (rpcError) throw rpcError;
 
-      // Normalize response
-      const result = typeof data === 'string' ? JSON.parse(data) : data;
-      const code = (result.code as GetGroupCallsCode) || 'UNKNOWN_ERROR';
+      // Use centralized RPC response handling
+      const result = handleRpcResponse<{
+        code: string;
+        members?: GroupMemberOnCall[];
+        calls?: { user_id: string; call_date: string }[];
+      }>(data);
+      const code = result.code as GetGroupCallsCode;
 
       if (code !== 'SUCCESS') {
         setErrorCode(code);

@@ -1,8 +1,9 @@
 // Heart management hook - refetch on visibility change (no realtime)
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import type { HeartWithSender, SendHeartResult, SendHeartCode, HeartStats } from '../types/heart';
+import { handleRpcResponse } from '../utils/rpc';
 import { getTodayDate } from '../utils/date';
+import type { HeartWithSender, SendHeartResult, SendHeartCode, HeartStats } from '../types/heart';
 
 // Exhaustive mapping: every code maps to exactly one message
 const SEND_HEART_MESSAGES: Record<SendHeartCode, string> = {
@@ -25,6 +26,13 @@ const heartsCache = {
   lastFetchedAt: 0,
   userId: null as string | null,
 };
+
+// Clear cache on logout (called from AuthContext)
+export function clearHeartsCache() {
+  heartsCache.stats = { total_received: 0, total_sent: 0, received_today: 0, sent_today: 0 };
+  heartsCache.lastFetchedAt = 0;
+  heartsCache.userId = null;
+}
 
 export function useHearts(userId: string | undefined) {
   // Initialize from cache if same user (regardless of staleness for initial render)
@@ -179,7 +187,7 @@ export function useHearts(userId: string | undefined) {
     });
   };
 
-  // Send heart to friend - uses optimistic UI pattern
+  // Send heart to friend - uses optimistic UI pattern internally
   const sendHeart = async (
     recipientId: string,
     message: string = 'wishes you a white call!'
@@ -188,9 +196,12 @@ export function useHearts(userId: string | undefined) {
     incrementSentToday();
 
     // Call the single source of truth: send_heart DB function
+    // Pass user's local date to avoid server timezone issues
+    const shiftDate = getTodayDate();
     const { data, error } = await supabase.rpc('send_heart', {
       p_recipient_id: recipientId,
       p_message: message,
+      p_shift_date: shiftDate,
     });
 
     // Network or RPC error - rollback
@@ -203,22 +214,10 @@ export function useHearts(userId: string | undefined) {
       };
     }
 
-    // Normalize response: handle string, object, or unexpected shapes
-    let result: { code?: string; heart_id?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as SendHeartCode) || 'UNKNOWN_ERROR';
-    const errorMessage = SEND_HEART_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string; heart_id?: string }>(data);
+    const code = result.code as SendHeartCode;
+    const errorMessage = SEND_HEART_MESSAGES[code] || SEND_HEART_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       // Success - optimistic update was correct, no refetch needed
@@ -230,12 +229,74 @@ export function useHearts(userId: string | undefined) {
     return { success: false, code, error: errorMessage };
   };
 
+  /**
+   * Send heart with full optimistic UI support.
+   * Handles both internal stats update AND external UI state updates.
+   *
+   * Use this instead of manually calling beginMutation/sendHeart/endMutation
+   * in page components.
+   *
+   * @param recipientId - ID of friend to send heart to
+   * @param options.onOptimisticUpdate - Called immediately to update UI optimistically
+   * @param options.onRollback - Called if send fails to revert UI state
+   * @param options.message - Optional custom message
+   */
+  const sendHeartWithOptimism = async (
+    recipientId: string,
+    options?: {
+      onOptimisticUpdate?: () => void;
+      onRollback?: () => void;
+      message?: string;
+    }
+  ): Promise<SendHeartResult> => {
+    // Call optimistic update callback immediately
+    options?.onOptimisticUpdate?.();
+
+    // Optimistic update: increment sent count
+    incrementSentToday();
+
+    // Call the single source of truth: send_heart DB function
+    const shiftDate = getTodayDate();
+    const { data, error } = await supabase.rpc('send_heart', {
+      p_recipient_id: recipientId,
+      p_message: options?.message || 'wishes you a white call!',
+      p_shift_date: shiftDate,
+    });
+
+    // Network or RPC error - rollback
+    if (error) {
+      decrementSentToday();
+      options?.onRollback?.();
+      return {
+        success: false,
+        code: 'UNKNOWN_ERROR',
+        error: SEND_HEART_MESSAGES.UNKNOWN_ERROR,
+      };
+    }
+
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string; heart_id?: string }>(data);
+    const code = result.code as SendHeartCode;
+    const errorMessage = SEND_HEART_MESSAGES[code] || SEND_HEART_MESSAGES.UNKNOWN_ERROR;
+
+    if (code === 'SUCCESS') {
+      // Success - optimistic update was correct
+      return { success: true, code, heart_id: result.heart_id };
+    }
+
+    // Failure - rollback both internal stats and external UI
+    decrementSentToday();
+    options?.onRollback?.();
+    return { success: false, code, error: errorMessage };
+  };
+
   return {
     heartsReceived,
     heartsSent,
     stats,
     loading: isInitialLoad, // Only true until first successful load
     sendHeart,
+    sendHeartWithOptimism,
     refreshHearts: loadHearts,
   };
 }

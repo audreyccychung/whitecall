@@ -4,6 +4,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { clearAllCaches } from '../utils/cacheManager';
 import type { Profile } from '../types/database';
 
 // Explicit auth state machine - auth can NEVER get stuck in an indeterminate state
@@ -228,6 +229,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    // Clear all module-level caches to prevent data leakage between users
+    clearAllCaches();
   };
 
   const refreshProfile = async () => {

@@ -12,8 +12,8 @@ import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
 import { GroupCalendarView } from '../components/GroupCalendarView';
 import { FriendProfileModal } from '../components/FriendProfileModal';
-import type { GroupMemberOnCall } from '../types/group';
-import type { Friend } from '../types/friend';
+import type { GroupMember, GroupMemberOnCall } from '../types/group';
+import type { PersonPreview } from '../types/common';
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,7 @@ export default function GroupDetailPage() {
   const { user } = useAuth();
   const { groups, deleteGroup } = useGroups(user?.id);
   const { members, loading: membersLoading, addMember, removeMember, leaveGroup } = useGroupMembers(id);
-  const { sendHeart, heartsSent } = useHearts(user?.id);
+  const { sendHeartWithOptimism, heartsSent } = useHearts(user?.id);
   const { generateInviteCode, buildInviteUrl, isGenerating } = useGroupInvite();
   const { friends, addFriend } = useFriends(user?.id);
 
@@ -31,7 +31,7 @@ export default function GroupDetailPage() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Friend | null>(null);
+  const [selectedMember, setSelectedMember] = useState<PersonPreview | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -100,19 +100,19 @@ export default function GroupDetailPage() {
   };
 
   const handleSendHeart = async (memberId: string) => {
-    // Optimistic update - show as sent immediately
-    setSentHeartsLocal((prev) => new Set(prev).add(memberId));
-
-    const result = await sendHeart(memberId);
-
-    if (!result.success) {
-      // Rollback on failure
-      setSentHeartsLocal((prev) => {
-        const next = new Set(prev);
-        next.delete(memberId);
-        return next;
-      });
-    }
+    // Use consolidated optimistic heart sending
+    await sendHeartWithOptimism(memberId, {
+      onOptimisticUpdate: () => {
+        setSentHeartsLocal((prev) => new Set(prev).add(memberId));
+      },
+      onRollback: () => {
+        setSentHeartsLocal((prev) => {
+          const next = new Set(prev);
+          next.delete(memberId);
+          return next;
+        });
+      },
+    });
   };
 
   // Combine hearts from backend (heartsSent) with local optimistic updates
@@ -121,17 +121,30 @@ export default function GroupDetailPage() {
     ...sentHeartsLocal,
   ]);
 
-  // Convert GroupMemberOnCall to Friend for profile modal
-  const handleMemberClick = (member: GroupMemberOnCall) => {
-    const friendLike: Friend = {
+  // Convert GroupMemberOnCall to PersonPreview for profile modal (from calendar)
+  const handleCalendarMemberClick = (member: GroupMemberOnCall) => {
+    const person: PersonPreview = {
       id: member.user_id,
       username: member.username,
       display_name: member.display_name,
       avatar_type: member.avatar_type,
       avatar_color: member.avatar_color,
-      friendship_id: '', // Not used by modal, placeholder
     };
-    setSelectedMember(friendLike);
+    setSelectedMember(person);
+  };
+
+  // Convert GroupMember to PersonPreview for profile modal (from members list)
+  const handleListMemberClick = (member: GroupMember) => {
+    const person: PersonPreview = {
+      id: member.user_id,
+      username: member.username,
+      display_name: member.display_name,
+      avatar_type: member.avatar_type,
+      avatar_color: member.avatar_color,
+      is_on_call: member.is_on_call,
+      next_call_date: member.next_call_date,
+    };
+    setSelectedMember(person);
   };
 
   const handleDeleteGroup = async () => {
@@ -251,7 +264,7 @@ export default function GroupDetailPage() {
             className="bg-white rounded-2xl shadow-soft-lg p-6"
           >
             <h2 className="text-xl font-bold text-gray-800 mb-4">Group Schedule</h2>
-            <GroupCalendarView groupId={id} onMemberClick={handleMemberClick} />
+            <GroupCalendarView groupId={id} onMemberClick={handleCalendarMemberClick} />
           </motion.div>
         )}
 
@@ -351,6 +364,7 @@ export default function GroupDetailPage() {
               onRemoveMember={handleRemoveMember}
               onSendHeart={handleSendHeart}
               sentHearts={sentHeartsSet}
+              onMemberClick={handleListMemberClick}
             />
           )}
         </motion.div>

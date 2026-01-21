@@ -13,6 +13,7 @@ interface GroupMembersListProps {
   onRemoveMember: (memberId: string) => Promise<{ success: boolean; error?: string }>;
   onSendHeart?: (memberId: string) => Promise<void>;
   sentHearts?: Set<string>; // IDs of members we've already sent hearts to today
+  onMemberClick?: (member: GroupMember) => void; // Open profile modal
 }
 
 export function GroupMembersList({
@@ -22,6 +23,7 @@ export function GroupMembersList({
   onRemoveMember,
   onSendHeart,
   sentHearts = new Set(),
+  onMemberClick,
 }: GroupMembersListProps) {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -66,11 +68,20 @@ export function GroupMembersList({
     const alreadySent = sentHearts.has(member.user_id);
     const isExpanded = expandedId === member.user_id;
 
+    // Handle click: profile modal for non-self, expand for owner remove action
+    const handleCardClick = () => {
+      if (!isCurrentUser && onMemberClick) {
+        onMemberClick(member);
+      } else if (canRemove) {
+        toggleExpand(member.user_id);
+      }
+    };
+
     return (
       <div key={member.id} className="bg-white rounded-xl shadow-soft overflow-hidden">
         <div
-          className={`flex items-center justify-between p-4 ${canRemove ? 'cursor-pointer' : ''}`}
-          onClick={() => canRemove && toggleExpand(member.user_id)}
+          className={`flex items-center justify-between p-4 ${(!isCurrentUser || canRemove) ? 'cursor-pointer' : ''}`}
+          onClick={handleCardClick}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* On-call indicator dot */}

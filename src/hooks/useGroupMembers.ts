@@ -1,6 +1,7 @@
 // Group members management hook
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { handleRpcResponse } from '../utils/rpc';
 import type {
   GroupMember,
   AddMemberResult,
@@ -65,8 +66,8 @@ export function useGroupMembers(groupId: string | undefined) {
 
       if (rpcError) throw rpcError;
 
-      // Normalize response
-      const result = typeof data === 'string' ? JSON.parse(data) : data;
+      // Use centralized RPC response handling
+      const result = handleRpcResponse<{ code: string; members?: GroupMember[]; detail?: string }>(data);
 
       if (result.code === 'UNAUTHORIZED') {
         setError('Please log in to view members.');
@@ -139,22 +140,10 @@ export function useGroupMembers(groupId: string | undefined) {
       };
     }
 
-    // Normalize response
-    let result: { code?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as AddMemberCode) || 'UNKNOWN_ERROR';
-    const message = ADD_MEMBER_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string }>(data);
+    const code = result.code as AddMemberCode;
+    const message = ADD_MEMBER_MESSAGES[code] || ADD_MEMBER_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       await loadMembers();
@@ -187,22 +176,10 @@ export function useGroupMembers(groupId: string | undefined) {
       };
     }
 
-    // Normalize response
-    let result: { code?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as RemoveMemberCode) || 'UNKNOWN_ERROR';
-    const message = REMOVE_MEMBER_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string }>(data);
+    const code = result.code as RemoveMemberCode;
+    const message = REMOVE_MEMBER_MESSAGES[code] || REMOVE_MEMBER_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       await loadMembers();
@@ -234,22 +211,10 @@ export function useGroupMembers(groupId: string | undefined) {
       };
     }
 
-    // Normalize response
-    let result: { code?: string };
-    if (typeof data === 'string') {
-      try {
-        result = JSON.parse(data);
-      } catch {
-        result = {};
-      }
-    } else if (data && typeof data === 'object') {
-      result = data;
-    } else {
-      result = {};
-    }
-
-    const code = (result.code as LeaveGroupCode) || 'UNKNOWN_ERROR';
-    const message = LEAVE_GROUP_MESSAGES[code];
+    // Use centralized RPC response handling
+    const result = handleRpcResponse<{ code: string }>(data);
+    const code = result.code as LeaveGroupCode;
+    const message = LEAVE_GROUP_MESSAGES[code] || LEAVE_GROUP_MESSAGES.UNKNOWN_ERROR;
 
     if (code === 'SUCCESS') {
       return { success: true, code };

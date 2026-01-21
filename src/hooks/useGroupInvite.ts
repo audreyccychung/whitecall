@@ -62,8 +62,7 @@ export function useGroupInvite() {
       }
 
       return { success: false, message };
-    } catch (err) {
-      console.error('[useGroupInvite] generateInviteCode error:', err);
+    } catch {
       return { success: false, message: GENERATE_CODE_MESSAGES.UNKNOWN_ERROR };
     } finally {
       setIsGenerating(false);
@@ -97,8 +96,7 @@ export function useGroupInvite() {
         message,
         code: result.code,
       };
-    } catch (err) {
-      console.error('[useGroupInvite] joinGroupByCode error:', err);
+    } catch {
       return {
         success: false,
         message: JOIN_CODE_MESSAGES.UNKNOWN_ERROR,
@@ -121,8 +119,7 @@ export function useGroupInvite() {
       if (error) throw error;
 
       return data as InviteCodeInfo;
-    } catch (err) {
-      console.error('[useGroupInvite] getInviteCodeInfo error:', err);
+    } catch {
       return { valid: false, reason: 'UNKNOWN_ERROR' };
     } finally {
       setIsLoadingInfo(false);

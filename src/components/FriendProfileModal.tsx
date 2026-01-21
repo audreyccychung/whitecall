@@ -5,9 +5,11 @@ import { AvatarDisplay } from './AvatarDisplay';
 import { useFriendCalls } from '../hooks/useFriendCalls';
 import { formatCallDateList, getTodayDate } from '../utils/date';
 import type { Friend } from '../types/friend';
+import type { PersonPreview } from '../types/common';
 
 interface FriendProfileModalProps {
-  friend: Friend | null;
+  // Accept either full Friend or minimal PersonPreview (for group members)
+  friend: Friend | PersonPreview | null;
   onClose: () => void;
   // Optional: for group member context where they may not be friends yet
   showAddFriend?: boolean;
