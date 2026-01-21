@@ -14,159 +14,140 @@
 
 ## V0.6 - Groups Foundation ✓ COMPLETE
 
-**Scope**: Create and manage groups
-
-### Database
-- [x] Create `groups` table (id, name, created_by, created_at)
-- [x] Create `group_members` table (group_id, user_id, joined_at)
-- [x] RLS policies for group access
-- [x] `create_group` RPC function (atomic, with error codes)
-- [x] `add_group_member` RPC function (atomic, with error codes)
-- [x] `remove_group_member` RPC function (atomic, with error codes)
-- [x] `delete_group` RPC function (atomic, with error codes)
-- [x] Migration file: `009_add_groups.sql`
-- [x] 20-member limit trigger (prevents race conditions)
-
-### Types
-- [x] `types/group.ts` - Group, GroupMember, result types
-
-### Hooks
-- [x] `useGroups` hook - list groups, create group, delete group
-- [x] `useGroupMembers` hook - list members, add member, remove member
-
-### Pages & Components
-- [x] GroupsPage - list user's groups with create form
-- [x] GroupDetailPage - view group members, add/remove, delete group
-- [x] CreateGroupForm - name input with validation
-- [x] GroupMembersList - show members with remove button
-- [x] AddMemberForm - add by username
-- [x] GroupCard - group display in list
-- [x] Navigation link to Groups in HomePage
-
-### Constraints
-- Max 20 members per group (DB trigger + RPC check)
-- Only creator can add/remove members
-- Group names: 3-30 characters
-- Self-healing for I11 invariant (creator always member)
-
-### Bug Fixes (Post-Release)
-- [x] Migration 010: Fix `group_members` RLS circular dependency (first attempt)
-- [x] Migration 011: Fix `groups` RLS infinite recursion (owner-only simplification)
-- [x] Migration 012: Restore owner visibility of group members
-
-**Current V0.6 Limitations:**
-- Non-owner members cannot see groups they belong to (V1 fix: `get_my_groups()` RPC)
-- Non-owner members cannot see other members (V1 fix: `get_group_members()` RPC)
+- [x] Groups table, RLS, RPC functions
+- [x] 20-member limit, owner-only management
+- [x] GroupsPage, GroupDetailPage, member management
 
 ---
 
 ## V0.7 - Friend Profile Modal ✓ COMPLETE
 
-**Scope**: View a friend's upcoming call schedule
-
-### Feature
-- [x] Tap friend card → slide-up modal (bottom sheet)
-- [x] Show friend avatar, display name, username
-- [x] List upcoming calls (next 30 days, future only)
-- [x] Highlight next upcoming call
-- [x] Truncate to ~6 dates with "+N more" if needed
-- [x] Empty state: "No upcoming calls scheduled"
-
-### Implementation
-- [x] `FriendProfileModal` component
-- [x] `useFriendCalls(friendId)` hook - fetch calls for next 30 days
-- [x] No DB changes needed (RLS already allows friend call access)
-
-### Explicit Non-Goals
-- No calendar grid or month view
-- No date picker or editing
-- No group logic
-- No past calls
+- [x] Tap friend → slide-up modal with upcoming calls
+- [x] `useFriendCalls` hook
 
 ---
 
 ## V0.9 - Group Calendar + Find Free Day ✓ COMPLETE
 
-**Scope**: See all members' calls and find common free days
-
-### Backend
-- [x] `get_group_calls` RPC - fetch calls for all members in date range
-- [x] `get_my_groups` RPC - let non-owner members see groups
-- [x] `get_group_members` RPC - let non-owner members see other members
-- [x] Free day calculation (client-side, from fetched data)
-
-### Frontend
-- [x] GroupCalendarView component - 14-day horizontal scrollable grid
-- [x] Member avatars on busy days (stacked, max 3 shown)
-- [x] Green highlight on free days (no one on call)
-- [x] "Next free day: Jan 20" banner at top
-- [x] DayDetailModal - click day to see who's on call
-- [x] Tap member in modal → opens FriendProfileModal
-
-### Data Structure
-```typescript
-type GroupCalendarDay = {
-  date: string;
-  membersOnCall: { user_id: string; username: string; display_name: string | null; avatar_type: string; avatar_color: string }[];
-  isFree: boolean;
-};
-```
+- [x] `get_group_calls` RPC
+- [x] 14-day calendar grid with member avatars
+- [x] "Next free day" banner
+- [x] DayDetailModal
 
 ---
 
 ## V1.1 - Call Ratings & History ✓ COMPLETE
 
-**Scope**: Rate past calls and add manual entries
-
-### Features - COMPLETE
-- [x] Call ratings system (rough/okay/good/great with emoji)
-- [x] `save_call_rating` RPC (upsert with validation)
-- [x] `RateCallModal` component
-- [x] `CallHistoryList` component
-- [x] History page with past calls list
-- [x] Single calendar on Calls page (removed duplicate from History)
-- [x] Calendar shows emoji for rated past calls, gray for unrated
-- [x] Tap past call → rating modal
-- [x] Manual past call entry (+ button like Strava)
-- [x] `add_past_call_with_rating` RPC (atomic)
-- [x] `AddPastCallModal` component with date picker
+- [x] Rating system (rough/okay/good/great)
+- [x] Sleep tracking (hours slept)
+- [x] Manual past call entry
+- [x] Calendar shows emoji for rated calls
 
 ---
 
-## V1.2 - Polish & Launch (IN PROGRESS)
+## V1.2 - Polish & Social ✓ COMPLETE
 
-**Scope**: Production-ready group scheduling with improved UX
+- [x] Leave group functionality
+- [x] Google Sign-In
+- [x] Group invite links (shareable join codes)
+- [x] Add/remove friend from profile modal
+- [x] Bottom Navigation Bar
+- [x] Settings Page with avatar display
+- [x] Profile stats (trend chart, hearts/call, avg mood)
+- [x] Push notifications for heart alerts
+- [x] Audit fixes (mutation locks, RPC parsing, cache management)
 
-### Features - COMPLETE
-- [x] Leave group functionality (`leave_group` RPC)
-- [x] Google Sign-In (OAuth alternative to email/password)
-- [x] Helpful login error: "Try signing in with Google instead"
+---
 
-### Features - IN PROGRESS
-- [ ] Bottom Navigation Bar (persistent nav from all pages)
-- [ ] Profile Page (view/edit avatar, username, display name, sign out)
+## V1.3 - Retention & Engagement (NEXT)
 
-### Features - PENDING
-- [ ] Group invite links (shareable join links)
+**Scope**: Add proven retention mechanics from RETENTION_STRATEGY.md
+
+### Priority 1: Streaks (High Impact)
+- [ ] Display current streak on home screen ("🔥 7-day streak!")
+- [ ] Streak logic: consecutive days sending hearts
+- [ ] Streak risk notification (evening reminder if about to break)
+- [ ] `current_streak`, `longest_streak` columns exist in profiles
+
+### Priority 2: Badges (Gamification)
+- [ ] "First Heart" badge (send 1)
+- [ ] "Caring Colleague" badge (send 10)
+- [ ] "Support Squad" badge (send 50)
+- [ ] "Call Warrior" badge (survive 10 call shifts)
+- [ ] Badge display on profile page
+- [ ] `user_badges` table exists (schema ready)
+
+### Priority 3: Weekly Recap
+- [ ] Sunday summary: "You sent X hearts this week"
+- [ ] Shareable image format (Instagram story size)
+- [ ] Hearts received count
+
+### Priority 4: Smart Feed
+- [ ] Sort friends by "who needs support most"
+- [ ] Prioritize friends with many shifts + few hearts received
+- [ ] Label: "🆘 Dave has 4 call shifts this week"
+
+### Profile Enhancements
 - [ ] `updateProfile` RPC (change username, avatar, display name)
-
-### Quality
-- [x] Error handling for all group operations - done in V0.6
-- [x] Loading states - done in V0.6
-- [x] Empty states - done in V0.6
-- [x] Mobile responsive design - done in V0.6
-
-### Deferred from Audit
-- [ ] M5: Username validation error codes
-- [ ] M6: sendHeart error codes
-- [ ] m1: Badges/settings/streaks features
+- [ ] Edit profile UI on Settings page
 
 ---
 
-## Future (V1.x+)
+## V1.4 - Quality & Polish (FUTURE)
+
+### Error Codes (Deferred from Audit)
+- [ ] M5: Username validation error codes
+- [ ] M6: sendHeart detailed error codes
+
+### UX Polish
+- [ ] Empty state illustrations
+- [ ] Confetti on first heart received (exists but verify)
+- [ ] Heart counter bounce animation (exists but verify)
+
+### Performance
+- [ ] Request deduplication for all hooks (useFriends done)
+- [ ] Preload common routes
+
+---
+
+## Future (V2+)
 
 - Recurring call patterns (every Monday, etc.)
-- Calendar sync (Google, Apple)
-- Push notifications
+- Calendar sync (Google, Apple) - Premium
 - Group chat/notes
 - Shift swap requests
+- Anonymous "Call Survival Stories" feed
+- Family mode (simplified interface for non-medical family)
+- Native iOS/Android apps (Capacitor)
+
+---
+
+## Retention Features Status
+
+From RETENTION_STRATEGY.md - tracking implementation:
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Daily Streaks | Schema ready | Display not implemented |
+| Onboarding Tutorial | ✓ Done | `onboarding_completed` in profiles |
+| Haptic/Sound Feedback | ✓ Done | `user_settings` table |
+| Weekly Recap | Not started | V1.3 |
+| Smart Feed | Not started | V1.3 |
+| Milestone Badges | Schema ready | `user_badges` table exists |
+| Group Leaderboards | Not started | V2 |
+| Push Notifications | ✓ Done | Heart alerts |
+
+---
+
+## Database Schema Status
+
+### Retention columns in `profiles`:
+- `current_streak` - exists
+- `longest_streak` - exists
+- `last_heart_sent_date` - exists
+- `onboarding_completed` - exists
+
+### Tables:
+- `user_settings` - exists (sound, haptic, notifications)
+- `user_badges` - exists (empty, ready for badges)
+- `call_ratings` - exists (rating, notes, hours_slept)
