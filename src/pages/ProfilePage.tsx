@@ -31,8 +31,6 @@ export default function ProfilePage() {
     longestStreak: profile?.longest_streak ?? 0,
   });
 
-  const earnedBadges = badges.filter((b) => b.earned);
-
   // Modal state for rating
   const [ratingModal, setRatingModal] = useState<{
     isOpen: boolean;
@@ -75,6 +73,12 @@ export default function ProfilePage() {
     return `${hours.toFixed(1)}h`;
   };
 
+  // Format avg support (hearts per call)
+  const formatAvgSupport = (avg: number | null) => {
+    if (avg === null) return '-';
+    return `${avg.toFixed(1)} 🤍`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
@@ -85,7 +89,7 @@ export default function ProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        {/* Hero Section - Identity + Badges */}
+        {/* Hero Section - Identity only */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -127,7 +131,7 @@ export default function ProfilePage() {
               </Link>
             </div>
 
-            {/* User info + badges */}
+            {/* User info */}
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-gray-800 truncate">
                 {profile.display_name || `@${profile.username}`}
@@ -135,33 +139,20 @@ export default function ProfilePage() {
               {profile.display_name && (
                 <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
               )}
-              {/* Earned badges - small row under username */}
-              {earnedBadges.length > 0 && (
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  {earnedBadges.map((badge) => (
-                    <span
-                      key={badge.id}
-                      className="text-sm"
-                      title={`${badge.name}: ${badge.description}`}
-                    >
-                      {badge.emoji}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </motion.div>
 
-        {/* This Month's Stats - 3 clear metrics */}
+        {/* This Month's Stats - 4 clear metrics */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
           <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2 px-1">This Month</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-4 gap-2">
             <StatCard label="Calls" value={stats.callsThisMonth} />
+            <StatCard label="Avg Support" value={formatAvgSupport(stats.avgHeartsPerCall)} />
             <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
             <StatCard label="Avg Mood" value={getMoodEmoji(stats.avgMoodScore)} />
           </div>
@@ -174,6 +165,38 @@ export default function ProfilePage() {
           transition={{ delay: 0.1 }}
         >
           <TrendChart data={stats.trendData} />
+        </motion.div>
+
+        {/* Achievements - Strava-style badges */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="bg-white rounded-2xl shadow-soft-lg p-5"
+        >
+          <h3 className="text-sm font-medium text-gray-500 mb-3">Achievements</h3>
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            {badges.map((badge) => (
+              <div
+                key={badge.id}
+                className={`flex items-center gap-2 px-3 py-2 rounded-full flex-shrink-0 ${
+                  badge.earned
+                    ? 'bg-amber-50 border border-amber-200'
+                    : 'bg-gray-100 border border-gray-200 opacity-50'
+                }`}
+                title={badge.description}
+              >
+                <span className={`text-lg ${badge.earned ? '' : 'grayscale'}`}>
+                  {badge.earned ? badge.emoji : '🔒'}
+                </span>
+                <span className={`text-sm font-medium whitespace-nowrap ${
+                  badge.earned ? 'text-amber-800' : 'text-gray-500'
+                }`}>
+                  {badge.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
         {/* My Calls */}
