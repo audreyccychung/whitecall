@@ -152,9 +152,9 @@ export default function ProfilePage() {
           <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2 px-1">This Month</p>
           <div className="grid grid-cols-4 gap-2">
             <StatCard label="Calls" value={stats.callsThisMonth} />
-            <StatCard label="Avg Support" value={formatAvgSupport(stats.avgHeartsPerCall)} />
-            <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
             <StatCard label="Avg Mood" value={getMoodEmoji(stats.avgMoodScore)} />
+            <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
+            <StatCard label="Avg Support" value={formatAvgSupport(stats.avgHeartsPerCall)} />
           </div>
         </motion.div>
 
