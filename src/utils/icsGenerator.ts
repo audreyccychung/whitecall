@@ -34,7 +34,7 @@ export function generateICS(calls: Call[]): string {
       `DTSTAMP:${dtstamp}`,
       `DTSTART;VALUE=DATE:${dateValue}`,
       `DTEND;VALUE=DATE:${dateValue}`,
-      'SUMMARY:WhiteCall',
+      'SUMMARY:Call',
       'DESCRIPTION:Scheduled call with a loved one',
       'END:VEVENT'
     );

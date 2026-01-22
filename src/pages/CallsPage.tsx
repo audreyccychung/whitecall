@@ -5,6 +5,7 @@ import { format, isBefore, startOfDay, parseISO } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalls } from '../hooks/useCalls';
 import { useCallRatings } from '../hooks/useCallRatings';
+import { downloadICS } from '../utils/icsGenerator';
 import { CallCalendar } from '../components/CallCalendar';
 import { RateCallModal } from '../components/RateCallModal';
 import { AddPastCallModal } from '../components/AddPastCallModal';
@@ -24,6 +25,9 @@ export default function CallsPage() {
 
   // Modal state for adding past call
   const [showAddPastCall, setShowAddPastCall] = useState(false);
+
+  // Calendar export state
+  const [exportingCalendar, setExportingCalendar] = useState(false);
 
   // Convert calls array to Set for O(1) lookup
   const callDates = useMemo(() => {
@@ -56,6 +60,18 @@ export default function CallsPage() {
   // Handle past call added - refetch both calls and ratings
   const handlePastCallSaved = async () => {
     await Promise.all([refreshCalls(), refetchRatings()]);
+  };
+
+  // Handle calendar export
+  const handleCalendarExport = () => {
+    if (upcomingCalls.length === 0) return;
+
+    setExportingCalendar(true);
+    try {
+      downloadICS(upcomingCalls);
+    } finally {
+      setExportingCalendar(false);
+    }
   };
 
   return (
@@ -165,6 +181,21 @@ export default function CallsPage() {
                   </button>
                 </motion.div>
               ))}
+
+              {/* Export button */}
+              <button
+                onClick={handleCalendarExport}
+                disabled={exportingCalendar}
+                className="w-full mt-4 flex items-center justify-center gap-2 p-3 bg-sky-soft-50 text-sky-soft-700 rounded-xl hover:bg-sky-soft-100 transition-colors disabled:opacity-50"
+              >
+                {exportingCalendar ? (
+                  <div className="w-4 h-4 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <span>📅</span>
+                )}
+                <span>Export to calendar</span>
+              </button>
+              <p className="text-xs text-gray-400 text-center">Opens in your default calendar app</p>
             </div>
           )}
         </motion.div>
