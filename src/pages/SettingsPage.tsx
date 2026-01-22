@@ -1,10 +1,12 @@
 // Settings page - user account settings (moved from ProfilePage)
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usePushNotifications } from '../hooks/usePushNotifications';
+import { useCalls } from '../hooks/useCalls';
 import { supabase } from '../lib/supabase';
+import { downloadICS } from '../utils/icsGenerator';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import { EditUsernameModal } from '../components/EditUsernameModal';
@@ -16,6 +18,16 @@ export default function SettingsPage() {
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
   const [savingShareData, setSavingShareData] = useState(false);
+  const [exportingCalendar, setExportingCalendar] = useState(false);
+
+  // Load calls for calendar export
+  const { calls, loading: callsLoading } = useCalls(user?.id);
+
+  // Filter to upcoming calls (today and future)
+  const upcomingCalls = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return calls.filter((call) => call.call_date >= today);
+  }, [calls]);
 
   // Push notifications
   const {
@@ -53,6 +65,17 @@ export default function SettingsPage() {
       console.error('[SettingsPage] Failed to update share data setting:', err);
     } finally {
       setSavingShareData(false);
+    }
+  };
+
+  const handleCalendarExport = async () => {
+    if (upcomingCalls.length === 0) return;
+
+    setExportingCalendar(true);
+    try {
+      downloadICS(upcomingCalls);
+    } finally {
+      setExportingCalendar(false);
     }
   };
 
@@ -219,6 +242,36 @@ export default function SettingsPage() {
                 )}
               </div>
             </button>
+          </div>
+
+          {/* Calendar Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Calendar</p>
+
+            <button
+              onClick={handleCalendarExport}
+              disabled={exportingCalendar || callsLoading || upcomingCalls.length === 0}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📅</span>
+                <div className="text-left">
+                  <p className="font-medium text-gray-800">Export upcoming calls</p>
+                  <p className="text-sm text-gray-500">
+                    {callsLoading
+                      ? 'Loading...'
+                      : upcomingCalls.length === 0
+                        ? 'No upcoming calls to export'
+                        : `${upcomingCalls.length} call${upcomingCalls.length === 1 ? '' : 's'} to export`}
+                  </p>
+                </div>
+              </div>
+
+              {exportingCalendar && (
+                <div className="w-5 h-5 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
+              )}
+            </button>
+            <p className="text-xs text-gray-400 mt-2 ml-1">Re-export if your schedule changes</p>
           </div>
 
           {/* Notifications Section */}
