@@ -1,7 +1,9 @@
 // Weekly recap card - simple static summary
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Call, CallRating, CallRatingValue } from '../../types/database';
 import type { HeartWithSender } from '../../types/heart';
+import { ShareButton, SharePreviewModal, WeeklyShareCard } from '../share';
+import { useShareCard } from '../../hooks/useShareCard';
 
 interface WeeklyRecapProps {
   calls: Call[];
@@ -17,6 +19,10 @@ const RATING_SCORES: Record<CallRatingValue, number> = {
 };
 
 export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps) {
+  const [showPreview, setShowPreview] = useState(false);
+  const shareCard = useShareCard();
+  const { cardRef, isGenerating, generateAndShare } = shareCard;
+
   const weekStats = useMemo(() => {
     // Get dates for last 7 days
     const now = new Date();
@@ -59,11 +65,22 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
 
   const moodEmoji = getMoodEmoji(weekStats.avgMood);
 
+  const handleShare = async () => {
+    await generateAndShare();
+    setShowPreview(false);
+  };
+
   return (
-    <div className="bg-gradient-to-br from-sky-soft-50 to-pink-50 rounded-2xl shadow-soft-lg p-5">
-      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-        This Week
-      </h3>
+    <>
+      <div className="bg-gradient-to-br from-sky-soft-50 to-pink-50 rounded-2xl shadow-soft-lg p-5 relative">
+        {/* Share button */}
+        <div className="absolute top-3 right-3">
+          <ShareButton onClick={() => setShowPreview(true)} />
+        </div>
+
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          This Week
+        </h3>
 
       <div className="grid grid-cols-3 gap-4 text-center">
         {/* Calls */}
@@ -85,5 +102,22 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
         </div>
       </div>
     </div>
+
+      {/* Share preview modal */}
+      <SharePreviewModal
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
+        onShare={handleShare}
+        isGenerating={isGenerating}
+      >
+        <WeeklyShareCard
+          ref={cardRef}
+          calls={weekStats.callCount}
+          avgSleep={null}
+          heartsReceived={weekStats.heartsReceived}
+          moodEmoji={moodEmoji || ''}
+        />
+      </SharePreviewModal>
+    </>
   );
 }
