@@ -11,7 +11,6 @@ import { useBadges } from '../hooks/useBadges';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { StatCard } from '../components/profile/StatCard';
 import { TrendChart } from '../components/profile/TrendChart';
-import { BadgesDisplay } from '../components/profile/BadgesDisplay';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
 import type { CallRating } from '../types/database';
@@ -31,6 +30,8 @@ export default function ProfilePage() {
     currentStreak: profile?.current_streak ?? 0,
     longestStreak: profile?.longest_streak ?? 0,
   });
+
+  const earnedBadges = badges.filter((b) => b.earned);
 
   // Modal state for rating
   const [ratingModal, setRatingModal] = useState<{
@@ -84,7 +85,7 @@ export default function ProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        {/* Hero Section - Identity */}
+        {/* Hero Section - Identity + Badges */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,13 +127,27 @@ export default function ProfilePage() {
               </Link>
             </div>
 
-            {/* User info */}
+            {/* User info + badges */}
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold text-gray-800 truncate">
                 {profile.display_name || `@${profile.username}`}
               </h2>
               {profile.display_name && (
                 <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
+              )}
+              {/* Earned badges - small row under username */}
+              {earnedBadges.length > 0 && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  {earnedBadges.map((badge) => (
+                    <span
+                      key={badge.id}
+                      className="text-sm"
+                      title={`${badge.name}: ${badge.description}`}
+                    >
+                      {badge.emoji}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </div>
@@ -144,7 +159,7 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-2 px-1">This Month</p>
+          <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2 px-1">This Month</p>
           <div className="grid grid-cols-3 gap-2">
             <StatCard label="Calls" value={stats.callsThisMonth} />
             <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
@@ -159,15 +174,6 @@ export default function ProfilePage() {
           transition={{ delay: 0.1 }}
         >
           <TrendChart data={stats.trendData} />
-        </motion.div>
-
-        {/* Badges - De-emphasized earned markers */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.12 }}
-        >
-          <BadgesDisplay badges={badges} />
         </motion.div>
 
         {/* My Calls */}
