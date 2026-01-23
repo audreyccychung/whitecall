@@ -8,12 +8,18 @@ import { useCallRatings } from '../hooks/useCallRatings';
 import { useHearts } from '../hooks/useHearts';
 import { useProfileStats } from '../hooks/useProfileStats';
 import { useBadges } from '../hooks/useBadges';
+import { useShareCard } from '../hooks/useShareCard';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { StatCard } from '../components/profile/StatCard';
 import { TrendChart } from '../components/profile/TrendChart';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
+import { StreakBanner, StreakShareCard, SharePreviewModal, MonthlyShareCard, ShareButton } from '../components/share';
+import { formatStat, getStatLabel, type StatKey } from '../utils/statsRegistry';
 import type { CallRating } from '../types/database';
+
+// Stats displayed in the monthly UI section (intentionally different from share card)
+const MONTHLY_UI_STATS: StatKey[] = ['calls', 'avgMood', 'avgSleep', 'avgSupport'];
 
 export default function ProfilePage() {
   const { user, profile } = useAuth();
@@ -38,6 +44,13 @@ export default function ProfilePage() {
     existingRating?: CallRating;
   }>({ isOpen: false, callDate: '' });
 
+  // Share card state
+  const [shareModal, setShareModal] = useState<{
+    type: 'streak' | 'monthly' | null;
+  }>({ type: null });
+  const streakShare = useShareCard();
+  const monthlyShare = useShareCard();
+
   // Handle click on call in history list
   const handleHistoryItemClick = (callDate: string, existingRating?: CallRating) => {
     setRatingModal({ isOpen: true, callDate, existingRating });
@@ -47,6 +60,20 @@ export default function ProfilePage() {
   const closeRatingModal = () => {
     setRatingModal({ isOpen: false, callDate: '' });
   };
+
+  // Share handlers
+  const handleStreakShare = async () => {
+    await streakShare.generateAndShare();
+    setShareModal({ type: null });
+  };
+
+  const handleMonthlyShare = async () => {
+    await monthlyShare.generateAndShare();
+    setShareModal({ type: null });
+  };
+
+  // Get current month name
+  const currentMonth = new Date().toLocaleString('default', { month: 'long' });
 
   if (!profile || !user) {
     return (
@@ -58,25 +85,14 @@ export default function ProfilePage() {
 
   const isLoading = callsLoading || ratingsLoading || heartsLoading;
 
-  // Format avg mood as emoji
-  const getMoodEmoji = (score: number | null) => {
-    if (score === null) return '-';
-    if (score >= 3.5) return '✨';
-    if (score >= 2.5) return '😊';
-    if (score >= 1.5) return '😐';
-    return '😫';
-  };
-
-  // Format sleep
-  const formatSleep = (hours: number | null) => {
-    if (hours === null) return '-';
-    return `${hours.toFixed(1)}h`;
-  };
-
-  // Format avg support (hearts per call)
-  const formatAvgSupport = (avg: number | null) => {
-    if (avg === null) return '-';
-    return `${avg.toFixed(1)} 🤍`;
+  // Map stat keys to values for formatting
+  const statValues: Record<StatKey, number | null> = {
+    calls: stats.callsThisMonth,
+    heartsReceived: stats.totalHeartsReceived,
+    avgMood: stats.avgMoodScore,
+    avgSleep: stats.avgSleep,
+    avgSupport: stats.avgHeartsPerCall,
+    streak: profile.current_streak ?? 0,
   };
 
   return (
@@ -89,6 +105,14 @@ export default function ProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+        {/* Streak Banner - shows when user has active streak */}
+        {(profile.current_streak ?? 0) >= 3 && (
+          <StreakBanner
+            days={profile.current_streak ?? 0}
+            onShare={() => setShareModal({ type: 'streak' })}
+          />
+        )}
+
         {/* Hero Section - Identity only */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -149,12 +173,18 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <p className="text-xs font-medium text-gray-700 uppercase tracking-wide mb-2 px-1">This Month</p>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">This Month</p>
+            <ShareButton onClick={() => setShareModal({ type: 'monthly' })} />
+          </div>
           <div className="grid grid-cols-4 gap-2">
-            <StatCard label="Calls" value={stats.callsThisMonth} />
-            <StatCard label="Avg Mood" value={getMoodEmoji(stats.avgMoodScore)} />
-            <StatCard label="Avg Sleep" value={formatSleep(stats.avgSleep)} />
-            <StatCard label="Avg Support" value={formatAvgSupport(stats.avgHeartsPerCall)} />
+            {MONTHLY_UI_STATS.map((statKey) => (
+              <StatCard
+                key={statKey}
+                label={getStatLabel(statKey)}
+                value={formatStat(statKey, statValues[statKey])}
+              />
+            ))}
           </div>
         </motion.div>
 
@@ -235,6 +265,35 @@ export default function ProfilePage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Share Modals */}
+      <SharePreviewModal
+        isOpen={shareModal.type === 'streak'}
+        onClose={() => setShareModal({ type: null })}
+        onShare={handleStreakShare}
+        isGenerating={streakShare.isGenerating}
+      >
+        <StreakShareCard
+          ref={streakShare.cardRef}
+          streakDays={profile.current_streak ?? 0}
+        />
+      </SharePreviewModal>
+
+      <SharePreviewModal
+        isOpen={shareModal.type === 'monthly'}
+        onClose={() => setShareModal({ type: null })}
+        onShare={handleMonthlyShare}
+        isGenerating={monthlyShare.isGenerating}
+      >
+        <MonthlyShareCard
+          ref={monthlyShare.cardRef}
+          month={currentMonth}
+          calls={stats.callsThisMonth}
+          avgSleep={stats.avgSleep}
+          heartsReceived={stats.totalHeartsReceived}
+          currentStreak={profile.current_streak ?? 0}
+        />
+      </SharePreviewModal>
     </div>
   );
 }

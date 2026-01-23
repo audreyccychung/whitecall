@@ -4,6 +4,10 @@ import type { Call, CallRating, CallRatingValue } from '../../types/database';
 import type { HeartWithSender } from '../../types/heart';
 import { ShareButton, SharePreviewModal, WeeklyShareCard } from '../share';
 import { useShareCard } from '../../hooks/useShareCard';
+import { formatStat, getStatLabel, type StatKey } from '../../utils/statsRegistry';
+
+// Stats displayed in the UI card (intentionally different from share card)
+const WEEKLY_RECAP_STATS: StatKey[] = ['calls', 'heartsReceived', 'avgMood'];
 
 interface WeeklyRecapProps {
   calls: Call[];
@@ -54,16 +58,15 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
     return null;
   }
 
-  // Get mood emoji
-  const getMoodEmoji = (score: number | null) => {
-    if (score === null) return null;
-    if (score >= 3.5) return '✨';
-    if (score >= 2.5) return '😊';
-    if (score >= 1.5) return '😐';
-    return '😫';
+  // Map stat keys to values for formatting
+  const statValues: Record<StatKey, number | null> = {
+    calls: weekStats.callCount,
+    heartsReceived: weekStats.heartsReceived,
+    avgMood: weekStats.avgMood,
+    avgSleep: null,
+    avgSupport: null,
+    streak: null,
   };
-
-  const moodEmoji = getMoodEmoji(weekStats.avgMood);
 
   const handleShare = async () => {
     await generateAndShare();
@@ -83,23 +86,14 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
         </h3>
 
       <div className="grid grid-cols-3 gap-4 text-center">
-        {/* Calls */}
-        <div>
-          <p className="text-2xl font-bold text-gray-800">{weekStats.callCount}</p>
-          <p className="text-xs text-gray-500">{weekStats.callCount === 1 ? 'Call' : 'Calls'}</p>
-        </div>
-
-        {/* Hearts Received */}
-        <div>
-          <p className="text-2xl font-bold text-gray-800">{weekStats.heartsReceived}</p>
-          <p className="text-xs text-gray-500">Hearts Received</p>
-        </div>
-
-        {/* Avg Mood */}
-        <div>
-          <p className="text-2xl">{moodEmoji || '-'}</p>
-          <p className="text-xs text-gray-500">Avg Mood</p>
-        </div>
+        {WEEKLY_RECAP_STATS.map((statKey) => (
+          <div key={statKey}>
+            <p className={`text-2xl ${statKey === 'avgMood' ? '' : 'font-bold text-gray-800'}`}>
+              {formatStat(statKey, statValues[statKey])}
+            </p>
+            <p className="text-xs text-gray-500">{getStatLabel(statKey)}</p>
+          </div>
+        ))}
       </div>
     </div>
 
@@ -115,7 +109,7 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
           calls={weekStats.callCount}
           avgSleep={null}
           heartsReceived={weekStats.heartsReceived}
-          moodEmoji={moodEmoji || ''}
+          avgMood={weekStats.avgMood}
         />
       </SharePreviewModal>
     </>
