@@ -270,6 +270,42 @@ npm run preview
 npm run lint
 ```
 
+## Database Migrations
+
+**DO NOT modify the database schema via the Supabase dashboard.**
+
+All schema changes must go through migrations to prevent drift between local and remote.
+
+### Migration Commands
+
+```bash
+# Check migration folder exists
+npm run db:check
+
+# View migration sync status (local vs remote)
+npm run db:status
+
+# Create a new migration
+npm run db:new your_change_name
+
+# Push migrations to remote
+npm run db:push
+```
+
+### Migration Workflow
+
+1. Create migration: `npm run db:new add_feature_name`
+2. Edit the generated file in `supabase/migrations/`
+3. Push to remote: `npm run db:push`
+4. Commit: `git add supabase/migrations/ && git commit`
+
+### Rules
+
+- **CLI for schema changes** (tables, columns, RLS, functions)
+- **Dashboard for read-only ops** (viewing data, debugging queries)
+- Never edit a pushed migration—create a new one
+- Migrations are append-only, like git commits
+
 ## Next Steps (V0.5)
 
 - [ ] Calendar integration

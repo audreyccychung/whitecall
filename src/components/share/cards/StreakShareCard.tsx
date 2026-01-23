@@ -13,7 +13,6 @@ export const StreakShareCard = forwardRef<HTMLDivElement, StreakShareCardProps>(
     return (
       <div
         ref={ref}
-        className="absolute -left-[9999px] top-0"
         style={{
           width: '1080px',
           height: '1920px',

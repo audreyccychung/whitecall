@@ -43,7 +43,7 @@ export function SharePreviewModal({
               {/* Preview - scaled down card */}
               <div className="mb-6">
                 <div
-                  className="relative mx-auto overflow-hidden rounded-2xl shadow-lg"
+                  className="relative mx-auto overflow-hidden rounded-2xl shadow-lg bg-gray-100"
                   style={{
                     width: '200px',
                     height: '356px', // 1080:1920 ratio
@@ -52,10 +52,11 @@ export function SharePreviewModal({
                   {/* Scaled preview container */}
                   <div
                     style={{
-                      transform: 'scale(0.185)',
+                      transform: 'scale(0.185185)',
                       transformOrigin: 'top left',
-                      width: '1080px',
-                      height: '1920px',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
                     }}
                   >
                     {children}
