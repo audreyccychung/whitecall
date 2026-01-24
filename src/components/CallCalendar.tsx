@@ -16,7 +16,7 @@ import {
   startOfDay,
 } from 'date-fns';
 import type { CallRating } from '../types/database';
-import { RATING_EMOJI } from '../types/database';
+import { RatingIcon } from './RatingIcon';
 
 interface CallCalendarProps {
   callDates: Set<string>; // Set of YYYY-MM-DD strings
@@ -185,11 +185,11 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
                 ${isLoading ? 'opacity-60' : ''}
               `}
             >
-              {/* Show date with emoji below for rated past calls, otherwise just date */}
+              {/* Show date with rating circle below for rated past calls, otherwise just date */}
               {isPast && hasCall && hasRating ? (
-                <div className="flex flex-col items-center leading-none">
+                <div className="flex flex-col items-center leading-none gap-0.5">
                   <span>{format(day, 'd')}</span>
-                  <span className="text-xs">{RATING_EMOJI[rating.rating]}</span>
+                  <RatingIcon rating={rating.rating} size="sm" />
                 </div>
               ) : (
                 format(day, 'd')
@@ -215,7 +215,7 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
           <span>Unrated</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-base">🌕</span>
+          <div className="w-4 h-4 bg-white rounded-full border border-gray-300" />
           <span>Rated</span>
         </div>
       </div>

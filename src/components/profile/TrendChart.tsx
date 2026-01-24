@@ -1,25 +1,18 @@
-// Bar-based trend chart: sleep bars with mood emoji overlay
+// Bar-based trend chart: sleep bars with mood circle overlay
 // Strava-inspired: calm, glanceable, mobile-first
 import type { TrendPoint } from '../../hooks/useProfileStats';
+import { RatingIconByScore } from '../RatingIcon';
 
 interface TrendChartProps {
   data: TrendPoint[];
 }
 
-// Mood emoji mapping (1-4 scale) - moon phases from dark to bright
-const MOOD_EMOJI: Record<number, string> = {
-  1: '🌑',  // Black call - new moon
-  2: '🌘',  // Waning crescent (mostly dark)
-  3: '🌖',  // Waxing gibbous (mostly bright)
-  4: '🌕',  // White call - full moon
-};
-
-// Bar color by mood - grayscale gradient matching moon phases
+// Bar color by mood - grayscale gradient (black to white)
 const MOOD_COLORS: Record<number, string> = {
-  1: 'bg-gray-700',   // black call - dark
-  2: 'bg-gray-400',   // mostly dark
-  3: 'bg-gray-200',   // mostly light
-  4: 'bg-white border border-gray-200', // white call - bright with subtle border
+  1: 'bg-gray-800',   // black call
+  2: 'bg-gray-500',   // dark gray
+  3: 'bg-gray-300',   // light gray
+  4: 'bg-white border border-gray-300', // white call
 };
 
 // Calculate dynamic ceiling based on max sleep in data
@@ -74,14 +67,11 @@ export function TrendChart({ data }: TrendChartProps) {
           const sleepHours = point.sleep ?? 0;
           const heightPercent = Math.min((sleepHours / ceiling) * 100, 100);
           const moodColor = MOOD_COLORS[point.mood] || 'bg-gray-300';
-          const emoji = MOOD_EMOJI[point.mood] || '😐';
 
           return (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              {/* Emoji above bar */}
-              <span className="text-base" title={`${MOOD_EMOJI[point.mood]} mood`}>
-                {emoji}
-              </span>
+              {/* Rating circle above bar */}
+              <RatingIconByScore score={point.mood} size="sm" />
 
               {/* Bar container (fixed height for alignment) */}
               <div className="w-full flex flex-col justify-end" style={{ height: 80 }}>
@@ -107,7 +97,7 @@ export function TrendChart({ data }: TrendChartProps) {
 
       {/* Subtle footer hint */}
       <p className="text-xs text-gray-400 text-center mt-3">
-        Sleep hours · Mood emoji
+        Sleep hours · Call rating
       </p>
     </div>
   );

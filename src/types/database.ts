@@ -34,18 +34,25 @@ export interface CallRating {
 }
 
 // Rating display helpers
-// Uses moon phases: dark (rough) to bright (white call)
-// 🌑 new moon (black) → 🌘 waning → 🌖 waxing → 🌕 full moon (white)
+// Grayscale gradient: black (worst) → dark gray → light gray → white (best)
 export const RATING_EMOJI: Record<CallRatingValue, string> = {
-  rough: '🌑',  // Black call - new moon (dark)
-  okay: '🌘',   // Waning crescent (mostly dark)
-  good: '🌖',   // Waxing gibbous (mostly bright)
-  great: '🌕',  // White call - full moon (bright)
+  rough: '⚫',  // Black call
+  okay: '⚫',   // Dark gray (will be rendered as CSS circle)
+  good: '⚪',   // Light gray (will be rendered as CSS circle)
+  great: '⚪',  // White call
+};
+
+// CSS colors for rendering circles (grayscale gradient)
+export const RATING_COLORS: Record<CallRatingValue, string> = {
+  rough: '#1f2937', // gray-800 (black)
+  okay: '#6b7280',  // gray-500 (dark gray)
+  good: '#d1d5db',  // gray-300 (light gray)
+  great: '#ffffff', // white
 };
 
 export const RATING_LABEL: Record<CallRatingValue, string> = {
   rough: 'Black',
-  okay: 'Gray',
+  okay: 'Dark',
   good: 'Light',
   great: 'White',
 };

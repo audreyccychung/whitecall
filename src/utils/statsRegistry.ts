@@ -5,13 +5,14 @@
  * but all formatting and labels come from here.
  */
 
-// Mood score to emoji mapping - moon phases (dark to bright)
+// Mood score to circle emoji mapping (black to white gradient)
+// For display in text contexts where we can't render CSS circles
 function getMoodEmoji(score: number | null): string {
   if (score === null) return '-';
-  if (score >= 3.5) return '🌕'; // White call - full moon
-  if (score >= 2.5) return '🌖'; // Mostly bright
-  if (score >= 1.5) return '🌘'; // Mostly dark
-  return '🌑'; // Black call - new moon
+  if (score >= 3.5) return '⚪'; // White call
+  if (score >= 2.5) return '🔘'; // Light gray (radio button as proxy)
+  if (score >= 1.5) return '⬛'; // Dark gray (using black square as proxy)
+  return '⚫'; // Black call
 }
 
 export interface StatDefinition {

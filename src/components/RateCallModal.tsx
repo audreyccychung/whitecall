@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import type { CallRating, CallRatingValue } from '../types/database';
-import { RATING_EMOJI, RATING_LABEL } from '../types/database';
+import { RATING_LABEL } from '../types/database';
+import { RatingIcon } from './RatingIcon';
 import { useCallRatings } from '../hooks/useCallRatings';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -105,7 +106,7 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
                   ${isSaving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}
               >
-                <span className="text-2xl mb-1">{RATING_EMOJI[rating]}</span>
+                <RatingIcon rating={rating} size="lg" className="mb-1" />
                 <span className="text-xs text-gray-600">{RATING_LABEL[rating]}</span>
               </button>
             ))}
