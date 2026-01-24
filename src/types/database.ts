@@ -52,8 +52,8 @@ export const RATING_COLORS: Record<CallRatingValue, string> = {
 
 export const RATING_LABEL: Record<CallRatingValue, string> = {
   rough: 'Black',
-  okay: 'Dark',
-  good: 'Light',
+  okay: 'Rough',
+  good: 'Okay',
   great: 'White',
 };
 

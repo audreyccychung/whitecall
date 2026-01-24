@@ -11,6 +11,7 @@ import { useFriends } from '../hooks/useFriends';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
 import { GroupCalendarView } from '../components/GroupCalendarView';
+import { GroupLeaderboard } from '../components/GroupLeaderboard';
 import { FriendProfileModal } from '../components/FriendProfileModal';
 import type { GroupMember, GroupMemberOnCall } from '../types/group';
 import type { PersonPreview } from '../types/common';
@@ -265,6 +266,19 @@ export default function GroupDetailPage() {
           >
             <h2 className="text-xl font-bold text-gray-800 mb-4">Group Schedule</h2>
             <GroupCalendarView groupId={id} onMemberClick={handleCalendarMemberClick} />
+          </motion.div>
+        )}
+
+        {/* Leaderboard - Hearts sent this week */}
+        {id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl shadow-soft-lg p-6"
+          >
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Top Supporters</h2>
+            <p className="text-sm text-gray-500 mb-4">Hearts sent this week</p>
+            <GroupLeaderboard groupId={id} />
           </motion.div>
         )}
 

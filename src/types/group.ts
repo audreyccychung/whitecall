@@ -167,3 +167,20 @@ export interface InviteCodeInfo {
   group_name?: string;
   member_count?: number;
 }
+
+// Result codes from get_group_heart_leaderboard RPC
+export type GetLeaderboardCode =
+  | 'SUCCESS'
+  | 'UNAUTHORIZED'
+  | 'GROUP_NOT_FOUND'
+  | 'NOT_A_MEMBER'
+  | 'UNKNOWN_ERROR';
+
+export interface LeaderboardEntry {
+  user_id: string;
+  username: string;
+  display_name: string | null;
+  avatar_type: string;
+  avatar_color: string;
+  hearts_sent: number;
+}
