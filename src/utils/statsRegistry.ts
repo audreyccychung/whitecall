@@ -36,7 +36,7 @@ export const STAT_DEFINITIONS = {
     format: (v: number | null) => (v === null ? '-' : `${v.toFixed(1)}h`),
   },
   avgMood: {
-    label: 'Avg Mood',
+    label: 'Avg Quality',
     format: getMoodEmoji,
   },
   avgSupport: {
