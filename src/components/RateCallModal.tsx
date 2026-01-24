@@ -45,6 +45,11 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
       return;
     }
 
+    if (hoursSlept === null) {
+      setError('Please enter how much you slept');
+      return;
+    }
+
     setError(null);
     const result = await saveRating(callDate, selectedRating, notes || null, hoursSlept);
 
@@ -113,10 +118,10 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
           </div>
         </div>
 
-        {/* Hours Slept (optional) */}
+        {/* Hours Slept (required) */}
         <div className="mb-6">
           <label htmlFor="hoursSlept" className="block text-sm font-medium text-gray-700 mb-2">
-            How much did you sleep? <span className="text-gray-400 font-normal">(optional)</span>
+            How much did you sleep?
           </label>
           <div className="flex items-center gap-3">
             <span className="text-xl">😴</span>
@@ -127,7 +132,7 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
               disabled={isSaving}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-soft-500 focus:border-transparent outline-none bg-white"
             >
-              <option value="">Not recorded</option>
+              <option value="">Select hours</option>
               {SLEEP_OPTIONS.map((hours) => (
                 <option key={hours} value={hours}>
                   {hours === 0 ? 'No sleep' : hours === 1 ? '1 hour' : `${hours} hours`}
@@ -173,7 +178,7 @@ export function RateCallModal({ callDate, existingRating, onClose, onSaved }: Ra
           </button>
           <button
             onClick={handleSave}
-            disabled={isSaving || !selectedRating}
+            disabled={isSaving || !selectedRating || hoursSlept === null}
             className="flex-1 py-3 bg-sky-soft-500 text-white rounded-xl font-medium hover:bg-sky-soft-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             {isSaving ? 'Saving...' : 'Save'}
