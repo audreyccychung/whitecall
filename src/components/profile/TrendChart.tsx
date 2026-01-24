@@ -6,20 +6,20 @@ interface TrendChartProps {
   data: TrendPoint[];
 }
 
-// Mood emoji mapping (1-4 scale)
+// Mood emoji mapping (1-4 scale) - moon phases from dark to bright
 const MOOD_EMOJI: Record<number, string> = {
-  1: '😫',
-  2: '😐',
-  3: '😊',
-  4: '✨',
+  1: '🌑',  // Black call - new moon
+  2: '🌘',  // Waning crescent (mostly dark)
+  3: '🌖',  // Waxing gibbous (mostly bright)
+  4: '🌕',  // White call - full moon
 };
 
-// Bar color by mood (subtle tints)
+// Bar color by mood - grayscale gradient matching moon phases
 const MOOD_COLORS: Record<number, string> = {
-  1: 'bg-red-200',    // rough - muted red
-  2: 'bg-gray-300',   // okay - neutral gray
-  3: 'bg-emerald-200', // good - soft green
-  4: 'bg-emerald-300', // great - brighter green
+  1: 'bg-gray-700',   // black call - dark
+  2: 'bg-gray-400',   // mostly dark
+  3: 'bg-gray-200',   // mostly light
+  4: 'bg-white border border-gray-200', // white call - bright with subtle border
 };
 
 // Calculate dynamic ceiling based on max sleep in data

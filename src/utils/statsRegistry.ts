@@ -5,13 +5,13 @@
  * but all formatting and labels come from here.
  */
 
-// Mood score to emoji mapping
+// Mood score to emoji mapping - moon phases (dark to bright)
 function getMoodEmoji(score: number | null): string {
   if (score === null) return '-';
-  if (score >= 3.5) return '✨';
-  if (score >= 2.5) return '😊';
-  if (score >= 1.5) return '😐';
-  return '😫';
+  if (score >= 3.5) return '🌕'; // White call - full moon
+  if (score >= 2.5) return '🌖'; // Mostly bright
+  if (score >= 1.5) return '🌘'; // Mostly dark
+  return '🌑'; // Black call - new moon
 }
 
 export interface StatDefinition {

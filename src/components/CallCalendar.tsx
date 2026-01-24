@@ -215,7 +215,7 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
           <span>Unrated</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-base">😊</span>
+          <span className="text-base">🌕</span>
           <span>Rated</span>
         </div>
       </div>

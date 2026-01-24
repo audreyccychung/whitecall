@@ -45,8 +45,18 @@ export default function HomePage() {
     }
   };
 
-  // Filter friends who are on call (derived from calls table)
-  const friendsOnCall = friends.filter((f) => f.is_on_call);
+  // Filter friends who are on call, sorted: can send heart first, then alphabetically
+  const friendsOnCall = friends
+    .filter((f) => f.is_on_call)
+    .sort((a, b) => {
+      // Friends you can still send a heart to come first
+      if (a.can_send_heart && !b.can_send_heart) return -1;
+      if (!a.can_send_heart && b.can_send_heart) return 1;
+      // Then alphabetically by display name or username
+      const nameA = (a.display_name || a.username).toLowerCase();
+      const nameB = (b.display_name || b.username).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
 
   // Filter hearts received today for the senders list
   const heartsReceivedToday = heartsReceived.filter((h) => h.shift_date === today);

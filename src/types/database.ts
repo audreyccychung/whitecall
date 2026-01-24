@@ -34,18 +34,20 @@ export interface CallRating {
 }
 
 // Rating display helpers
+// Uses moon phases: dark (rough) to bright (white call)
+// 🌑 new moon (black) → 🌘 waning → 🌖 waxing → 🌕 full moon (white)
 export const RATING_EMOJI: Record<CallRatingValue, string> = {
-  rough: '😫',
-  okay: '😐',
-  good: '😊',
-  great: '✨',
+  rough: '🌑',  // Black call - new moon (dark)
+  okay: '🌘',   // Waning crescent (mostly dark)
+  good: '🌖',   // Waxing gibbous (mostly bright)
+  great: '🌕',  // White call - full moon (bright)
 };
 
 export const RATING_LABEL: Record<CallRatingValue, string> = {
-  rough: 'Rough',
-  okay: 'Okay',
-  good: 'Good',
-  great: 'Great',
+  rough: 'Black',
+  okay: 'Gray',
+  good: 'Light',
+  great: 'White',
 };
 
 export interface Friendship {
