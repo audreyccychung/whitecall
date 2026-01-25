@@ -19,7 +19,8 @@ interface FriendProfileModalProps {
   onRemoveFriend?: (friendId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
-const MAX_VISIBLE_CALLS = 6;
+const DEFAULT_VISIBLE_CALLS = 3;
+const EXPANDED_VISIBLE_CALLS = 10;
 
 export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend, showRemoveFriend, onRemoveFriend }: FriendProfileModalProps) {
   const { calls, loading, error } = useFriendCalls(friend?.id || null);
@@ -29,6 +30,7 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
   const [removingFriend, setRemovingFriend] = useState(false);
   const [removeFriendError, setRemoveFriendError] = useState<string | null>(null);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [showAllCalls, setShowAllCalls] = useState(false);
 
   const handleAddFriend = async () => {
     if (!friend || !onAddFriend) return;
@@ -66,8 +68,10 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
   };
 
   const today = getTodayDate();
-  const visibleCalls = calls.slice(0, MAX_VISIBLE_CALLS);
-  const remainingCount = calls.length - MAX_VISIBLE_CALLS;
+  const maxVisible = showAllCalls ? EXPANDED_VISIBLE_CALLS : DEFAULT_VISIBLE_CALLS;
+  const visibleCalls = calls.slice(0, maxVisible);
+  const remainingCount = calls.length - maxVisible;
+  const canExpand = !showAllCalls && calls.length > DEFAULT_VISIBLE_CALLS;
 
   return (
     <AnimatePresence>
@@ -88,7 +92,7 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[80vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[80vh] overflow-y-auto"
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">
@@ -207,7 +211,16 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
                       );
                     })}
 
-                    {remainingCount > 0 && (
+                    {canExpand && (
+                      <button
+                        onClick={() => setShowAllCalls(true)}
+                        className="w-full text-sm text-sky-soft-600 hover:text-sky-soft-700 text-center pt-2 font-medium"
+                      >
+                        Show {calls.length - DEFAULT_VISIBLE_CALLS} more
+                      </button>
+                    )}
+
+                    {showAllCalls && remainingCount > 0 && (
                       <p className="text-sm text-gray-500 text-center pt-2">
                         +{remainingCount} more
                       </p>
