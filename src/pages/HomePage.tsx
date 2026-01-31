@@ -105,8 +105,8 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-soft p-3"
         >
-          <div className="flex items-center gap-3">
-            <div className="relative flex-shrink-0">
+          <div className="flex items-start gap-3">
+            <div className="relative flex-shrink-0 pt-0.5">
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
