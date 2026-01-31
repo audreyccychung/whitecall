@@ -1,10 +1,11 @@
 // Weekly recap card - simple static summary
 import { useMemo, useState } from 'react';
-import type { Call, CallRating, CallRatingValue } from '../../types/database';
+import type { Call, CallRating } from '../../types/database';
 import type { HeartWithSender } from '../../types/heart';
 import { ShareButton, SharePreviewModal, WeeklyShareCard } from '../share';
 import { useShareCard } from '../../hooks/useShareCard';
 import { formatStat, getStatLabel, type StatKey } from '../../utils/statsRegistry';
+import { RATING_SCORES } from '../../constants/ratings';
 
 // Stats displayed in the UI card (intentionally different from share card)
 const WEEKLY_RECAP_STATS: StatKey[] = ['calls', 'heartsReceived', 'avgMood'];
@@ -14,13 +15,6 @@ interface WeeklyRecapProps {
   ratings: CallRating[];
   heartsReceived: HeartWithSender[];
 }
-
-const RATING_SCORES: Record<CallRatingValue, number> = {
-  rough: 1,
-  okay: 2,
-  good: 3,
-  great: 4,
-};
 
 export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps) {
   const [showPreview, setShowPreview] = useState(false);

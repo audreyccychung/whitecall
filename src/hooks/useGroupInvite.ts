@@ -3,14 +3,14 @@ import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type {
   GenerateInviteCodeResult,
-  GenerateInviteCodeCode,
+  InviteCodeGenCode,
   JoinGroupByCodeResult,
-  JoinGroupByCodeCode,
+  GroupJoinCode,
   InviteCodeInfo,
 } from '../types/group';
 
 // Exhaustive message mappings
-const GENERATE_CODE_MESSAGES: Record<GenerateInviteCodeCode, string> = {
+const GENERATE_CODE_MESSAGES: Record<InviteCodeGenCode, string> = {
   SUCCESS: 'Invite link created!',
   UNAUTHORIZED: 'You must be logged in.',
   GROUP_NOT_FOUND: 'Group not found.',
@@ -18,7 +18,7 @@ const GENERATE_CODE_MESSAGES: Record<GenerateInviteCodeCode, string> = {
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 
-const JOIN_CODE_MESSAGES: Record<JoinGroupByCodeCode, string> = {
+const JOIN_CODE_MESSAGES: Record<GroupJoinCode, string> = {
   SUCCESS: 'You joined the group!',
   UNAUTHORIZED: 'You must be logged in to join.',
   INVALID_CODE: 'This invite link is invalid.',
@@ -75,7 +75,7 @@ export function useGroupInvite() {
     groupId?: string;
     groupName?: string;
     message: string;
-    code: JoinGroupByCodeCode;
+    code: GroupJoinCode;
   }> => {
     setIsJoining(true);
 

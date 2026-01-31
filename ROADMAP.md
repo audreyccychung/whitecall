@@ -59,60 +59,65 @@
 
 ---
 
-## V1.3 - Retention & Engagement (NEXT)
+## V1.3 - Retention & Engagement ✓ COMPLETE
 
-**Scope**: Add proven retention mechanics from RETENTION_STRATEGY.md
+### Streaks
+- [x] Display current streak on home screen and profile
+- [x] Streak logic: consecutive days sending hearts
+- [x] Streak risk notification (5:30 PM HKT cron reminder)
+- [x] Shareable streak card (Instagram story format)
 
-### Priority 1: Streaks (High Impact)
-- [ ] Display current streak on home screen ("🔥 7-day streak!")
-- [ ] Streak logic: consecutive days sending hearts
-- [ ] Streak risk notification (evening reminder if about to break)
-- [ ] `current_streak`, `longest_streak` columns exist in profiles
+### Badges
+- [x] "First Heart" badge (send 1)
+- [x] "Caring Colleague" badge (send 10)
+- [x] "Support Squad" badge (send 50)
+- [x] "Call Warrior" badge (survive 10 call shifts)
+- [x] Badge display on profile page
+- [x] `useBadges` hook
 
-### Priority 2: Badges (Gamification)
-- [ ] "First Heart" badge (send 1)
-- [ ] "Caring Colleague" badge (send 10)
-- [ ] "Support Squad" badge (send 50)
-- [ ] "Call Warrior" badge (survive 10 call shifts)
-- [ ] Badge display on profile page
-- [ ] `user_badges` table exists (schema ready)
+### Weekly/Monthly Recap
+- [x] Monthly summary with stats
+- [x] Shareable image format (Instagram story size)
+- [x] Hearts received, avg mood, avg sleep stats
 
-### Priority 3: Weekly Recap
-- [ ] Sunday summary: "You sent X hearts this week"
-- [ ] Shareable image format (Instagram story size)
-- [ ] Hearts received count
-
-### Priority 4: Smart Feed
-- [ ] Sort friends by "who needs support most"
-- [ ] Prioritize friends with many shifts + few hearts received
-- [ ] Label: "🆘 Dave has 4 call shifts this week"
+### Smart Feed
+- [x] Sort friends by actionable first (can send heart)
+- [x] Alphabetical sort within groups
 
 ### Profile Enhancements
-- [ ] `updateProfile` RPC (change username, avatar, display name)
-- [ ] Edit profile UI on Settings page
+- [x] Edit display name modal
+- [x] Edit username modal
+- [x] Edit avatar modal (change animal/color)
+
+### Group Enhancements
+- [x] Quiet day celebration banner
+- [x] Group leaderboard (top 5 supporters, medals)
+
+### Notifications
+- [x] Daily reminder at 10 AM HKT ("X friends on call")
+- [x] Streak reminder at 5:30 PM HKT ("Keep your streak!")
 
 ---
 
 ## V1.4 - Quality & Polish (FUTURE)
 
 ### Error Codes (Deferred from Audit)
-- [ ] M5: Username validation error codes
-- [ ] M6: sendHeart detailed error codes
+- [x] M5: Username validation error codes (in update_profile RPC)
+- [x] M6: sendHeart detailed error codes (in send_heart RPC)
 
 ### UX Polish
 - [ ] Empty state illustrations
-- [ ] Confetti on first heart received (exists but verify)
-- [ ] Heart counter bounce animation (exists but verify)
+- [x] Confetti on first heart received
+- [x] Heart counter bounce animation
 
 ### Performance
-- [ ] Request deduplication for all hooks (useFriends done)
+- [x] Request deduplication for hooks
 - [ ] Preload common routes
 
 ---
 
 ## Future (V2+)
 
-- Recurring call patterns (every Monday, etc.)
 - Calendar sync (Google, Apple) - Premium
 - Group chat/notes
 - Shift swap requests
@@ -124,30 +129,30 @@
 
 ## Retention Features Status
 
-From RETENTION_STRATEGY.md - tracking implementation:
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Daily Streaks | Schema ready | Display not implemented |
-| Onboarding Tutorial | ✓ Done | `onboarding_completed` in profiles |
-| Haptic/Sound Feedback | ✓ Done | `user_settings` table |
-| Weekly Recap | Not started | V1.3 |
-| Smart Feed | Not started | V1.3 |
-| Milestone Badges | Schema ready | `user_badges` table exists |
-| Group Leaderboards | Not started | V2 |
-| Push Notifications | ✓ Done | Heart alerts |
+| Feature | Status |
+|---------|--------|
+| Daily Streaks | ✓ Done |
+| Onboarding Tutorial | ✓ Done |
+| Haptic/Sound Feedback | ✓ Done |
+| Weekly/Monthly Recap | ✓ Done |
+| Smart Feed | ✓ Done |
+| Milestone Badges | ✓ Done |
+| Group Leaderboards | ✓ Done |
+| Push Notifications | ✓ Done |
+| Edit Profile | ✓ Done |
 
 ---
 
 ## Database Schema Status
 
 ### Retention columns in `profiles`:
-- `current_streak` - exists
-- `longest_streak` - exists
+- `current_streak` - exists, displayed
+- `longest_streak` - exists, displayed
 - `last_heart_sent_date` - exists
 - `onboarding_completed` - exists
 
 ### Tables:
 - `user_settings` - exists (sound, haptic, notifications)
-- `user_badges` - exists (empty, ready for badges)
+- `user_badges` - exists (computed from profile data)
 - `call_ratings` - exists (rating, notes, hours_slept)
+- `push_subscriptions` - exists (web push)

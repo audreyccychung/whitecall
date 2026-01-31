@@ -140,14 +140,14 @@ export function GroupCalendarView({ groupId, onMemberClick }: GroupCalendarViewP
     <div className="space-y-3">
       {/* Next free day banner */}
       {allDaysFree ? (
-        <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl px-4 py-3 text-center">
-          <span className="text-xl">🎉</span>
-          <p className="font-semibold text-green-700">All days are free!</p>
+        <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg px-3 py-2 flex items-center justify-center gap-1.5">
+          <span className="text-base">🎉</span>
+          <span className="text-sm font-semibold text-green-700">All days are free!</span>
         </div>
       ) : todayIsFree ? (
-        <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-xl px-4 py-3 text-center">
-          <span className="text-xl">🎉</span>
-          <p className="font-semibold text-green-700">Quiet day! No one's on call</p>
+        <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg px-3 py-2 flex items-center justify-center gap-1.5">
+          <span className="text-base">🎉</span>
+          <span className="text-sm font-semibold text-green-700">Quiet day! No one's on call</span>
         </div>
       ) : nextFreeDay ? (
         <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 text-green-700 text-sm font-medium">

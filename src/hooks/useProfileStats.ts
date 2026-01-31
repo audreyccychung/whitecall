@@ -1,7 +1,8 @@
 // Profile stats hook - computes derived stats for profile display
 import { useMemo } from 'react';
-import type { Call, CallRating, CallRatingValue } from '../types/database';
+import type { Call, CallRating } from '../types/database';
 import type { HeartWithSender } from '../types/heart';
+import { RATING_SCORES } from '../constants/ratings';
 
 export interface ProfileStats {
   // Call stats
@@ -32,13 +33,6 @@ export interface TrendPoint {
   hearts: number; // hearts received on this shift
 }
 
-// Convert rating to numeric score
-const RATING_SCORES: Record<CallRatingValue, number> = {
-  rough: 1,
-  okay: 2,
-  good: 3,
-  great: 4,
-};
 
 export function useProfileStats(
   calls: Call[],

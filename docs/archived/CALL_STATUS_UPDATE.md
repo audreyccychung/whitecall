@@ -152,7 +152,6 @@ npm run build
 1. **Calendar Integration** (V0.5): Auto-detect shifts from calendar
 2. **Multi-day Shifts**: Option to set "On call until [date]"
 3. **Timezone Support**: Handle shifts across timezones
-4. **Recurring Schedules**: Set regular call patterns
 
 ---
 

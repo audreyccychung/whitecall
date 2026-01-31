@@ -9,7 +9,7 @@
  * @param data - Raw response from supabase.rpc()
  * @returns Parsed object or null if parsing fails
  */
-export function parseRpcResponse<T>(data: unknown): T | null {
+function parseRpcResponse<T>(data: unknown): T | null {
   if (typeof data === 'string') {
     try {
       return JSON.parse(data) as T;
@@ -41,7 +41,7 @@ export function parseRpcResponse<T>(data: unknown): T | null {
  * @param fallbackCode - Code to use if response is invalid (default: 'UNKNOWN_ERROR')
  * @returns Object with guaranteed code property
  */
-export function normalizeRpcResult<T extends { code?: string }>(
+function normalizeRpcResult<T extends { code?: string }>(
   parsed: T | null,
   fallbackCode: string = 'UNKNOWN_ERROR'
 ): T & { code: string } {

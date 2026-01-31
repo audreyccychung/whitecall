@@ -129,7 +129,7 @@ export interface LeaveGroupResult {
 }
 
 // Result codes from generate_invite_code RPC
-export type GenerateInviteCodeCode =
+export type InviteCodeGenCode =
   | 'SUCCESS'
   | 'UNAUTHORIZED'
   | 'GROUP_NOT_FOUND'
@@ -138,13 +138,13 @@ export type GenerateInviteCodeCode =
 
 export interface GenerateInviteCodeResult {
   success: boolean;
-  code: GenerateInviteCodeCode;
+  code: InviteCodeGenCode;
   invite_code?: string;
   expires_at?: string;
 }
 
 // Result codes from join_group_by_code RPC
-export type JoinGroupByCodeCode =
+export type GroupJoinCode =
   | 'SUCCESS'
   | 'UNAUTHORIZED'
   | 'INVALID_CODE'
@@ -155,7 +155,7 @@ export type JoinGroupByCodeCode =
 
 export interface JoinGroupByCodeResult {
   success: boolean;
-  code: JoinGroupByCodeCode;
+  code: GroupJoinCode;
   group_id?: string;
   group_name?: string;
 }
