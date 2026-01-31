@@ -4,6 +4,7 @@ import type { Call, CallRating } from '../../types/database';
 import type { HeartWithSender } from '../../types/heart';
 import { ShareButton, SharePreviewModal, WeeklyShareCard } from '../share';
 import { useShareCard } from '../../hooks/useShareCard';
+import { MoodCircle } from '../MoodCircle';
 import { formatStat, getStatLabel, type StatKey } from '../../utils/statsRegistry';
 import { RATING_SCORES } from '../../constants/ratings';
 
@@ -82,9 +83,15 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
       <div className="grid grid-cols-3 gap-4 text-center">
         {WEEKLY_RECAP_STATS.map((statKey) => (
           <div key={statKey}>
-            <p className={`text-2xl ${statKey === 'avgMood' ? '' : 'font-bold text-gray-800'}`}>
-              {formatStat(statKey, statValues[statKey])}
-            </p>
+            {statKey === 'avgMood' ? (
+              <div className="flex justify-center items-center h-8">
+                <MoodCircle score={statValues[statKey]} size="lg" />
+              </div>
+            ) : (
+              <p className="text-2xl font-bold text-gray-800">
+                {formatStat(statKey, statValues[statKey])}
+              </p>
+            )}
             <p className="text-xs text-gray-500">{getStatLabel(statKey)}</p>
           </div>
         ))}

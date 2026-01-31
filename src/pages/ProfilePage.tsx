@@ -10,6 +10,7 @@ import { useProfileStats } from '../hooks/useProfileStats';
 import { useBadges } from '../hooks/useBadges';
 import { useShareCard } from '../hooks/useShareCard';
 import { AvatarDisplay } from '../components/AvatarDisplay';
+import { MoodCircle } from '../components/MoodCircle';
 import { StatCard } from '../components/profile/StatCard';
 import { TrendChart } from '../components/profile/TrendChart';
 import { FriendsSection } from '../components/profile/FriendsSection';
@@ -175,7 +176,11 @@ export default function ProfilePage() {
               <StatCard
                 key={statKey}
                 label={getStatLabel(statKey)}
-                value={formatStat(statKey, statValues[statKey])}
+                value={
+                  statKey === 'avgMood'
+                    ? <MoodCircle score={statValues[statKey]} size="lg" />
+                    : formatStat(statKey, statValues[statKey])
+                }
               />
             ))}
           </div>
