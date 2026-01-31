@@ -52,6 +52,7 @@ export default function CreateProfilePage() {
 
     // Validate username
     const trimmedUsername = username.trim().toLowerCase();
+    const trimmedDisplayName = displayName.trim();
 
     if (trimmedUsername.length < 3 || trimmedUsername.length > 20) {
       setError('Username must be 3-20 characters long');
@@ -59,6 +60,16 @@ export default function CreateProfilePage() {
     }
     if (!/^[a-z0-9_]+$/.test(trimmedUsername)) {
       setError('Username can only contain lowercase letters, numbers, and underscores');
+      return;
+    }
+
+    // Validate display name (required)
+    if (trimmedDisplayName.length < 1) {
+      setError('Display name is required');
+      return;
+    }
+    if (trimmedDisplayName.length > 50) {
+      setError('Display name must be 50 characters or less');
       return;
     }
 
@@ -110,7 +121,7 @@ export default function CreateProfilePage() {
       const { error: insertError } = await supabase.from('profiles').insert({
         id: user.id,
         username: trimmedUsername,
-        display_name: displayName.trim() || null,
+        display_name: trimmedDisplayName,
         avatar_type: avatarType,
         avatar_color: colorHex,
         timezone: userTimezone,
@@ -193,13 +204,15 @@ export default function CreateProfilePage() {
           {/* Display Name */}
           <div>
             <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
-              Display Name (Optional)
+              Display Name *
             </label>
             <input
               type="text"
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
+              required
+              maxLength={50}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-soft-500 focus:border-transparent outline-none"
               placeholder="Dr. John Doe"
               disabled={loading}
@@ -221,7 +234,7 @@ export default function CreateProfilePage() {
 
           <button
             type="submit"
-            disabled={loading || username.trim().length < 3}
+            disabled={loading || username.trim().length < 3 || displayName.trim().length < 1}
             className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-lg"
           >
             {loading ? 'Creating profile...' : 'Complete Setup'}
