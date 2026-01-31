@@ -8,6 +8,7 @@ interface HeartSendersListProps {
   hearts: HeartWithSender[];
   maxVisible?: number;
   onTap?: () => void; // Callback when tapped (to trigger heart animation)
+  compact?: boolean;
 }
 
 // Soft haptic feedback
@@ -17,7 +18,7 @@ const softHaptic = () => {
   }
 };
 
-export function HeartSendersList({ hearts, maxVisible = 5, onTap }: HeartSendersListProps) {
+export function HeartSendersList({ hearts, maxVisible = 5, onTap, compact = false }: HeartSendersListProps) {
   const [expanded, setExpanded] = useState(false);
 
   if (hearts.length === 0) return null;
@@ -32,25 +33,28 @@ export function HeartSendersList({ hearts, maxVisible = 5, onTap }: HeartSenders
     setExpanded(!expanded);
   };
 
+  const avatarSize = compact ? 'tiny' : 'small';
+  const overflowSize = compact ? 'w-8 h-8 text-xs' : 'w-12 h-12 text-sm';
+
   return (
-    <div className="mt-3 relative">
+    <div className={compact ? "relative" : "mt-3 relative"}>
       {/* Avatars row - tap to expand */}
       <motion.button
         onClick={handleTap}
         whileTap={{ scale: 0.95 }}
-        className="flex items-center justify-center gap-1 mx-auto"
+        className={`flex items-center gap-1 ${compact ? '' : 'justify-center mx-auto'}`}
       >
         {visibleHearts.map((heart) => (
           <div key={heart.id}>
             <AvatarDisplay
               avatarType={heart.sender_avatar_type}
               avatarColor={heart.sender_avatar_color}
-              size="small"
+              size={avatarSize}
             />
           </div>
         ))}
         {remainingCount > 0 && (
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-sm text-gray-500 font-medium">
+          <div className={`${overflowSize} rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-medium`}>
             +{remainingCount}
           </div>
         )}

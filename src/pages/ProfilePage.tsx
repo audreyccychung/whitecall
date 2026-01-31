@@ -12,9 +12,10 @@ import { useShareCard } from '../hooks/useShareCard';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { StatCard } from '../components/profile/StatCard';
 import { TrendChart } from '../components/profile/TrendChart';
+import { FriendsSection } from '../components/profile/FriendsSection';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
-import { StreakBanner, StreakShareCard, SharePreviewModal, MonthlyShareCard, ShareButton } from '../components/share';
+import { StreakShareCard, SharePreviewModal, MonthlyShareCard, ShareButton } from '../components/share';
 import { formatStat, getStatLabel, type StatKey } from '../utils/statsRegistry';
 import type { CallRating } from '../types/database';
 
@@ -105,14 +106,6 @@ export default function ProfilePage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
-        {/* Streak Banner - shows when user has active streak */}
-        {(profile.current_streak ?? 0) >= 3 && (
-          <StreakBanner
-            days={profile.current_streak ?? 0}
-            onShare={() => setShareModal({ type: 'streak' })}
-          />
-        )}
-
         {/* Hero Section - Identity only */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -229,11 +222,14 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
+        {/* Friends Section */}
+        <FriendsSection userId={user?.id} username={profile?.username} />
+
         {/* My Calls */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl shadow-soft-lg p-5"
         >
           <div className="flex items-center justify-between mb-4">

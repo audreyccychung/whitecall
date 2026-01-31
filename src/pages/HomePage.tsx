@@ -1,10 +1,11 @@
 // Main home page - user's avatar, hearts, friends on call feed
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useHearts } from '../hooks/useHearts';
 import { useFriends } from '../hooks/useFriends';
 import { useCalls } from '../hooks/useCalls';
+import { useOnboarding } from '../hooks/useOnboarding';
 import { useStore } from '../lib/store';
 import { getTodayDate } from '../utils/date';
 import { AvatarDisplay } from '../components/AvatarDisplay';
@@ -13,12 +14,16 @@ import { HeartButton } from '../components/HeartButton';
 import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
 import { HeartSendersList } from '../components/HeartSendersList';
 import { ActivityFeed } from '../components/ActivityFeed';
+import { OnboardingModal } from '../components/onboarding/OnboardingModal';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
   const { stats, sendHeartWithOptimism, heartsReceived } = useHearts(user?.id);
   const [heartsPulse, setHeartsPulse] = useState(false);
   const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation } = useFriends(user?.id);
+
+  // Onboarding for new users
+  const { showOnboarding, completeOnboarding } = useOnboarding();
 
   // Load calls data (this syncs to global store)
   useCalls(user?.id);
@@ -94,32 +99,26 @@ export default function HomePage() {
           </motion.div>
         )}
 
-        {/* User Status Card - Compact */}
+        {/* User Status - Always shows */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-soft-lg p-4"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-soft p-3"
         >
-          <div className="flex flex-col items-center">
-            {/* Avatar with Hearts */}
-            <div className="relative mb-2">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-shrink-0">
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
-                size="large"
+                size="small"
               />
-              <HeartDisplay count={stats.received_today} pulse={heartsPulse} />
+              {isUserOnCall && stats.received_today > 0 && (
+                <HeartDisplay count={stats.received_today} pulse={heartsPulse} size="small" />
+              )}
             </div>
-
-            {/* User Info */}
-            <h2 className="text-base font-bold text-gray-800 mb-2">
-              {profile.display_name || profile.username}
-            </h2>
-
-            {/* Heart Counter */}
-            <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} />
-
-            {/* Who sent hearts - only show if on call and received hearts */}
+            <div className="flex-1 min-w-0">
+              <HeartCounterAnimation count={stats.received_today} isOnCall={isUserOnCall} compact />
+            </div>
             {isUserOnCall && heartsReceivedToday.length > 0 && (
               <HeartSendersList
                 hearts={heartsReceivedToday}
@@ -127,74 +126,53 @@ export default function HomePage() {
                   setHeartsPulse(true);
                   setTimeout(() => setHeartsPulse(false), 600);
                 }}
+                compact
               />
             )}
           </div>
         </motion.div>
 
-        {/* Friends on Call */}
-        <div className="bg-white rounded-2xl shadow-soft-lg p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-1">Friends on call today</h3>
-          <p className="text-sm text-gray-500 mb-4">Wish them a white call 🤍</p>
-
-          {friendsLoading ? (
-            <div className="text-center py-8">
-              <div className="w-12 h-12 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-600">Loading friends...</p>
+        {/* Friends on Call - Compact list */}
+        {!friendsLoading && friendsOnCall.length > 0 && (
+          <div className="bg-white rounded-xl shadow-soft p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-gray-700">Friends on call</h3>
+              <span className="text-xs text-gray-400">{friendsOnCall.length} today</span>
             </div>
-          ) : friendsOnCall.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-6xl mb-4">😌</p>
-              <p className="text-gray-600 mb-2">No friends on call today</p>
-              <p className="text-sm text-gray-500">Enjoy the quiet day!</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {friendsOnCall.map((friend) => (
                 <motion.div
                   key={friend.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center justify-between px-4 py-3 gap-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center justify-between py-2 px-2 gap-2 bg-gray-50 rounded-lg"
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <AvatarDisplay
                       avatarType={friend.avatar_type}
                       avatarColor={friend.avatar_color}
-                      size="medium"
+                      size="small"
                     />
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <p className="font-medium text-gray-800 truncate">
-                        {friend.display_name || friend.username}
-                      </p>
-                      <p className="text-sm text-gray-400 truncate">@{friend.username}</p>
-                    </div>
+                    <p className="text-sm font-medium text-gray-700 truncate">
+                      {friend.display_name || friend.username}
+                    </p>
                   </div>
-
-                  <div className="ml-3 flex-shrink-0">
-                    <HeartButton
-                      onClick={() => handleSendHeart(friend.id)}
-                      alreadySent={!friend.can_send_heart}
-                    />
-                  </div>
+                  <HeartButton
+                    onClick={() => handleSendHeart(friend.id)}
+                    alreadySent={!friend.can_send_heart}
+                  />
                 </motion.div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Support Summary */}
-        {stats.sent_today > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-pink-50 to-sky-soft-50 rounded-xl p-6 text-center"
-          >
-            <p className="text-lg text-gray-700">
-              You supported <span className="font-bold text-sky-soft-600">{stats.sent_today}</span>{' '}
-              {stats.sent_today === 1 ? 'friend' : 'friends'} today
-            </p>
-          </motion.div>
+        {/* Empty state when no friends on call */}
+        {!friendsLoading && friendsOnCall.length === 0 && friends.length > 0 && (
+          <div className="bg-white rounded-xl shadow-soft p-3 text-center">
+            <p className="text-xl mb-0.5">😌</p>
+            <p className="text-xs text-gray-500">No friends on call today</p>
+          </div>
         )}
 
         {/* Activity Feed - Friends' call ratings */}
@@ -202,6 +180,13 @@ export default function HomePage() {
           <ActivityFeed userId={user?.id} />
         </div>
       </main>
+
+      {/* Onboarding Modal */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingModal onComplete={completeOnboarding} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

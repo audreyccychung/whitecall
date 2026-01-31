@@ -9,7 +9,6 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import CreateProfilePage from './pages/CreateProfilePage';
 import HomePage from './pages/HomePage';
-import FriendsPage from './pages/FriendsPage';
 import CallsPage from './pages/CallsPage';
 import GroupsPage from './pages/GroupsPage';
 import GroupDetailPage from './pages/GroupDetailPage';
@@ -32,7 +31,7 @@ function App() {
           {/* Protected routes with bottom navigation */}
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route path="/home" element={<HomePage />} />
-            <Route path="/friends" element={<FriendsPage />} />
+            <Route path="/friends" element={<Navigate to="/profile" replace />} />
             <Route path="/calls" element={<CallsPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />

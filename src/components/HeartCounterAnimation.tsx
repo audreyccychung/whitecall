@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react';
 interface HeartCounterAnimationProps {
   count: number;
   isOnCall: boolean;
+  compact?: boolean;
 }
 
-export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimationProps) {
+export function HeartCounterAnimation({ count, isOnCall, compact = false }: HeartCounterAnimationProps) {
   const [prevCount, setPrevCount] = useState(count);
   const [showIncrease, setShowIncrease] = useState(false);
 
@@ -49,11 +50,11 @@ export function HeartCounterAnimation({ count, isOnCall }: HeartCounterAnimation
         initial={{ scale: 1 }}
         animate={{ scale: count > prevCount ? [1, 1.2, 1] : 1 }}
         transition={{ duration: 0.3 }}
-        className="text-center"
+        className={compact ? "text-left" : "text-center"}
       >
-        <div className="text-base text-gray-800">
+        <div className={compact ? "text-sm text-gray-700" : "text-base text-gray-800"}>
           <div>{message.line1}</div>
-          {message.line2 && <div>{message.line2}</div>}
+          {!compact && message.line2 && <div>{message.line2}</div>}
         </div>
       </motion.div>
 

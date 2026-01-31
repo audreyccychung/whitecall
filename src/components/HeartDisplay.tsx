@@ -6,17 +6,27 @@ interface HeartDisplayProps {
   count: number;
   maxVisible?: number;
   pulse?: boolean; // Trigger a pulse animation
+  size?: 'small' | 'medium' | 'large';
 }
 
-export function HeartDisplay({ count, maxVisible = 20, pulse = false }: HeartDisplayProps) {
+export function HeartDisplay({ count, maxVisible = 20, pulse = false, size = 'large' }: HeartDisplayProps) {
+  // Size configurations
+  const sizeConfig = {
+    small: { radius: 30, textSize: 'text-sm', maxHearts: 3 },
+    medium: { radius: 45, textSize: 'text-lg', maxHearts: 8 },
+    large: { radius: 60, textSize: 'text-2xl', maxHearts: 20 },
+  };
+  const config = sizeConfig[size];
+  const effectiveMaxVisible = Math.min(maxVisible, config.maxHearts);
+
   // Generate random positions for hearts in a circle around the avatar
   const hearts = useMemo(() => {
-    const visibleCount = Math.min(count, maxVisible);
+    const visibleCount = Math.min(count, effectiveMaxVisible);
     const positions: { x: number; y: number; delay: number; scale: number }[] = [];
 
     for (let i = 0; i < visibleCount; i++) {
       const angle = (i / visibleCount) * Math.PI * 2;
-      const radius = 60 + Math.random() * 20; // Random radius for organic feel
+      const radius = config.radius + Math.random() * 10; // Random radius for organic feel
       const x = Math.cos(angle) * radius;
       const y = Math.sin(angle) * radius;
 
@@ -29,7 +39,7 @@ export function HeartDisplay({ count, maxVisible = 20, pulse = false }: HeartDis
     }
 
     return positions;
-  }, [count, maxVisible]);
+  }, [count, effectiveMaxVisible, config.radius]);
 
   if (count === 0) return null;
 
@@ -38,7 +48,7 @@ export function HeartDisplay({ count, maxVisible = 20, pulse = false }: HeartDis
       {hearts.map((heart, index) => (
         <motion.div
           key={index}
-          className="absolute text-2xl"
+          className={`absolute ${config.textSize}`}
           style={{
             left: '50%',
             top: '50%',
