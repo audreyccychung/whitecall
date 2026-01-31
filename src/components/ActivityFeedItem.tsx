@@ -73,7 +73,7 @@ export function ActivityFeedItem({ activity, onToggleLike }: ActivityFeedItemPro
   const rating = activity.metadata.rating as CallRatingValue;
   const ratingLabel = RATING_LABEL[rating] || rating;
   const hoursSlept = activity.metadata.hours_slept;
-  const displayName = activity.display_name || 'Friend';
+  const displayName = activity.display_name || activity.username || 'Friend';
 
   return (
     <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-100">

@@ -94,6 +94,7 @@ export interface Activity {
   created_at: string;
   // Joined fields from get_activity_feed RPC
   display_name?: string;
+  username?: string;
   avatar_type?: string;
   avatar_color?: string;
   user_has_liked?: boolean;
