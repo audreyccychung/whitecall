@@ -54,7 +54,9 @@ export function HeartCounterAnimation({ count, isOnCall, compact = false }: Hear
       >
         <div className={compact ? "text-sm text-gray-700" : "text-base text-gray-800"}>
           <div>{message.line1}</div>
-          {!compact && message.line2 && <div>{message.line2}</div>}
+          {message.line2 && (
+            <div className={compact ? "text-xs text-gray-500" : ""}>{message.line2}</div>
+          )}
         </div>
       </motion.div>
 
