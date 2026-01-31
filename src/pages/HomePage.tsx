@@ -12,6 +12,7 @@ import { HeartDisplay } from '../components/HeartDisplay';
 import { HeartButton } from '../components/HeartButton';
 import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
 import { HeartSendersList } from '../components/HeartSendersList';
+import { ActivityFeed } from '../components/ActivityFeed';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -195,6 +196,11 @@ export default function HomePage() {
             </p>
           </motion.div>
         )}
+
+        {/* Activity Feed - Friends' call ratings */}
+        <div className="bg-white rounded-2xl shadow-soft-lg p-6">
+          <ActivityFeed userId={user?.id} />
+        </div>
       </main>
     </div>
   );

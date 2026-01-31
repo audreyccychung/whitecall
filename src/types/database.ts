@@ -12,6 +12,7 @@ export interface Profile {
   last_heart_sent_date: string | null; // YYYY-MM-DD format
   // Privacy settings
   share_data_with_groups: boolean;
+  share_activity_feed: boolean;
   // Onboarding
   onboarding_completed: boolean;
   // Metadata
@@ -74,3 +75,50 @@ export interface Call {
 }
 
 // Friend type (with extended fields) is defined in friend.ts
+
+// Activity feed types
+export type ActivityType = 'call_rated';
+
+export interface ActivityMetadata {
+  call_date: string; // YYYY-MM-DD
+  rating: CallRatingValue;
+  hours_slept: number | null;
+}
+
+export interface Activity {
+  id: string;
+  user_id: string;
+  activity_type: ActivityType;
+  metadata: ActivityMetadata;
+  like_count: number;
+  created_at: string;
+  // Joined fields from get_activity_feed RPC
+  display_name?: string;
+  avatar_type?: string;
+  avatar_color?: string;
+  user_has_liked?: boolean;
+}
+
+// RPC response types
+export type ToggleLikeCode = 'LIKED' | 'UNLIKED' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'CANNOT_LIKE_OWN' | 'NOT_FRIENDS' | 'UNKNOWN_ERROR';
+
+export interface ToggleLikeResponse {
+  code: ToggleLikeCode;
+  message?: string;
+}
+
+export type GetFeedCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface GetFeedResponse {
+  code: GetFeedCode;
+  activities?: Activity[];
+  message?: string;
+}
+
+export type UpdateShareSettingCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface UpdateShareSettingResponse {
+  code: UpdateShareSettingCode;
+  enabled?: boolean;
+  message?: string;
+}

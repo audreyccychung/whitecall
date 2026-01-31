@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
   const [savingShareData, setSavingShareData] = useState(false);
+  const [savingShareFeed, setSavingShareFeed] = useState(false);
 
   // Push notifications
   const {
@@ -53,6 +54,32 @@ export default function SettingsPage() {
       console.error('[SettingsPage] Failed to update share data setting:', err);
     } finally {
       setSavingShareData(false);
+    }
+  };
+
+  const handleShareFeedToggle = async () => {
+    if (!profile) return;
+
+    setSavingShareFeed(true);
+    try {
+      const newValue = !profile.share_activity_feed;
+      const { data, error } = await supabase.rpc('update_share_activity_setting', {
+        p_enabled: newValue,
+      });
+
+      if (error) throw error;
+
+      const result = data as { code: string };
+      if (result.code !== 'SUCCESS') {
+        console.error('[SettingsPage] Failed to update feed setting:', result.code);
+        return;
+      }
+
+      await refreshProfile();
+    } catch (err) {
+      console.error('[SettingsPage] Failed to update feed setting:', err);
+    } finally {
+      setSavingShareFeed(false);
     }
   };
 
@@ -214,6 +241,38 @@ export default function SettingsPage() {
                   }`}>
                     <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mx-1 ${
                       profile.share_data_with_groups ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </div>
+                )}
+              </div>
+            </button>
+
+            <button
+              onClick={handleShareFeedToggle}
+              disabled={savingShareFeed}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50 mt-2"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📢</span>
+                <div className="text-left">
+                  <p className="font-medium text-gray-800">Share in Support Feed</p>
+                  <p className="text-sm text-gray-500">
+                    {profile.share_activity_feed
+                      ? 'Friends see your call ratings in their feed'
+                      : 'Your ratings are hidden from friends\' feeds'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                {savingShareFeed ? (
+                  <div className="w-5 h-5 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <div className={`w-12 h-7 rounded-full transition-colors flex items-center ${
+                    profile.share_activity_feed ? 'bg-green-500' : 'bg-gray-300'
+                  }`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mx-1 ${
+                      profile.share_activity_feed ? 'translate-x-5' : 'translate-x-0'
                     }`} />
                   </div>
                 )}
