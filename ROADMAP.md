@@ -134,6 +134,29 @@
 
 ---
 
+## V1.6 - UI Consolidation ✓ COMPLETE
+
+### Navigation Simplification
+- [x] Remove Friends tab (5 tabs → 4 tabs: Home, Calendar, Groups, Profile)
+- [x] Move friends management to Profile page (FriendsSection component)
+- [x] Redirect /friends → /profile for backwards compatibility
+
+### Home Page Condensing
+- [x] Condense user avatar card to compact horizontal bar
+- [x] Two-line status message ("You're not on call today" + "Want to support a friend?")
+- [x] Compact friends-on-call list with tighter spacing
+- [x] Activity Feed as hero content
+
+### Profile Page Cleanup
+- [x] Remove duplicate streak banner (streak only on Home)
+- [x] Add FriendsSection with collapsible add friend form
+- [x] Fix Avg Quality emoji → MoodCircle component (grayscale: white=best, black=worst)
+
+### Onboarding
+- [x] Update Groups step: "Create a Group" → "Find Free Days"
+
+---
+
 ## Future (V2+)
 
 ### Short-term Improvements
@@ -163,7 +186,7 @@
 | Feature | Status |
 |---------|--------|
 | Daily Streaks | ✓ Done |
-| Onboarding Tutorial | Not implemented |
+| Onboarding Tutorial | ✓ Done (modal with 4 steps) |
 | Haptic/Sound Feedback | Not implemented (skeleton exists) |
 | Weekly/Monthly Recap | ✓ Done |
 | Smart Feed | ✓ Done |
@@ -171,6 +194,7 @@
 | Group Leaderboards | ✓ Done |
 | Push Notifications | ✓ Done |
 | Edit Profile | ✓ Done |
+| UI Consolidation | ✓ Done (4 tabs, condensed home) |
 
 ---
 
