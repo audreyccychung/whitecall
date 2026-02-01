@@ -10,6 +10,8 @@ interface AppState {
 
   // Onboarding state - allows Settings to trigger tutorial re-view
   showOnboardingManual: boolean;
+  // Track if user dismissed onboarding this session (prevents re-showing if DB update fails)
+  onboardingDismissedThisSession: boolean;
 
   // Call status actions
   setCallDates: (dates: string[]) => void;
@@ -19,6 +21,7 @@ interface AppState {
   // Onboarding actions
   openOnboarding: () => void;
   closeOnboarding: () => void;
+  dismissOnboarding: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -26,6 +29,7 @@ export const useStore = create<AppState>((set, get) => ({
   callDates: new Set(),
   isCallStatusLoaded: false,
   showOnboardingManual: false,
+  onboardingDismissedThisSession: false,
 
   // Call status actions
   setCallDates: (dates) => {
@@ -43,6 +47,7 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   // Onboarding actions
-  openOnboarding: () => set({ showOnboardingManual: true }),
+  openOnboarding: () => set({ showOnboardingManual: true, onboardingDismissedThisSession: false }),
   closeOnboarding: () => set({ showOnboardingManual: false }),
+  dismissOnboarding: () => set({ onboardingDismissedThisSession: true }),
 }));
