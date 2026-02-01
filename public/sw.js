@@ -9,7 +9,7 @@
 // It does NOT aggressively cache data to avoid stale data issues.
 // For an early-stage product, fresh data > offline capability.
 
-const CACHE_NAME = 'whitecall-shell-v1';
+const CACHE_NAME = 'whitecall-shell-v2';
 
 // Only cache the absolute minimum needed for app shell
 // DO NOT add API routes or dynamic data here
