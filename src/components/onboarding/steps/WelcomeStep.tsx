@@ -27,15 +27,15 @@ export function WelcomeStep() {
             </div>
           </div>
           {/* Heart button mock */}
-          <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
-            <span className="text-lg">❤️</span>
+          <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center">
+            <span className="text-lg">🤍</span>
           </div>
         </div>
       </div>
 
       {/* Caption */}
       <p className="text-sm text-gray-500 mt-4">
-        Tap the heart to let them know you care
+        Send a white call to let them know you care
       </p>
     </div>
   );
