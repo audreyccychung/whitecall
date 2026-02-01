@@ -8,16 +8,24 @@ interface AppState {
   callDates: Set<string>; // Set of YYYY-MM-DD strings
   isCallStatusLoaded: boolean;
 
+  // Onboarding state - allows Settings to trigger tutorial re-view
+  showOnboardingManual: boolean;
+
   // Call status actions
   setCallDates: (dates: string[]) => void;
   addCallDate: (date: string) => void;
   removeCallDate: (date: string) => void;
+
+  // Onboarding actions
+  openOnboarding: () => void;
+  closeOnboarding: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
   // Initial state
   callDates: new Set(),
   isCallStatusLoaded: false,
+  showOnboardingManual: false,
 
   // Call status actions
   setCallDates: (dates) => {
@@ -33,4 +41,8 @@ export const useStore = create<AppState>((set, get) => ({
     newDates.delete(date);
     set({ callDates: newDates });
   },
+
+  // Onboarding actions
+  openOnboarding: () => set({ showOnboardingManual: true }),
+  closeOnboarding: () => set({ showOnboardingManual: false }),
 }));
