@@ -15,6 +15,7 @@ export interface Profile {
   share_activity_feed: boolean;
   // Onboarding
   onboarding_completed: boolean;
+  onboarding_version: number; // 0 = never onboarded, 1+ = completed that version
   // Metadata
   created_at: string;
   updated_at: string;

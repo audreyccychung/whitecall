@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useStore } from '../lib/store';
+import { CURRENT_ONBOARDING_VERSION } from '../constants/onboarding';
 
 interface UseOnboardingReturn {
   showOnboarding: boolean;
@@ -20,10 +21,11 @@ export function useOnboarding(): UseOnboardingReturn {
   const closeOnboardingGlobal = useStore((state) => state.closeOnboarding);
 
   // Show onboarding if:
-  // 1. Profile exists AND onboarding not completed (new user)
+  // 1. Profile exists AND user hasn't seen current version
   // 2. OR manually triggered from Settings (global state)
-  const shouldShowOnboarding = profile && !profile.onboarding_completed;
-  const showOnboarding = shouldShowOnboarding || showOnboardingManual;
+  const userVersion = profile?.onboarding_version ?? 0;
+  const needsOnboarding = profile && userVersion < CURRENT_ONBOARDING_VERSION;
+  const showOnboarding = needsOnboarding || showOnboardingManual;
   const isManualTrigger = showOnboardingManual;
 
   // Open onboarding manually (from Settings "View Tutorial" button)
@@ -36,12 +38,15 @@ export function useOnboarding(): UseOnboardingReturn {
     // Close the modal first (instant feedback)
     closeOnboardingGlobal();
 
-    // Only update DB if this was a first-time user (not manual re-view)
-    if (profile && !profile.onboarding_completed) {
+    // Only update DB if user needs to be upgraded to current version
+    if (profile && userVersion < CURRENT_ONBOARDING_VERSION) {
       try {
         const { error } = await supabase
           .from('profiles')
-          .update({ onboarding_completed: true })
+          .update({
+            onboarding_completed: true,
+            onboarding_version: CURRENT_ONBOARDING_VERSION,
+          })
           .eq('id', profile.id);
 
         if (error) {
@@ -55,7 +60,7 @@ export function useOnboarding(): UseOnboardingReturn {
         console.error('[useOnboarding] Error completing onboarding:', err);
       }
     }
-  }, [profile, refreshProfile, closeOnboardingGlobal]);
+  }, [profile, userVersion, refreshProfile, closeOnboardingGlobal]);
 
   return {
     showOnboarding,
