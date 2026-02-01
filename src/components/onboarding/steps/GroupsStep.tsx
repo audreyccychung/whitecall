@@ -18,7 +18,7 @@ export function GroupsStep() {
         <div className="flex items-center gap-3 mb-3">
           <span className="text-2xl">👩‍⚕️</span>
           <div className="text-left">
-            <p className="font-medium text-gray-800 text-sm">ICU Night Team</p>
+            <p className="font-medium text-gray-800 text-sm">Ro 1 PWH Med</p>
             <p className="text-xs text-gray-500">5 members</p>
           </div>
         </div>
