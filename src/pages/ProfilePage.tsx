@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalls } from '../hooks/useCalls';
 import { useCallRatings } from '../hooks/useCallRatings';
+import { useCallEngagement } from '../hooks/useCallEngagement';
 import { useHearts } from '../hooks/useHearts';
 import { useProfileStats } from '../hooks/useProfileStats';
 import { useBadges } from '../hooks/useBadges';
@@ -27,6 +28,7 @@ export default function ProfilePage() {
   const { user, profile } = useAuth();
   const { calls, loading: callsLoading } = useCalls(user?.id);
   const { ratings, ratingsMap, isLoading: ratingsLoading } = useCallRatings(user?.id);
+  const { engagementMap, isLoading: engagementLoading } = useCallEngagement(user?.id);
   const { heartsReceived, stats: heartStats, loading: heartsLoading } = useHearts(user?.id);
 
   // Compute stats
@@ -85,7 +87,7 @@ export default function ProfilePage() {
     );
   }
 
-  const isLoading = callsLoading || ratingsLoading || heartsLoading;
+  const isLoading = callsLoading || ratingsLoading || engagementLoading || heartsLoading;
 
   // Map stat keys to values for formatting
   const statValues: Record<StatKey, number | null> = {
@@ -250,6 +252,7 @@ export default function ProfilePage() {
           <CallHistoryList
             calls={calls}
             ratingsMap={ratingsMap}
+            engagementMap={engagementMap}
             onRateClick={handleHistoryItemClick}
             isLoading={isLoading}
           />

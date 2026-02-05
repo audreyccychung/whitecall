@@ -1,5 +1,7 @@
 // Activity feed - displays friends' activities with like support
+import { useState } from 'react';
 import { ActivityFeedItem } from './ActivityFeedItem';
+import { LikersModal } from './LikersModal';
 import { useActivityFeed } from '../hooks/useActivityFeed';
 
 // Refresh icon SVG
@@ -30,6 +32,7 @@ interface ActivityFeedProps {
 
 export function ActivityFeed({ userId }: ActivityFeedProps) {
   const { activities, isLoading, error, toggleLike, refetch } = useActivityFeed(userId);
+  const [selectedActivityForLikers, setSelectedActivityForLikers] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -93,9 +96,16 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
             key={activity.id}
             activity={activity}
             onToggleLike={toggleLike}
+            onLikeCountClick={(id) => setSelectedActivityForLikers(id)}
           />
         ))}
       </div>
+
+      {/* Likers Modal */}
+      <LikersModal
+        activityId={selectedActivityForLikers}
+        onClose={() => setSelectedActivityForLikers(null)}
+      />
     </div>
   );
 }

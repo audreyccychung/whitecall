@@ -7,13 +7,135 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned for V0.5 (Week 3-4)
-- Automatic call detection from calendar
-- Message feed
-- **RETENTION: Weekly recap**
-- **RETENTION: Smart "who needs support" feed**
-- **RETENTION: "You made someone's day" feedback**
-- **RETENTION: Badge system foundation**
+### Next: V2.0 - Social Features
+- Activity feed with likes and comments
+- Enhanced social sharing (Instagram, WhatsApp)
+- Photo uploads for call stories
+- Public/private post visibility
+
+---
+
+## [1.6.0] - 2026-02-01
+
+### Changed - UI Consolidation
+
+**Navigation Simplification**:
+- Reduced from 5 tabs to 4 tabs (Home, Calendar, Groups, Profile)
+- Removed Friends tab - friends management moved to Profile page
+- Added redirect /friends → /profile for backwards compatibility
+
+**Home Page Condensing**:
+- Condensed user avatar card to compact horizontal bar
+- Activity Feed promoted to hero content
+- Compact friends-on-call list with tighter spacing
+
+**Profile Page Cleanup**:
+- Removed duplicate streak banner (streak only on Home now)
+- Added FriendsSection component with collapsible add friend form
+- Fixed Avg Quality display: emoji → MoodCircle component (grayscale)
+
+**Onboarding**:
+- Updated Groups step: "Create a Group" → "Find Free Days"
+
+---
+
+## [1.5.0] - 2026-01-30
+
+### Changed - Codebase Stability Audit
+
+**Dead Code Removal**:
+- Removed unused exports from `rpc.ts` (parseRpcResponse, normalizeRpcResult)
+
+**Consolidation**:
+- Extracted `RATING_SCORES` to shared constants (was duplicated)
+
+**Naming Cleanup**:
+- Renamed `GenerateInviteCodeCode` → `InviteCodeGenCode`
+- Renamed `JoinGroupByCodeCode` → `GroupJoinCode`
+
+**Documented**:
+- Implicit dependency: useCalls → global store sync
+- Hearts + Friends coupling: `can_send_heart` computed in friends query
+
+---
+
+## [1.4.0] - 2026-01-28
+
+### Added - Quality & Polish (Partial)
+
+**Error Codes**:
+- M5: Username validation error codes (in update_profile RPC)
+- M6: sendHeart detailed error codes (in send_heart RPC)
+
+**UX Polish**:
+- Confetti on first heart received
+- Heart counter bounce animation
+- Request deduplication for hooks
+
+**Pending**:
+- Empty state illustrations
+- Preload common routes
+
+---
+
+## [1.3.0] - 2026-01-26
+
+### Added - Retention & Engagement
+
+**Streaks**:
+- Display current streak on home screen
+- Streak logic: consecutive days sending hearts
+- Streak risk notification (5:30 PM HKT cron reminder)
+- Shareable streak card (Instagram story format)
+
+**Badges**:
+- "First Heart" badge (send 1)
+- "Caring Colleague" badge (send 10)
+- "Support Squad" badge (send 50)
+- "Call Warrior" badge (survive 10 call shifts)
+- Badge display on profile page
+- `useBadges` hook
+
+**Weekly/Monthly Recap**:
+- Monthly summary with stats
+- Shareable image format (Instagram story size)
+- Hearts received, avg mood, avg sleep stats
+
+**Smart Feed**:
+- Sort friends by actionable first (can send heart)
+- Alphabetical sort within groups
+
+**Profile Enhancements**:
+- Edit display name modal
+- Edit username modal
+- Edit avatar modal (change animal/color)
+
+**Group Enhancements**:
+- Quiet day celebration banner
+- Group leaderboard (top 5 supporters, medals)
+
+**Notifications**:
+- Daily reminder at 10 AM HKT ("X friends on call")
+- Streak reminder at 5:30 PM HKT ("Keep your streak!")
+
+---
+
+## [1.2.0] - 2026-01-24
+
+### Added - Polish & Social
+
+**Features**:
+- Leave group functionality
+- Google Sign-In
+- Group invite links (shareable join codes)
+- Add/remove friend from profile modal
+- Bottom Navigation Bar
+- Settings Page with avatar display
+- Profile stats (trend chart, hearts/call, avg mood)
+- Push notifications for heart alerts
+
+**Technical**:
+- Audit fixes (mutation locks, RPC parsing, cache management)
 
 ---
 

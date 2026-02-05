@@ -27,6 +27,7 @@ function HeartIcon({ filled, className }: { filled: boolean; className?: string 
 interface ActivityFeedItemProps {
   activity: Activity;
   onToggleLike: (activityId: string) => Promise<{ success: boolean }>;
+  onLikeCountClick?: (activityId: string) => void;
 }
 
 // Format relative time (e.g., "2h ago", "1d ago")
@@ -45,7 +46,7 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString();
 }
 
-export function ActivityFeedItem({ activity, onToggleLike }: ActivityFeedItemProps) {
+export function ActivityFeedItem({ activity, onToggleLike, onLikeCountClick }: ActivityFeedItemProps) {
   const [isLiking, setIsLiking] = useState(false);
   const [localLiked, setLocalLiked] = useState(activity.user_has_liked ?? false);
   const [localLikeCount, setLocalLikeCount] = useState(activity.like_count);
@@ -73,7 +74,16 @@ export function ActivityFeedItem({ activity, onToggleLike }: ActivityFeedItemPro
   const rating = activity.metadata.rating as CallRatingValue;
   const ratingLabel = RATING_LABEL[rating] || rating;
   const hoursSlept = activity.metadata.hours_slept;
+  const notes = activity.metadata.notes;
   const displayName = activity.display_name || activity.username || 'Friend';
+
+  // Handle clicking the like count to show likers
+  const handleLikeCountClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (localLikeCount > 0 && onLikeCountClick) {
+      onLikeCountClick(activity.id);
+    }
+  };
 
   return (
     <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-100">
@@ -101,24 +111,39 @@ export function ActivityFeedItem({ activity, onToggleLike }: ActivityFeedItemPro
             </span>
           )}
         </div>
+
+        {/* Notes - displayed if present */}
+        {notes && (
+          <p className="text-sm text-gray-500 mt-2 line-clamp-2 italic">
+            "{notes}"
+          </p>
+        )}
       </div>
 
       {/* Like button */}
-      <button
-        onClick={handleLike}
-        disabled={isLiking}
-        className={`flex items-center gap-1 px-2 py-1 rounded-full transition-colors ${
-          localLiked
-            ? 'text-red-500 bg-red-50'
-            : 'text-gray-400 hover:text-red-400 hover:bg-red-50'
-        }`}
-        aria-label={localLiked ? 'Unlike' : 'Like'}
-      >
-        <HeartIcon filled={localLiked} className={isLiking ? 'animate-pulse' : ''} />
+      <div className="flex items-center gap-1">
+        <button
+          onClick={handleLike}
+          disabled={isLiking}
+          className={`p-1.5 rounded-full transition-colors ${
+            localLiked
+              ? 'text-red-500 bg-red-50'
+              : 'text-gray-400 hover:text-red-400 hover:bg-red-50'
+          }`}
+          aria-label={localLiked ? 'Unlike' : 'Like'}
+        >
+          <HeartIcon filled={localLiked} className={isLiking ? 'animate-pulse' : ''} />
+        </button>
         {localLikeCount > 0 && (
-          <span className="text-sm font-medium">{localLikeCount}</span>
+          <button
+            onClick={handleLikeCountClick}
+            className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline"
+            aria-label="View who liked this"
+          >
+            {localLikeCount}
+          </button>
         )}
-      </button>
+      </div>
     </div>
   );
 }

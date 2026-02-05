@@ -1,9 +1,10 @@
 // Settings page - user account settings (moved from ProfilePage)
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usePushNotifications } from '../hooks/usePushNotifications';
+import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { EditAvatarModal } from '../components/EditAvatarModal';
@@ -12,11 +13,20 @@ import { EditDisplayNameModal } from '../components/EditDisplayNameModal';
 
 export default function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
+  const navigate = useNavigate();
+  const openOnboarding = useStore((state) => state.openOnboarding);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
   const [savingShareData, setSavingShareData] = useState(false);
   const [savingShareFeed, setSavingShareFeed] = useState(false);
+  const [savingNotesPrivacy, setSavingNotesPrivacy] = useState(false);
+
+  // Handle view tutorial - navigate to home and open onboarding
+  const handleViewTutorial = () => {
+    openOnboarding();
+    navigate('/home');
+  };
 
   // Push notifications
   const {
@@ -80,6 +90,32 @@ export default function SettingsPage() {
       console.error('[SettingsPage] Failed to update feed setting:', err);
     } finally {
       setSavingShareFeed(false);
+    }
+  };
+
+  const handleNotesPrivacyToggle = async () => {
+    if (!profile) return;
+
+    setSavingNotesPrivacy(true);
+    try {
+      const newValue = !profile.notes_private;
+      const { data, error } = await supabase.rpc('update_notes_privacy_setting', {
+        p_private: newValue,
+      });
+
+      if (error) throw error;
+
+      const result = data as { code: string };
+      if (result.code !== 'SUCCESS') {
+        console.error('[SettingsPage] Failed to update notes privacy:', result.code);
+        return;
+      }
+
+      await refreshProfile();
+    } catch (err) {
+      console.error('[SettingsPage] Failed to update notes privacy:', err);
+    } finally {
+      setSavingNotesPrivacy(false);
     }
   };
 
@@ -278,6 +314,38 @@ export default function SettingsPage() {
                 )}
               </div>
             </button>
+
+            <button
+              onClick={handleNotesPrivacyToggle}
+              disabled={savingNotesPrivacy}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50 mt-2"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📝</span>
+                <div className="text-left">
+                  <p className="font-medium text-gray-800">Make notes private</p>
+                  <p className="text-sm text-gray-500">
+                    {profile.notes_private
+                      ? 'Your notes are hidden from friends'
+                      : 'Friends can see your call notes'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                {savingNotesPrivacy ? (
+                  <div className="w-5 h-5 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <div className={`w-12 h-7 rounded-full transition-colors flex items-center ${
+                    profile.notes_private ? 'bg-green-500' : 'bg-gray-300'
+                  }`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mx-1 ${
+                      profile.notes_private ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </div>
+                )}
+              </div>
+            </button>
           </div>
 
           {/* Notifications Section */}
@@ -339,6 +407,25 @@ export default function SettingsPage() {
                 </p>
               </div>
             )}
+          </div>
+
+          {/* Help Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Help</p>
+
+            <button
+              onClick={handleViewTutorial}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📖</span>
+                <div className="text-left">
+                  <p className="font-medium text-gray-800">View Tutorial</p>
+                  <p className="text-sm text-gray-500">Learn how to use WhiteCall</p>
+                </div>
+              </div>
+              <span className="text-gray-400 text-sm">›</span>
+            </button>
           </div>
 
           {/* Sign Out Button */}

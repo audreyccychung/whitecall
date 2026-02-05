@@ -8,11 +8,12 @@ import { RATING_EMOJI, RATING_LABEL } from '../types/database';
 interface CallHistoryListProps {
   calls: Call[];
   ratingsMap: Map<string, CallRating>;
+  engagementMap?: Map<string, number>; // call_date -> like_count
   onRateClick: (callDate: string, existingRating?: CallRating) => void;
   isLoading?: boolean;
 }
 
-export function CallHistoryList({ calls, ratingsMap, onRateClick, isLoading }: CallHistoryListProps) {
+export function CallHistoryList({ calls, ratingsMap, engagementMap, onRateClick, isLoading }: CallHistoryListProps) {
   // Filter to past calls only, sorted by date descending
   const pastCalls = useMemo(() => {
     const today = startOfDay(new Date());
@@ -73,6 +74,9 @@ export function CallHistoryList({ calls, ratingsMap, onRateClick, isLoading }: C
                     {RATING_EMOJI[rating.rating]} {RATING_LABEL[rating.rating]}
                     {rating.hours_slept !== null && ` · 😴 ${rating.hours_slept}h`}
                     {rating.notes && ' · Has notes'}
+                    {engagementMap && engagementMap.get(call.call_date) ? (
+                      <span className="text-red-400"> · ❤️ {engagementMap.get(call.call_date)}</span>
+                    ) : null}
                   </p>
                 ) : (
                   <p className="text-sm text-gray-400">Not rated yet</p>

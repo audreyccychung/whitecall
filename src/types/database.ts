@@ -13,6 +13,7 @@ export interface Profile {
   // Privacy settings
   share_data_with_groups: boolean;
   share_activity_feed: boolean;
+  notes_private: boolean; // When true, hides notes from activity feed
   // Onboarding
   onboarding_completed: boolean;
   onboarding_version: number; // 0 = never onboarded, 1+ = completed that version
@@ -84,6 +85,7 @@ export interface ActivityMetadata {
   call_date: string; // YYYY-MM-DD
   rating: CallRatingValue;
   hours_slept: number | null;
+  notes?: string | null; // Optional - omitted if owner has notes_private=true
 }
 
 export interface Activity {
@@ -122,5 +124,47 @@ export type UpdateShareSettingCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR
 export interface UpdateShareSettingResponse {
   code: UpdateShareSettingCode;
   enabled?: boolean;
+  message?: string;
+}
+
+// Get activity likers RPC types
+export type GetLikersCode = 'SUCCESS' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'NOT_FRIENDS' | 'UNKNOWN_ERROR';
+
+export interface ActivityLiker {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_type: string;
+  avatar_color: string;
+  created_at: string;
+}
+
+export interface GetLikersResponse {
+  code: GetLikersCode;
+  likers?: ActivityLiker[];
+  message?: string;
+}
+
+// Update notes privacy RPC types
+export type UpdateNotesPrivacyCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface UpdateNotesPrivacyResponse {
+  code: UpdateNotesPrivacyCode;
+  private?: boolean;
+  message?: string;
+}
+
+// Get call engagement RPC types
+export type GetEngagementCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface CallEngagement {
+  call_date: string;
+  activity_id: string;
+  like_count: number;
+}
+
+export interface GetEngagementResponse {
+  code: GetEngagementCode;
+  engagement?: CallEngagement[];
   message?: string;
 }
