@@ -4,16 +4,25 @@ import { motion } from 'framer-motion';
 import { format, parseISO, isBefore, startOfDay } from 'date-fns';
 import type { Call, CallRating } from '../types/database';
 import { RATING_EMOJI, RATING_LABEL } from '../types/database';
+import type { EngagementData } from '../hooks/useCallEngagement';
 
 interface CallHistoryListProps {
   calls: Call[];
   ratingsMap: Map<string, CallRating>;
-  engagementMap?: Map<string, number>; // call_date -> like_count
+  engagementMap?: Map<string, EngagementData>; // call_date -> engagement data
   onRateClick: (callDate: string, existingRating?: CallRating) => void;
+  onEngagementClick?: (activityId: string) => void;
   isLoading?: boolean;
 }
 
-export function CallHistoryList({ calls, ratingsMap, engagementMap, onRateClick, isLoading }: CallHistoryListProps) {
+export function CallHistoryList({
+  calls,
+  ratingsMap,
+  engagementMap,
+  onRateClick,
+  onEngagementClick,
+  isLoading,
+}: CallHistoryListProps) {
   // Filter to past calls only, sorted by date descending
   const pastCalls = useMemo(() => {
     const today = startOfDay(new Date());
@@ -41,11 +50,21 @@ export function CallHistoryList({ calls, ratingsMap, engagementMap, onRateClick,
     );
   }
 
+  // Handle engagement click (opens engagement modal)
+  const handleEngagementClick = (e: React.MouseEvent, activityId: string) => {
+    e.stopPropagation(); // Prevent card click (edit rating)
+    if (onEngagementClick) {
+      onEngagementClick(activityId);
+    }
+  };
+
   return (
     <div className="space-y-2">
       {pastCalls.map((call, index) => {
         const rating = ratingsMap.get(call.call_date);
         const hasRating = !!rating;
+        const engagement = engagementMap?.get(call.call_date);
+        const hasEngagement = engagement && (engagement.like_count > 0 || engagement.comment_count > 0);
 
         return (
           <motion.button
@@ -70,14 +89,28 @@ export function CallHistoryList({ calls, ratingsMap, engagementMap, onRateClick,
                   {format(parseISO(call.call_date), 'EEEE, MMM d')}
                 </p>
                 {hasRating ? (
-                  <p className="text-sm text-gray-500">
-                    {RATING_EMOJI[rating.rating]} {RATING_LABEL[rating.rating]}
-                    {rating.hours_slept !== null && ` · 😴 ${rating.hours_slept}h`}
-                    {rating.notes && ' · Has notes'}
-                    {engagementMap && engagementMap.get(call.call_date) ? (
-                      <span className="text-red-400"> · ❤️ {engagementMap.get(call.call_date)}</span>
-                    ) : null}
-                  </p>
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <p className="text-sm text-gray-500">
+                      {RATING_EMOJI[rating.rating]} {RATING_LABEL[rating.rating]}
+                      {rating.hours_slept !== null && ` · 😴 ${rating.hours_slept}h`}
+                      {rating.notes && ' · Has notes'}
+                    </p>
+                    {/* Engagement counts - tappable, separate from card */}
+                    {hasEngagement && engagement && (
+                      <button
+                        onClick={(e) => handleEngagementClick(e, engagement.activity_id)}
+                        className="text-sm text-gray-400 hover:text-gray-600 hover:underline ml-1"
+                      >
+                        {engagement.like_count > 0 && (
+                          <span className="text-red-400">❤️ {engagement.like_count}</span>
+                        )}
+                        {engagement.like_count > 0 && engagement.comment_count > 0 && ' · '}
+                        {engagement.comment_count > 0 && (
+                          <span className="text-sky-soft-500">💬 {engagement.comment_count}</span>
+                        )}
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm text-gray-400">Not rated yet</p>
                 )}

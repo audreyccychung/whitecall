@@ -1,4 +1,4 @@
-// Call engagement hook - fetch like counts for user's calls
+// Call engagement hook - fetch engagement data for user's calls
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { CallEngagement, GetEngagementCode } from '../types/database';
@@ -13,9 +13,16 @@ const GET_ENGAGEMENT_MESSAGES: Record<GetEngagementCode, string> = {
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
 
+// Engagement data for a single call
+export interface EngagementData {
+  activity_id: string;
+  like_count: number;
+  comment_count: number;
+}
+
 // Module-level cache
 const engagementCache = {
-  engagementMap: new Map<string, number>(), // call_date -> like_count
+  engagementMap: new Map<string, EngagementData>(), // call_date -> engagement data
   lastFetchedAt: 0,
   userId: null as string | null,
 };
@@ -33,7 +40,7 @@ export function useCallEngagement(userId: string | undefined) {
     engagementCache.userId === userId &&
     engagementCache.lastFetchedAt > 0;
 
-  const [engagementMap, setEngagementMap] = useState<Map<string, number>>(
+  const [engagementMap, setEngagementMap] = useState<Map<string, EngagementData>>(
     hasCachedData ? engagementCache.engagementMap : new Map()
   );
   const [isLoading, setIsLoading] = useState(!hasCachedData);
@@ -69,10 +76,15 @@ export function useCallEngagement(userId: string | undefined) {
       }
 
       const engagementData = result.engagement || [];
-      const newMap = new Map<string, number>();
+      const newMap = new Map<string, EngagementData>();
       engagementData.forEach((e) => {
-        if (e.like_count > 0) {
-          newMap.set(e.call_date, e.like_count);
+        // Include entries with any engagement (likes or comments)
+        if (e.like_count > 0 || e.comment_count > 0) {
+          newMap.set(e.call_date, {
+            activity_id: e.activity_id,
+            like_count: e.like_count,
+            comment_count: e.comment_count,
+          });
         }
       });
 

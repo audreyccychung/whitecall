@@ -1,7 +1,8 @@
-// Activity feed - displays friends' activities with like support
+// Activity feed - displays friends' activities with like and comment support
 import { useState } from 'react';
 import { ActivityFeedItem } from './ActivityFeedItem';
 import { LikersModal } from './LikersModal';
+import { CommentsModal } from './CommentsModal';
 import { useActivityFeed } from '../hooks/useActivityFeed';
 
 // Refresh icon SVG
@@ -33,6 +34,17 @@ interface ActivityFeedProps {
 export function ActivityFeed({ userId }: ActivityFeedProps) {
   const { activities, isLoading, error, toggleLike, refetch } = useActivityFeed(userId);
   const [selectedActivityForLikers, setSelectedActivityForLikers] = useState<string | null>(null);
+  const [selectedActivityForComments, setSelectedActivityForComments] = useState<string | null>(null);
+  // Track comment count deltas for optimistic updates (activityId -> delta)
+  const [commentCountDeltas, setCommentCountDeltas] = useState<Record<string, number>>({});
+
+  // Handle comment count change from modal
+  const handleCommentCountChange = (activityId: string, delta: number) => {
+    setCommentCountDeltas((prev) => ({
+      ...prev,
+      [activityId]: (prev[activityId] || 0) + delta,
+    }));
+  };
 
   if (isLoading) {
     return (
@@ -97,6 +109,8 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
             activity={activity}
             onToggleLike={toggleLike}
             onLikeCountClick={(id) => setSelectedActivityForLikers(id)}
+            onCommentClick={(id) => setSelectedActivityForComments(id)}
+            commentCountDelta={commentCountDeltas[activity.id] || 0}
           />
         ))}
       </div>
@@ -105,6 +119,13 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
       <LikersModal
         activityId={selectedActivityForLikers}
         onClose={() => setSelectedActivityForLikers(null)}
+      />
+
+      {/* Comments Modal */}
+      <CommentsModal
+        activityId={selectedActivityForComments}
+        onClose={() => setSelectedActivityForComments(null)}
+        onCommentCountChange={handleCommentCountChange}
       />
     </div>
   );

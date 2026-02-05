@@ -94,6 +94,7 @@ export interface Activity {
   activity_type: ActivityType;
   metadata: ActivityMetadata;
   like_count: number;
+  comment_count: number;
   created_at: string;
   // Joined fields from get_activity_feed RPC
   display_name?: string;
@@ -161,10 +162,47 @@ export interface CallEngagement {
   call_date: string;
   activity_id: string;
   like_count: number;
+  comment_count: number;
 }
 
 export interface GetEngagementResponse {
   code: GetEngagementCode;
   engagement?: CallEngagement[];
+  message?: string;
+}
+
+// Activity comments types
+export interface ActivityComment {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  // Joined fields from RPC
+  username?: string;
+  display_name?: string | null;
+  avatar_type?: string;
+  avatar_color?: string;
+}
+
+export type AddCommentCode = 'SUCCESS' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'NOT_FRIENDS' | 'CANNOT_COMMENT_OWN' | 'CONTENT_TOO_LONG' | 'CONTENT_EMPTY' | 'UNKNOWN_ERROR';
+
+export interface AddCommentResponse {
+  code: AddCommentCode;
+  comment_id?: string;
+  message?: string;
+}
+
+export type GetCommentsCode = 'SUCCESS' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'NOT_FRIENDS' | 'UNKNOWN_ERROR';
+
+export interface GetCommentsResponse {
+  code: GetCommentsCode;
+  comments?: ActivityComment[];
+  message?: string;
+}
+
+export type DeleteCommentCode = 'SUCCESS' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'NOT_OWN_COMMENT' | 'UNKNOWN_ERROR';
+
+export interface DeleteCommentResponse {
+  code: DeleteCommentCode;
   message?: string;
 }

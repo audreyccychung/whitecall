@@ -17,6 +17,7 @@ import { TrendChart } from '../components/profile/TrendChart';
 import { FriendsSection } from '../components/profile/FriendsSection';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
+import { EngagementModal } from '../components/EngagementModal';
 import { StreakShareCard, SharePreviewModal, MonthlyShareCard, ShareButton } from '../components/share';
 import { formatStat, getStatLabel, type StatKey } from '../utils/statsRegistry';
 import type { CallRating } from '../types/database';
@@ -54,6 +55,9 @@ export default function ProfilePage() {
   }>({ type: null });
   const streakShare = useShareCard();
   const monthlyShare = useShareCard();
+
+  // Engagement modal state (for viewing likers + comments on own activity)
+  const [selectedActivityForEngagement, setSelectedActivityForEngagement] = useState<string | null>(null);
 
   // Handle click on call in history list
   const handleHistoryItemClick = (callDate: string, existingRating?: CallRating) => {
@@ -254,6 +258,7 @@ export default function ProfilePage() {
             ratingsMap={ratingsMap}
             engagementMap={engagementMap}
             onRateClick={handleHistoryItemClick}
+            onEngagementClick={(activityId) => setSelectedActivityForEngagement(activityId)}
             isLoading={isLoading}
           />
         </motion.div>
@@ -269,6 +274,12 @@ export default function ProfilePage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Engagement Modal (likers + comments) */}
+      <EngagementModal
+        activityId={selectedActivityForEngagement}
+        onClose={() => setSelectedActivityForEngagement(null)}
+      />
 
       {/* Share Modals */}
       <SharePreviewModal

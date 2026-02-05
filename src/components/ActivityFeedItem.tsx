@@ -1,5 +1,5 @@
-// Activity feed item - displays a single activity with like button
-import { useState } from 'react';
+// Activity feed item - displays a single activity with like and comment buttons
+import { useState, useEffect } from 'react';
 import { AvatarDisplay } from './AvatarDisplay';
 import { RatingIcon } from './RatingIcon';
 import type { Activity, CallRatingValue } from '../types/database';
@@ -24,10 +24,32 @@ function HeartIcon({ filled, className }: { filled: boolean; className?: string 
   );
 }
 
+// Comment SVG icon component
+function CommentIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
 interface ActivityFeedItemProps {
   activity: Activity;
   onToggleLike: (activityId: string) => Promise<{ success: boolean }>;
   onLikeCountClick?: (activityId: string) => void;
+  onCommentClick?: (activityId: string) => void;
+  // External comment count delta (positive = added, negative = removed)
+  commentCountDelta?: number;
 }
 
 // Format relative time (e.g., "2h ago", "1d ago")
@@ -46,10 +68,25 @@ function formatRelativeTime(dateString: string): string {
   return date.toLocaleDateString();
 }
 
-export function ActivityFeedItem({ activity, onToggleLike, onLikeCountClick }: ActivityFeedItemProps) {
+export function ActivityFeedItem({
+  activity,
+  onToggleLike,
+  onLikeCountClick,
+  onCommentClick,
+  commentCountDelta = 0,
+}: ActivityFeedItemProps) {
   const [isLiking, setIsLiking] = useState(false);
   const [localLiked, setLocalLiked] = useState(activity.user_has_liked ?? false);
   const [localLikeCount, setLocalLikeCount] = useState(activity.like_count);
+
+  // Comment count includes any delta from parent (for optimistic updates)
+  const localCommentCount = Math.max(0, activity.comment_count + commentCountDelta);
+
+  // Reset local state when activity changes
+  useEffect(() => {
+    setLocalLiked(activity.user_has_liked ?? false);
+    setLocalLikeCount(activity.like_count);
+  }, [activity.id, activity.user_has_liked, activity.like_count]);
 
   const handleLike = async () => {
     if (isLiking) return;
@@ -82,6 +119,14 @@ export function ActivityFeedItem({ activity, onToggleLike, onLikeCountClick }: A
     e.stopPropagation();
     if (localLikeCount > 0 && onLikeCountClick) {
       onLikeCountClick(activity.id);
+    }
+  };
+
+  // Handle clicking comment button or count
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCommentClick) {
+      onCommentClick(activity.id);
     }
   };
 
@@ -120,29 +165,52 @@ export function ActivityFeedItem({ activity, onToggleLike, onLikeCountClick }: A
         )}
       </div>
 
-      {/* Like button */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={handleLike}
-          disabled={isLiking}
-          className={`p-1.5 rounded-full transition-colors ${
-            localLiked
-              ? 'text-red-500 bg-red-50'
-              : 'text-gray-400 hover:text-red-400 hover:bg-red-50'
-          }`}
-          aria-label={localLiked ? 'Unlike' : 'Like'}
-        >
-          <HeartIcon filled={localLiked} className={isLiking ? 'animate-pulse' : ''} />
-        </button>
-        {localLikeCount > 0 && (
+      {/* Action buttons */}
+      <div className="flex items-center gap-2">
+        {/* Like button */}
+        <div className="flex items-center gap-0.5">
           <button
-            onClick={handleLikeCountClick}
-            className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline"
-            aria-label="View who liked this"
+            onClick={handleLike}
+            disabled={isLiking}
+            className={`p-1.5 rounded-full transition-colors ${
+              localLiked
+                ? 'text-red-500 bg-red-50'
+                : 'text-gray-400 hover:text-red-400 hover:bg-red-50'
+            }`}
+            aria-label={localLiked ? 'Unlike' : 'Like'}
           >
-            {localLikeCount}
+            <HeartIcon filled={localLiked} className={isLiking ? 'animate-pulse' : ''} />
           </button>
-        )}
+          {localLikeCount > 0 && (
+            <button
+              onClick={handleLikeCountClick}
+              className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline min-w-[16px]"
+              aria-label="View who liked this"
+            >
+              {localLikeCount}
+            </button>
+          )}
+        </div>
+
+        {/* Comment button */}
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={handleCommentClick}
+            className="p-1.5 rounded-full transition-colors text-gray-400 hover:text-sky-soft-500 hover:bg-sky-soft-50"
+            aria-label="View comments"
+          >
+            <CommentIcon />
+          </button>
+          {localCommentCount > 0 && (
+            <button
+              onClick={handleCommentClick}
+              className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline min-w-[16px]"
+              aria-label="View comments"
+            >
+              {localCommentCount}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
