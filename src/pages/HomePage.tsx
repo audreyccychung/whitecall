@@ -14,6 +14,7 @@ import { HeartButton } from '../components/HeartButton';
 import { HeartCounterAnimation } from '../components/HeartCounterAnimation';
 import { HeartSendersList } from '../components/HeartSendersList';
 import { ActivityFeed } from '../components/ActivityFeed';
+import { NotificationBell } from '../components/NotificationBell';
 import { OnboardingModal } from '../components/onboarding/OnboardingModal';
 
 export default function HomePage() {
@@ -79,8 +80,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">WhiteCall</h1>
+          <NotificationBell />
         </div>
       </header>
 

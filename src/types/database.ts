@@ -206,3 +206,49 @@ export interface DeleteCommentResponse {
   code: DeleteCommentCode;
   message?: string;
 }
+
+// Notification types
+export type NotificationType = 'like' | 'comment';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  activity_id: string | null;
+  comment_id: string | null;
+  read: boolean;
+  created_at: string;
+  // Joined fields from RPC
+  actor_id: string;
+  actor_username: string;
+  actor_display_name: string | null;
+  actor_avatar_type: string;
+  actor_avatar_color: string;
+  call_date: string | null;
+  rating: string | null;
+  comment_preview: string | null;
+}
+
+export type GetNotificationsCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface GetNotificationsResponse {
+  code: GetNotificationsCode;
+  notifications?: Notification[];
+  unread_count?: number;
+  message?: string;
+}
+
+export type MarkNotificationsReadCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface MarkNotificationsReadResponse {
+  code: MarkNotificationsReadCode;
+  updated_count?: number;
+  message?: string;
+}
+
+export type GetUnreadCountCode = 'SUCCESS' | 'UNAUTHORIZED' | 'UNKNOWN_ERROR';
+
+export interface GetUnreadCountResponse {
+  code: GetUnreadCountCode;
+  count?: number;
+  message?: string;
+}
