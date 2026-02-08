@@ -1,4 +1,4 @@
-// Calendar component for selecting call days
+// Calendar component for selecting shift days
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -15,20 +15,21 @@ import {
   isBefore,
   startOfDay,
 } from 'date-fns';
-import type { CallRating } from '../types/database';
+import type { CallRating, ShiftType, WorkPattern } from '../types/database';
 import { RatingIcon } from './RatingIcon';
+import { SHIFT_TYPE_MAP, getShiftTypesForPattern, getDesaturatedColor, isShiftRatable } from '../constants/shiftTypes';
 
 interface CallCalendarProps {
-  callDates: Set<string>; // Set of YYYY-MM-DD strings
-  ratingsMap?: Map<string, CallRating>; // Optional ratings lookup for past calls
-  onToggleDate: (date: string) => Promise<void>;
-  onPastCallClick?: (date: string) => void; // Callback when clicking a past call date
+  shiftMap: Map<string, ShiftType>; // YYYY-MM-DD -> shift type
+  ratingsMap?: Map<string, CallRating>;
+  workPattern: WorkPattern;
+  onDateTap: (date: string) => void; // Opens shift picker
+  onPastCallClick?: (date: string) => void; // Opens rating modal for ratable past shifts
   disabled?: boolean;
 }
 
-export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallClick, disabled = false }: CallCalendarProps) {
+export function CallCalendar({ shiftMap, ratingsMap, workPattern, onDateTap, onPastCallClick, disabled = false }: CallCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [loadingDate, setLoadingDate] = useState<string | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -37,32 +38,32 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  const handleDateClick = async (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const isPastDate = isBefore(date, startOfDay(new Date())) && !isToday(date);
-    const dateHasCall = callDates.has(dateStr);
+  const handleDateClick = (day: Date) => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const isPastDate = isBefore(day, startOfDay(new Date())) && !isToday(day);
+    const shiftType = shiftMap.get(dateStr);
+    const hasShift = !!shiftType;
 
-    // Past date without call - not clickable
-    if (isPastDate && !dateHasCall) {
+    // Past date without shift - not clickable
+    if (isPastDate && !hasShift) {
       return;
     }
 
-    // Past date WITH call - trigger past call click handler (for rating)
-    // This works even when calendar is disabled (read-only mode)
-    if (isPastDate && dateHasCall) {
+    // Past date WITH ratable shift - open rating modal
+    if (isPastDate && hasShift && isShiftRatable(shiftType, workPattern)) {
       onPastCallClick?.(dateStr);
       return;
     }
 
-    // Future/today dates - toggle call on/off (blocked when disabled)
+    // Past date WITH non-ratable shift - not clickable
+    if (isPastDate && hasShift) {
+      return;
+    }
+
+    // Future/today dates - open shift picker (blocked when disabled)
     if (disabled) return;
 
-    setLoadingDate(dateStr);
-    try {
-      await onToggleDate(dateStr);
-    } finally {
-      setLoadingDate(null);
-    }
+    onDateTap(dateStr);
   };
 
   const goToPreviousMonth = () => {
@@ -76,6 +77,9 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
   const goToToday = () => {
     setCurrentMonth(new Date());
   };
+
+  // Get shift types for legend based on work pattern
+  const legendShiftTypes = getShiftTypesForPattern(workPattern);
 
   return (
     <div className="bg-white rounded-2xl shadow-soft-lg p-6">
@@ -125,11 +129,17 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
           const dateStr = format(day, 'yyyy-MM-dd');
           const isCurrentMonth = isSameMonth(day, currentMonth);
           const isTodayDate = isToday(day);
-          const hasCall = callDates.has(dateStr);
+          const shiftType = shiftMap.get(dateStr);
+          const hasShift = !!shiftType;
           const isPast = isBefore(day, startOfDay(new Date())) && !isTodayDate;
-          const isLoading = loadingDate === dateStr;
           const rating = ratingsMap?.get(dateStr);
           const hasRating = !!rating;
+
+          // Is this past shift ratable?
+          const ratable = hasShift && isPast && isShiftRatable(shiftType!, workPattern);
+
+          // Get the shift config for coloring
+          const shiftConfig = shiftType ? SHIFT_TYPE_MAP[shiftType] : null;
 
           // Determine styles based on state priority
           const style: React.CSSProperties = {};
@@ -137,38 +147,34 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
 
           if (!isCurrentMonth) {
             style.color = '#d1d5db'; // gray-300
-          } else if (hasCall && !isPast) {
-            // Future/today calls: Blue filled circle
-            style.backgroundColor = '#0ea5e9'; // sky-soft-500
+          } else if (hasShift && !isPast) {
+            // Future/today shifts: Full color circle with ring
+            style.backgroundColor = shiftConfig!.color;
             style.color = '#ffffff';
-            style.boxShadow = '0 0 0 2px #0284c7, 0 0 0 4px #ffffff'; // ring effect
-          } else if (hasCall && isPast && hasRating) {
-            // Past calls with rating: Show emoji background
-            style.backgroundColor = '#f3f4f6'; // gray-100
-          } else if (hasCall && isPast) {
-            // Past calls without rating: Gray filled circle (clickable for rating)
-            style.backgroundColor = '#9ca3af'; // gray-400
+            style.boxShadow = `0 0 0 2px ${shiftConfig!.ringColor}, 0 0 0 4px #ffffff`;
+          } else if (hasShift && isPast) {
+            // Past shifts: Desaturated version of the shift color
+            // Preserves hue identity so users can still recognize the shift type
+            style.backgroundColor = getDesaturatedColor(shiftConfig!.color);
             style.color = '#ffffff';
           } else if (isPast) {
-            // Past without call: Grayed out text
+            // Past without shift: Grayed out text
             style.color = '#d1d5db'; // gray-300
           } else if (isTodayDate) {
-            style.boxShadow = '0 0 0 2px #0ea5e9, 0 0 0 4px #ffffff'; // ring effect
+            style.boxShadow = '0 0 0 2px #0ea5e9, 0 0 0 4px #ffffff';
           }
 
           // Hover states
-          if (!hasCall && !isPast && isCurrentMonth) {
+          if (!hasShift && !isPast && isCurrentMonth) {
             extraClasses = 'hover:bg-gray-100';
-          } else if (hasCall && isPast && isCurrentMonth) {
-            // Past calls get hover feedback for clickability
-            extraClasses = hasRating ? 'hover:bg-gray-200' : 'hover:bg-gray-500';
+          } else if (hasShift && isPast && ratable && isCurrentMonth) {
+            extraClasses = 'hover:brightness-90';
           }
 
-          // Past calls are always clickable (for rating), even when calendar is disabled
-          // Future dates are only clickable when calendar is not disabled
-          const isPastCallClickable = isPast && hasCall && !isLoading;
-          const isFutureDateClickable = !disabled && !isLoading && !isPast && isCurrentMonth;
-          const isClickable = isPastCallClickable || isFutureDateClickable;
+          // Clickability: past ratable shifts (for rating) or future dates (for picker)
+          const isPastRatableClickable = isPast && hasShift && ratable;
+          const isFutureDateClickable = !disabled && !isPast && isCurrentMonth;
+          const isClickable = isPastRatableClickable || isFutureDateClickable;
 
           return (
             <motion.button
@@ -181,12 +187,11 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
                 relative aspect-square flex items-center justify-center rounded-full text-sm font-medium
                 transition-all min-h-[44px]
                 ${extraClasses}
-                ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}
-                ${isLoading ? 'opacity-60' : ''}
+                ${isClickable ? 'cursor-pointer' : 'cursor-default'}
               `}
             >
-              {/* Show date with rating circle below for rated past calls, otherwise just date */}
-              {isPast && hasCall && hasRating ? (
+              {/* Show date with rating icon below for rated ratable past shifts */}
+              {isPast && hasShift && hasRating && ratable ? (
                 <div className="flex flex-col items-center leading-none gap-0.5">
                   <span>{format(day, 'd')}</span>
                   <RatingIcon rating={rating.rating} size="sm" />
@@ -194,30 +199,22 @@ export function CallCalendar({ callDates, ratingsMap, onToggleDate, onPastCallCl
               ) : (
                 format(day, 'd')
               )}
-              {isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
             </motion.button>
           );
         })}
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-sky-soft-500 rounded-full ring-2 ring-sky-soft-600 ring-offset-1" />
-          <span>On call</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-gray-400 rounded-full" />
-          <span>Unrated</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-white rounded-full border border-gray-300" />
-          <span>Rated</span>
-        </div>
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-gray-600">
+        {legendShiftTypes.map((st) => (
+          <div key={st.id} className="flex items-center gap-1.5">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: st.color }}
+            />
+            <span>{st.shortLabel}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -29,13 +29,13 @@ export default function HomePage() {
   // Load calls data (this syncs to global store)
   useCalls(user?.id);
 
-  // Read call dates from global store - subscribing to callDates triggers re-render when it changes
-  const callDates = useStore((state) => state.callDates);
+  // Read shift data from global store - subscribing to shiftMap triggers re-render when it changes
+  const shiftMap = useStore((state) => state.shiftMap);
   const isCallStatusLoaded = useStore((state) => state.isCallStatusLoaded);
 
-  // Compute on-call status from the subscribed state
+  // Compute on-call status from the subscribed state (any shift type counts)
   const today = getTodayDate();
-  const isUserOnCall = isCallStatusLoaded && callDates.has(today);
+  const isUserOnCall = isCallStatusLoaded && shiftMap.has(today);
 
   const handleSendHeart = async (friendId: string): Promise<void> => {
     // Token-based lock to prevent background refetch from overwriting optimistic update

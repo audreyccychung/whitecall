@@ -1,5 +1,6 @@
 // ICS file generator for calendar export
 import type { Call } from '../types/database';
+import { SHIFT_TYPE_MAP } from '../constants/shiftTypes';
 
 /**
  * Generates an ICS (iCalendar) file content for a list of calls.
@@ -28,14 +29,16 @@ export function generateICS(calls: Call[]): string {
     const now = new Date();
     const dtstamp = formatICSDate(now);
 
+    const shiftLabel = SHIFT_TYPE_MAP[call.shift_type]?.label || 'Call';
+
     lines.push(
       'BEGIN:VEVENT',
       `UID:${uid}`,
       `DTSTAMP:${dtstamp}`,
       `DTSTART;VALUE=DATE:${dateValue}`,
       `DTEND;VALUE=DATE:${dateValue}`,
-      'SUMMARY:Call',
-      'DESCRIPTION:Scheduled call with a loved one',
+      `SUMMARY:${shiftLabel}`,
+      `DESCRIPTION:WhiteCall - ${shiftLabel}`,
       'END:VEVENT'
     );
   }

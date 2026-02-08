@@ -157,19 +157,55 @@
 
 ---
 
+## V1.7 - Shift Type Calendar ✓ COMPLETE
+
+### Work Patterns
+- [x] Users choose work pattern in Settings (call-based or shift-based)
+- [x] `work_pattern` column on profiles (default 'call')
+- [x] `update_work_pattern` RPC for changing pattern
+
+### Shift Types
+- [x] `shift_type` column on calls table (default 'call')
+- [x] Call-based: Call (blue), Day Off (teal), Full Day Work (purple), Half Day (orange)
+- [x] Shift-based: AM (yellow), PM (blue), Night (indigo), Off (teal)
+- [x] Frontend constants for all 8 shift types (label, color, icon, pattern)
+
+### Bottom Sheet Picker
+- [x] Tap date → bottom sheet slides up with shift type options
+- [x] Shows only shift types for user's work pattern
+- [x] Auto-advances to next day after selection
+- [x] Sheet stays open for rapid consecutive-day entry
+- [x] Clear button to remove a shift from a date
+- [x] Mobile-first, touch targets >= 44px
+
+### Calendar Visual Updates
+- [x] Future dates: full color circle with ring effect
+- [x] Past dates: desaturated color (preserves hue identity)
+- [x] Past ratable dates: clickable for rating (call-based: only calls; shift-based: all)
+- [x] Legend shows shift types for current work pattern
+
+### Integration
+- [x] Zustand store updated (callDates Set → shiftMap Map)
+- [x] ICS export includes shift type labels
+- [x] Settings page work pattern selector
+- [x] HomePage on-schedule badge works with any shift type
+
+---
+
 ## Future (V2+)
 
 ### Short-term Improvements
 - [ ] Add explicit return type interfaces for `useHearts` and `useFriends` hooks
 - [ ] Create shared `PersonData` base type (dedupe Friend, GroupMember, LeaderboardEntry)
 - [ ] Remove redundant `id` field from GroupMember (keep only `user_id`)
-- [ ] Document useCalls → store sync dependency with inline comments
+- [ ] Update group calendar views to show shift type colors
 
 ### Medium-term Features
 - [ ] ICS calendar feed import (auto-populate calls from exported schedule)
 - [ ] Group statistics page (aggregate mood, support patterns)
 - [ ] "Most supported" vs "least supported" friend insights
 - [ ] Quiet day celebration notifications for groups
+- [ ] Multi-day shift spanning support
 
 ### Long-term / Premium
 - [ ] Calendar sync (Google, Apple) - Premium
@@ -205,11 +241,13 @@
 - `longest_streak` - exists, displayed
 - `last_heart_sent_date` - exists
 - `onboarding_completed` - exists (not used in UI)
+- `work_pattern` - exists ('call' or 'shift', default 'call')
 
 ### Tables:
+- `calls` - shift scheduling (call_date, shift_type)
+- `call_ratings` - exists (rating, notes, hours_slept)
 - `user_settings` - exists (not actively used)
 - `user_badges` - exists (but badges are computed, not written)
-- `call_ratings` - exists (rating, notes, hours_slept)
 - `push_subscriptions` - exists (web push)
 
 ---
@@ -225,7 +263,8 @@
 
 ### Known Coupling (Acceptable)
 - Hearts ↔ Friends: `can_send_heart` flag computed in friends query
-- useCalls ↔ Zustand store: call dates synced for HomePage banner
+- useCalls ↔ Zustand store: shift map synced for HomePage on-schedule badge
+- Shift type display config: frontend constants (`src/constants/shiftTypes.ts`), DB stores codes only
 
 ### Technical Debt (Low Priority)
 - Snake_case in TypeScript types (matches DB, but unconventional)

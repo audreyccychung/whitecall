@@ -2,10 +2,11 @@
 // NOTE: Profile/user state is managed by AuthContext (single source of truth).
 // This store is only for cross-component data that needs to sync without prop drilling.
 import { create } from 'zustand';
+import type { ShiftType } from '../types/database';
 
 interface AppState {
-  // Call status - global so it updates everywhere (e.g., HomePage reads, CallsPage writes)
-  callDates: Set<string>; // Set of YYYY-MM-DD strings
+  // Shift status - global so it updates everywhere (e.g., HomePage reads, CallsPage writes)
+  shiftMap: Map<string, ShiftType>; // YYYY-MM-DD -> shift type
   isCallStatusLoaded: boolean;
 
   // Onboarding state - allows Settings to trigger tutorial re-view
@@ -13,10 +14,10 @@ interface AppState {
   // Track if user dismissed onboarding this session (prevents re-showing if DB update fails)
   onboardingDismissedThisSession: boolean;
 
-  // Call status actions
-  setCallDates: (dates: string[]) => void;
-  addCallDate: (date: string) => void;
-  removeCallDate: (date: string) => void;
+  // Shift status actions
+  setShiftMap: (entries: Array<{ date: string; shiftType: ShiftType }>) => void;
+  setShift: (date: string, shiftType: ShiftType) => void;
+  removeShift: (date: string) => void;
 
   // Onboarding actions
   openOnboarding: () => void;
@@ -26,24 +27,28 @@ interface AppState {
 
 export const useStore = create<AppState>((set, get) => ({
   // Initial state
-  callDates: new Set(),
+  shiftMap: new Map(),
   isCallStatusLoaded: false,
   showOnboardingManual: false,
   onboardingDismissedThisSession: false,
 
-  // Call status actions
-  setCallDates: (dates) => {
-    set({ callDates: new Set(dates), isCallStatusLoaded: true });
+  // Shift status actions
+  setShiftMap: (entries) => {
+    const map = new Map<string, ShiftType>();
+    for (const { date, shiftType } of entries) {
+      map.set(date, shiftType);
+    }
+    set({ shiftMap: map, isCallStatusLoaded: true });
   },
-  addCallDate: (date) => {
-    const newDates = new Set(get().callDates);
-    newDates.add(date);
-    set({ callDates: newDates });
+  setShift: (date, shiftType) => {
+    const newMap = new Map(get().shiftMap);
+    newMap.set(date, shiftType);
+    set({ shiftMap: newMap });
   },
-  removeCallDate: (date) => {
-    const newDates = new Set(get().callDates);
-    newDates.delete(date);
-    set({ callDates: newDates });
+  removeShift: (date) => {
+    const newMap = new Map(get().shiftMap);
+    newMap.delete(date);
+    set({ shiftMap: newMap });
   },
 
   // Onboarding actions

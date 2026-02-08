@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePushNotifications } from '../hooks/usePushNotifications';
 import { useStore } from '../lib/store';
 import { supabase } from '../lib/supabase';
+import type { WorkPattern } from '../types/database';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { EditAvatarModal } from '../components/EditAvatarModal';
 import { EditUsernameModal } from '../components/EditUsernameModal';
@@ -21,6 +22,7 @@ export default function SettingsPage() {
   const [savingShareData, setSavingShareData] = useState(false);
   const [savingShareFeed, setSavingShareFeed] = useState(false);
   const [savingNotesPrivacy, setSavingNotesPrivacy] = useState(false);
+  const [savingWorkPattern, setSavingWorkPattern] = useState(false);
 
   // Handle view tutorial - navigate to home and open onboarding
   const handleViewTutorial = () => {
@@ -116,6 +118,31 @@ export default function SettingsPage() {
       console.error('[SettingsPage] Failed to update notes privacy:', err);
     } finally {
       setSavingNotesPrivacy(false);
+    }
+  };
+
+  const handleWorkPatternChange = async (pattern: WorkPattern) => {
+    if (!profile || profile.work_pattern === pattern) return;
+
+    setSavingWorkPattern(true);
+    try {
+      const { data, error } = await supabase.rpc('update_work_pattern', {
+        p_pattern: pattern,
+      });
+
+      if (error) throw error;
+
+      const result = data as { code: string };
+      if (result.code !== 'SUCCESS') {
+        console.error('[SettingsPage] Failed to update work pattern:', result.code);
+        return;
+      }
+
+      await refreshProfile();
+    } catch (err) {
+      console.error('[SettingsPage] Failed to update work pattern:', err);
+    } finally {
+      setSavingWorkPattern(false);
     }
   };
 
@@ -245,6 +272,50 @@ export default function SettingsPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Schedule Section */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Schedule</p>
+            <p className="text-sm text-gray-500 mb-3">
+              Choose your work pattern to see the right shift types in your calendar.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => handleWorkPatternChange('call')}
+                disabled={savingWorkPattern}
+                className={`p-4 rounded-xl text-left transition-all ${
+                  profile.work_pattern === 'call'
+                    ? 'bg-sky-soft-50 ring-2 ring-sky-soft-500'
+                    : 'bg-gray-50 hover:bg-gray-100'
+                } ${savingWorkPattern ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <p className="text-2xl mb-1">🤍</p>
+                <p className="font-medium text-gray-800 text-sm">Call-based</p>
+                <p className="text-xs text-gray-500 mt-0.5">Long calls, days off</p>
+              </button>
+
+              <button
+                onClick={() => handleWorkPatternChange('shift')}
+                disabled={savingWorkPattern}
+                className={`p-4 rounded-xl text-left transition-all ${
+                  profile.work_pattern === 'shift'
+                    ? 'bg-sky-soft-50 ring-2 ring-sky-soft-500'
+                    : 'bg-gray-50 hover:bg-gray-100'
+                } ${savingWorkPattern ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <p className="text-2xl mb-1">🔄</p>
+                <p className="font-medium text-gray-800 text-sm">Shift-based</p>
+                <p className="text-xs text-gray-500 mt-0.5">AM / PM / Night shifts</p>
+              </button>
+            </div>
+
+            {savingWorkPattern && (
+              <div className="flex justify-center mt-2">
+                <div className="w-5 h-5 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
           </div>
 
           {/* Privacy Section */}

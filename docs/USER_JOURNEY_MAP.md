@@ -244,21 +244,24 @@ Clicks close/outside → handleCloseModal()                 → selectedFriend: 
 
 ---
 
-### 13. User Toggles a Call Date
+### 13. User Adds a Shift to a Date
 
 ```
 User Action          → System Response                    → State Changes
 ─────────────────────────────────────────────────────────────────────────
-Clicks date cell     → Toggle logic determines action     →
-                       - Date not in callDates: add       →
-                       - Date in callDates: remove        →
-                     → Optimistic update to Zustand       → callDates: updated Set
-                     → supabase.insert/delete             →
-                     → Success: state already correct     →
-                     → Error: rollback Zustand            → callDates: previous
+Taps date cell       → ShiftPickerSheet opens             → selectedDate: set
+                     → Shows shift types for user's       →   shiftPickerOpen: true
+                       work pattern (call or shift)       →
+Taps shift type      → supabase.upsert(calls)             → shiftLoading: true
+                     → Refetch all calls from DB          → shiftMap: updated Map
+                     → Auto-advance to next day           → selectedDate: next day
+                     → Sheet stays open for next day      →
+Taps "Clear"         → supabase.delete(calls)             → shiftMap: updated Map
+                     → Auto-advance to next day           →
+Dismisses sheet      → Sheet closes                       → shiftPickerOpen: false
 ```
 
-**Expected UX**: Instant visual toggle, persists on success.
+**Expected UX**: Tap date → pick shift type → date colored → auto-advance. Rapid entry for consecutive days.
 
 ---
 

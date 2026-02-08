@@ -1,5 +1,11 @@
 // Database types matching Supabase schema
 
+// Work pattern determines which shift types appear in the calendar picker
+export type WorkPattern = 'call' | 'shift';
+
+// All shift type codes across both work patterns
+export type ShiftType = 'call' | 'day_off' | 'work' | 'half_day' | 'am' | 'pm' | 'night' | 'off';
+
 export interface Profile {
   id: string;
   username: string;
@@ -17,6 +23,8 @@ export interface Profile {
   // Onboarding
   onboarding_completed: boolean;
   onboarding_version: number; // 0 = never onboarded, 1+ = completed that version
+  // Work pattern
+  work_pattern: WorkPattern; // 'call' = call-based, 'shift' = shift-based
   // Metadata
   created_at: string;
   updated_at: string;
@@ -73,6 +81,7 @@ export interface Call {
   id: string;
   user_id: string;
   call_date: string; // YYYY-MM-DD format (single day, no time)
+  shift_type: ShiftType; // defaults to 'call' in DB
   created_at: string;
 }
 

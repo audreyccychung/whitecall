@@ -1,20 +1,29 @@
-// Calls calendar page - mark days you're on call
+// Calls calendar page - mark days with shift types
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format, isBefore, startOfDay, parseISO } from 'date-fns';
+import { format, isBefore, startOfDay, parseISO, addDays } from 'date-fns';
 import { useAuth } from '../contexts/AuthContext';
 import { useCalls } from '../hooks/useCalls';
 import { useCallRatings } from '../hooks/useCallRatings';
 import { downloadICS } from '../utils/icsGenerator';
 import { CallCalendar } from '../components/CallCalendar';
+import { ShiftPickerSheet } from '../components/ShiftPickerSheet';
 import { RateCallModal } from '../components/RateCallModal';
 import { AddPastCallModal } from '../components/AddPastCallModal';
-import type { CallRating } from '../types/database';
+import { SHIFT_TYPE_MAP } from '../constants/shiftTypes';
+import type { CallRating, ShiftType } from '../types/database';
 
 export default function CallsPage() {
-  const { user } = useAuth();
-  const { calls, loading, error, toggleCall, refreshCalls } = useCalls(user?.id);
+  const { user, profile } = useAuth();
+  const { calls, loading, error, setShift, clearShift, deleteCall, refreshCalls } = useCalls(user?.id);
   const { ratingsMap, isLoading: ratingsLoading, refetch: refetchRatings } = useCallRatings(user?.id);
+
+  const workPattern = profile?.work_pattern || 'call';
+
+  // Shift picker state
+  const [shiftPickerOpen, setShiftPickerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [shiftLoading, setShiftLoading] = useState(false);
 
   // Modal state for rating existing call
   const [ratingModal, setRatingModal] = useState<{
@@ -29,21 +38,58 @@ export default function CallsPage() {
   // Calendar export state
   const [exportingCalendar, setExportingCalendar] = useState(false);
 
-  // Convert calls array to Set for O(1) lookup
-  const callDates = useMemo(() => {
-    return new Set(calls.map((c) => c.call_date));
+  // Build shift map from calls for O(1) lookup
+  const shiftMap = useMemo(() => {
+    const map = new Map<string, ShiftType>();
+    for (const c of calls) {
+      map.set(c.call_date, c.shift_type);
+    }
+    return map;
   }, [calls]);
 
-  // Get upcoming calls (today and future)
+  // Get upcoming calls (today and future), excluding days off
+  // Call-based: only show 'call' type (not day_off, work, half_day)
+  // Shift-based: only show shifts (am, pm, night), not 'off'
   const upcomingCalls = useMemo(() => {
     const today = startOfDay(new Date());
+    const offTypes = workPattern === 'call'
+      ? new Set(['day_off', 'work', 'half_day'])
+      : new Set(['off']);
     return calls
-      .filter((c) => !isBefore(parseISO(c.call_date), today))
+      .filter((c) => !isBefore(parseISO(c.call_date), today) && !offTypes.has(c.shift_type))
       .slice(0, 5); // Show max 5 upcoming
-  }, [calls]);
+  }, [calls, workPattern]);
 
-  const handleToggleDate = async (date: string) => {
-    await toggleCall(date);
+  // Handle date tap - open shift picker
+  const handleDateTap = (date: string) => {
+    setSelectedDate(date);
+    setShiftPickerOpen(true);
+  };
+
+  // Handle shift selection from picker
+  const handleSelectShift = async (date: string, shiftType: ShiftType) => {
+    setShiftLoading(true);
+    try {
+      await setShift(date, shiftType);
+      // Auto-advance to next day
+      const nextDate = format(addDays(parseISO(date), 1), 'yyyy-MM-dd');
+      setSelectedDate(nextDate);
+    } finally {
+      setShiftLoading(false);
+    }
+  };
+
+  // Handle clear shift from picker
+  const handleClearShift = async (date: string) => {
+    setShiftLoading(true);
+    try {
+      await clearShift(date);
+      // Auto-advance to next day
+      const nextDate = format(addDays(parseISO(date), 1), 'yyyy-MM-dd');
+      setSelectedDate(nextDate);
+    } finally {
+      setShiftLoading(false);
+    }
   };
 
   // Handle click on past call in calendar (for rating)
@@ -52,9 +98,14 @@ export default function CallsPage() {
     setRatingModal({ isOpen: true, callDate, existingRating });
   };
 
-  // Close modal
+  // Close modals
   const closeRatingModal = () => {
     setRatingModal({ isOpen: false, callDate: '' });
+  };
+
+  const closeShiftPicker = () => {
+    setShiftPickerOpen(false);
+    setSelectedDate('');
   };
 
   // Handle past call added - refetch both calls and ratings
@@ -99,7 +150,7 @@ export default function CallsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center text-gray-600"
         >
-          Tap a date to mark when you're on call
+          Tap a date to add a shift
         </motion.p>
 
         {/* Error Display */}
@@ -119,9 +170,10 @@ export default function CallsPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <CallCalendar
-            callDates={callDates}
+            shiftMap={shiftMap}
             ratingsMap={ratingsMap}
-            onToggleDate={handleToggleDate}
+            workPattern={workPattern}
+            onDateTap={handleDateTap}
             onPastCallClick={handlePastCallClick}
             disabled={loading || ratingsLoading}
           />
@@ -149,38 +201,47 @@ export default function CallsPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {upcomingCalls.map((call) => (
-                <motion.div
-                  key={call.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-sky-soft-100 rounded-lg flex items-center justify-center">
-                      <span className="text-sky-soft-600 font-bold">
-                        {format(parseISO(call.call_date), 'd')}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">
-                        {format(parseISO(call.call_date), 'EEEE, MMMM d')}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {format(parseISO(call.call_date), 'yyyy')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => toggleCall(call.call_date)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-2"
-                    aria-label="Remove call"
+              {upcomingCalls.map((call) => {
+                const config = SHIFT_TYPE_MAP[call.shift_type];
+                return (
+                  <motion.div
+                    key={call.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
                   >
-                    ✕
-                  </button>
-                </motion.div>
-              ))}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: config ? config.color + '20' : '#e0f2fe' }}
+                      >
+                        <span
+                          className="font-bold"
+                          style={{ color: config?.color || '#0284c7' }}
+                        >
+                          {format(parseISO(call.call_date), 'd')}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">
+                          {format(parseISO(call.call_date), 'EEEE, MMMM d')}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {config?.label || 'Call'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => deleteCall(call.id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors p-2"
+                      aria-label="Remove call"
+                    >
+                      ✕
+                    </button>
+                  </motion.div>
+                );
+              })}
 
               {/* Export button */}
               <button
@@ -200,6 +261,20 @@ export default function CallsPage() {
           )}
         </motion.div>
       </main>
+
+      {/* Shift Picker Sheet */}
+      <AnimatePresence>
+        {shiftPickerOpen && selectedDate && (
+          <ShiftPickerSheet
+            selectedDate={selectedDate}
+            currentShiftType={shiftMap.get(selectedDate) || null}
+            isLoading={shiftLoading}
+            onSelectShift={handleSelectShift}
+            onClearShift={handleClearShift}
+            onClose={closeShiftPicker}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Rating Modal */}
       <AnimatePresence>

@@ -1,17 +1,16 @@
-// Call management hook - syncs with global Zustand store
+// Call/shift management hook - syncs with global Zustand store
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../lib/store';
-import type { Call } from '../types/database';
+import type { Call, ShiftType } from '../types/database';
 
 interface UseCallsReturn {
   calls: Call[];
   loading: boolean;
   error: string | null;
-  createCall: (date: string) => Promise<{ success: boolean; error?: string }>;
+  setShift: (date: string, shiftType: ShiftType) => Promise<{ success: boolean; error?: string }>;
+  clearShift: (date: string) => Promise<{ success: boolean; error?: string }>;
   deleteCall: (callId: string) => Promise<{ success: boolean; error?: string }>;
-  toggleCall: (date: string) => Promise<{ success: boolean; error?: string }>;
-  hasCallOnDate: (date: string) => boolean;
   refreshCalls: () => Promise<void>;
 }
 
@@ -20,8 +19,8 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Global store action - syncs call dates for cross-component access
-  const setCallDates = useStore((state) => state.setCallDates);
+  // Global store action - syncs shift data for cross-component access
+  const setShiftMap = useStore((state) => state.setShiftMap);
 
   const loadCalls = async () => {
     if (!userId) {
@@ -43,7 +42,7 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
 
       setCalls(data || []);
       // Sync to global store
-      setCallDates((data || []).map((c) => c.call_date));
+      setShiftMap((data || []).map((c) => ({ date: c.call_date, shiftType: c.shift_type })));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load calls');
     } finally {
@@ -55,17 +54,24 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
     loadCalls();
   }, [userId]);
 
-  const createCall = async (date: string): Promise<{ success: boolean; error?: string }> => {
+  // Upsert a shift for a given date (create or update)
+  const setShift = async (
+    date: string,
+    shiftType: ShiftType
+  ): Promise<{ success: boolean; error?: string }> => {
     if (!userId) {
       return { success: false, error: 'Not logged in' };
     }
 
     try {
-      const { error: insertError } = await supabase
+      const { error: upsertError } = await supabase
         .from('calls')
-        .insert({ user_id: userId, call_date: date });
+        .upsert(
+          { user_id: userId, call_date: date, shift_type: shiftType },
+          { onConflict: 'user_id,call_date' }
+        );
 
-      if (insertError) throw insertError;
+      if (upsertError) throw upsertError;
 
       // Refetch from DB to confirm success (no state guessing)
       await loadCalls();
@@ -74,9 +80,23 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
     } catch (err) {
       return {
         success: false,
-        error: err instanceof Error ? err.message : 'Failed to create call',
+        error: err instanceof Error ? err.message : 'Failed to set shift',
       };
     }
+  };
+
+  // Clear a shift from a given date
+  const clearShift = async (date: string): Promise<{ success: boolean; error?: string }> => {
+    if (!userId) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    const existingCall = calls.find((c) => c.call_date === date);
+    if (!existingCall) {
+      return { success: true }; // Already clear
+    }
+
+    return deleteCall(existingCall.id);
   };
 
   const deleteCall = async (callId: string): Promise<{ success: boolean; error?: string }> => {
@@ -105,28 +125,13 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
     }
   };
 
-  const hasCallOnDate = (date: string): boolean => {
-    return calls.some((c) => c.call_date === date);
-  };
-
-  const toggleCall = async (date: string): Promise<{ success: boolean; error?: string }> => {
-    const existingCall = calls.find((c) => c.call_date === date);
-
-    if (existingCall) {
-      return deleteCall(existingCall.id);
-    } else {
-      return createCall(date);
-    }
-  };
-
   return {
     calls,
     loading,
     error,
-    createCall,
+    setShift,
+    clearShift,
     deleteCall,
-    toggleCall,
-    hasCallOnDate,
     refreshCalls: loadCalls,
   };
 }
