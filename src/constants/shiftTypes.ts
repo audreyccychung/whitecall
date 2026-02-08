@@ -5,9 +5,10 @@ export interface ShiftTypeConfig {
   id: ShiftType;
   label: string;
   shortLabel: string;
-  color: string;       // Hex color for calendar circles
-  ringColor: string;   // Hex color for ring effect (darker shade)
-  icon: string;        // Emoji icon for the picker
+  color: string;        // Pastel hex color for backgrounds (picker, legend, upcoming list)
+  accentColor: string;  // Deeper color for calendar left-edge accent
+  ringColor: string;    // Darker shade for selection rings
+  icon: string;         // Emoji icon for the picker
   workPattern: WorkPattern;
 }
 
@@ -17,7 +18,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'call',
     label: 'Call',
     shortLabel: 'Call',
-    color: '#0ea5e9',
+    color: '#7dd3fc',
+    accentColor: '#38bdf8',
     ringColor: '#0284c7',
     icon: '🤍',
     workPattern: 'call',
@@ -26,7 +28,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'day_off',
     label: 'Day Off',
     shortLabel: 'Off',
-    color: '#14b8a6',
+    color: '#5eead4',
+    accentColor: '#2dd4bf',
     ringColor: '#0d9488',
     icon: '🏖️',
     workPattern: 'call',
@@ -35,7 +38,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'work',
     label: 'Full Day Work',
     shortLabel: 'Work',
-    color: '#a855f7',
+    color: '#c084fc',
+    accentColor: '#a855f7',
     ringColor: '#9333ea',
     icon: '💼',
     workPattern: 'call',
@@ -44,7 +48,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'half_day',
     label: 'Half Day',
     shortLabel: 'Half',
-    color: '#f97316',
+    color: '#fdba74',
+    accentColor: '#fb923c',
     ringColor: '#ea580c',
     icon: '⏰',
     workPattern: 'call',
@@ -54,7 +59,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'am',
     label: 'AM Shift',
     shortLabel: 'AM',
-    color: '#eab308',
+    color: '#fde047',
+    accentColor: '#eab308',
     ringColor: '#ca8a04',
     icon: '🌅',
     workPattern: 'shift',
@@ -63,7 +69,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'pm',
     label: 'PM Shift',
     shortLabel: 'PM',
-    color: '#0ea5e9',
+    color: '#7dd3fc',
+    accentColor: '#38bdf8',
     ringColor: '#0284c7',
     icon: '🌤️',
     workPattern: 'shift',
@@ -72,7 +79,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'night',
     label: 'Night Shift',
     shortLabel: 'Night',
-    color: '#6366f1',
+    color: '#a5b4fc',
+    accentColor: '#818cf8',
     ringColor: '#4f46e5',
     icon: '🌙',
     workPattern: 'shift',
@@ -81,7 +89,8 @@ export const SHIFT_TYPES: ShiftTypeConfig[] = [
     id: 'off',
     label: 'Off',
     shortLabel: 'Off',
-    color: '#14b8a6',
+    color: '#5eead4',
+    accentColor: '#2dd4bf',
     ringColor: '#0d9488',
     icon: '🏖️',
     workPattern: 'shift',
@@ -103,6 +112,11 @@ export function getShiftTypesForPattern(pattern: WorkPattern): ShiftTypeConfig[]
 export function isShiftRatable(shiftType: ShiftType, workPattern: WorkPattern): boolean {
   if (workPattern === 'shift') return true;
   return shiftType === 'call';
+}
+
+// Returns accentColor with 35% opacity for past day left-edge accents
+export function getPastAccentColor(accentColor: string): string {
+  return accentColor + '59';
 }
 
 // Desaturated color for past dates - mixes toward gray while preserving hue identity

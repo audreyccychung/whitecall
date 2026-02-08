@@ -145,13 +145,14 @@ export default function CallsPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
         {/* Instructions */}
-        <motion.p
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center text-gray-600"
+          className="text-center"
         >
-          Tap a date to add a shift
-        </motion.p>
+          <p className="text-gray-600">Tap a date to add a shift</p>
+          <p className="text-gray-400 text-sm">Long-press to rate a call</p>
+        </motion.div>
 
         {/* Error Display */}
         {error && (
@@ -213,11 +214,11 @@ export default function CallsPage() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: config ? config.color + '20' : '#e0f2fe' }}
+                        style={{ backgroundColor: config ? config.color + '30' : '#e0f2fe' }}
                       >
                         <span
                           className="font-bold"
-                          style={{ color: config?.color || '#0284c7' }}
+                          style={{ color: config?.accentColor || '#0284c7' }}
                         >
                           {format(parseISO(call.call_date), 'd')}
                         </span>

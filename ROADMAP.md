@@ -179,7 +179,7 @@
 - [x] Mobile-first, touch targets >= 44px
 
 ### Calendar Visual Updates
-- [x] Future dates: full color circle with ring effect
+- [x] Future dates: colored circle with shift type color
 - [x] Past dates: desaturated color (preserves hue identity)
 - [x] Past ratable dates: clickable for rating (call-based: only calls; shift-based: all)
 - [x] Legend shows shift types for current work pattern
@@ -192,22 +192,48 @@
 
 ---
 
-## Future (V2+)
+## V2.0 - Calendar Visual Redesign ✓ COMPLETE
 
-### Short-term Improvements
+### Calm Status Calendar
+- [x] Pastel color palette (reduced saturation ~25%, increased lightness)
+- [x] `accentColor` field on all shift types for accent indicators
+- [x] Rounded-xl cells (was rounded-full) for status-calendar aesthetic
+- [x] Inset left-edge bracket accent (`inset 3px box-shadow`)
+- [x] Soft background tint (8% opacity for future, 4% for past)
+- [x] Today as sole hero cell (sky-soft tint + ring, bold text)
+- [x] Past shifts muted (low-opacity tint + bracket + gray text)
+
+### Calendar UX
+- [x] All past dates editable (tap opens shift picker, was previously blocked)
+- [x] Long-press past ratable shifts to open rating modal
+- [x] "Long-press a past call to rate it" hint below legend
+- [x] Upcoming calls list filters by work pattern (no day-offs shown)
+- [x] Call emoji changed from phone to white heart
+
+### Picker & List Updates
+- [x] ShiftPickerSheet: softer icon circles (25% opacity pastel bg)
+- [x] ShiftPickerSheet: accentColor for selection ring
+- [x] Upcoming calls: adjusted opacity/color for new pastel palette
+- [x] Legend: small bars instead of dots (echoes left-edge accent)
+
+---
+
+## Future (V2.1+)
+
+### V2.1 - Short-term Improvements
 - [ ] Add explicit return type interfaces for `useHearts` and `useFriends` hooks
 - [ ] Create shared `PersonData` base type (dedupe Friend, GroupMember, LeaderboardEntry)
 - [ ] Remove redundant `id` field from GroupMember (keep only `user_id`)
 - [ ] Update group calendar views to show shift type colors
 
-### Medium-term Features
+### V2.2 - Medium-term Features
 - [ ] ICS calendar feed import (auto-populate calls from exported schedule)
 - [ ] Group statistics page (aggregate mood, support patterns)
 - [ ] "Most supported" vs "least supported" friend insights
 - [ ] Quiet day celebration notifications for groups
 - [ ] Multi-day shift spanning support
 
-### Long-term / Premium
+### V3.0 - Long-term / Premium
 - [ ] Calendar sync (Google, Apple) - Premium
 - [ ] Group chat/notes
 - [ ] Shift swap requests

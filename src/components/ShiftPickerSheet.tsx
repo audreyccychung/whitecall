@@ -75,11 +75,11 @@ export function ShiftPickerSheet({
                   }
                   ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}
-                style={isSelected ? { boxShadow: `0 0 0 2px ${st.color}` } : undefined}
+                style={isSelected ? { boxShadow: `0 0 0 2px ${st.accentColor}` } : undefined}
               >
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: st.color }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: st.color + '40' }}
                 >
                   <span className="text-sm">{st.icon}</span>
                 </div>
