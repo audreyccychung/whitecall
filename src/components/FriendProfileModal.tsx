@@ -171,6 +171,7 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
                   </div>
                 ) : calls.length === 0 ? (
                   <div className="py-6 text-center">
+                    <p className="text-3xl mb-2">📅</p>
                     <p className="text-gray-500">No upcoming calls scheduled</p>
                   </div>
                 ) : (

@@ -99,20 +99,20 @@
 
 ---
 
-## V1.4 - Quality & Polish (FUTURE)
+## V1.4 - Quality & Polish ✓ COMPLETE
 
 ### Error Codes (Deferred from Audit)
 - [x] M5: Username validation error codes (in update_profile RPC)
 - [x] M6: sendHeart detailed error codes (in send_heart RPC)
 
 ### UX Polish
-- [ ] Empty state illustrations
+- [x] Empty state illustrations (emoji headers on all empty states)
 - [x] Confetti on first heart received
 - [x] Heart counter bounce animation
 
 ### Performance
 - [x] Request deduplication for hooks
-- [ ] Preload common routes
+- [x] Preload common routes (N/A — all routes are static imports, app loads as single bundle)
 
 ---
 

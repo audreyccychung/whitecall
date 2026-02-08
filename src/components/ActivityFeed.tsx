@@ -82,9 +82,12 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Support Feed</h2>
         </div>
-        <p className="text-center text-gray-500 py-6 text-sm">
-          No activity yet. When your friends rate their calls, you'll see them here.
-        </p>
+        <div className="text-center py-6">
+          <p className="text-4xl mb-2">🤫</p>
+          <p className="text-gray-500 text-sm">
+            No activity yet. When your friends rate their calls, you'll see them here.
+          </p>
+        </div>
       </div>
     );
   }

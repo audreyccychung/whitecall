@@ -137,6 +137,7 @@ export function FriendsSection({ userId, username }: FriendsSectionProps) {
         </div>
       ) : friends.length === 0 ? (
         <div className="text-center py-4">
+          <p className="text-3xl mb-1">👋</p>
           <p className="text-sm text-gray-500">No friends yet</p>
           <p className="text-xs text-gray-400 mt-1">Add friends to support them on call</p>
         </div>

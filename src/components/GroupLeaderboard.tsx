@@ -82,6 +82,7 @@ export function GroupLeaderboard({ groupId }: GroupLeaderboardProps) {
   if (topFive.length === 0) {
     return (
       <div className="text-center py-4">
+        <p className="text-3xl mb-1">🤍</p>
         <p className="text-sm text-gray-500">No hearts sent this week yet.</p>
       </div>
     );
@@ -93,6 +94,7 @@ export function GroupLeaderboard({ groupId }: GroupLeaderboardProps) {
   if (!anyHeartsSent) {
     return (
       <div className="text-center py-4">
+        <p className="text-3xl mb-1">🤍</p>
         <p className="text-sm text-gray-500">No hearts sent this week yet.</p>
       </div>
     );
