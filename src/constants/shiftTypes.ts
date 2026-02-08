@@ -106,6 +106,15 @@ export function getShiftTypesForPattern(pattern: WorkPattern): ShiftTypeConfig[]
   return SHIFT_TYPES.filter((st) => st.workPattern === pattern);
 }
 
+// Shift types that count as "on call" (person needs support)
+// Must match backend filter: shift_type IN ('call', 'am', 'pm', 'night')
+const ON_DUTY_SHIFT_TYPES = new Set<ShiftType>(['call', 'am', 'pm', 'night']);
+
+// Check if a shift type counts as "on call" (eligible for hearts, shows in groups)
+export function isOnDutyShift(shiftType: ShiftType): boolean {
+  return ON_DUTY_SHIFT_TYPES.has(shiftType);
+}
+
 // Check if a shift type is ratable based on work pattern
 // Call-based: only 'call' type is ratable
 // Shift-based: all shift types are ratable

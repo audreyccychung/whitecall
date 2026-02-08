@@ -16,6 +16,7 @@ import { HeartSendersList } from '../components/HeartSendersList';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { NotificationBell } from '../components/NotificationBell';
 import { OnboardingModal } from '../components/onboarding/OnboardingModal';
+import { isOnDutyShift } from '../constants/shiftTypes';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -33,9 +34,10 @@ export default function HomePage() {
   const shiftMap = useStore((state) => state.shiftMap);
   const isCallStatusLoaded = useStore((state) => state.isCallStatusLoaded);
 
-  // Compute on-call status from the subscribed state (any shift type counts)
+  // Compute on-call status: only on-duty shift types count (not day_off, off, work, half_day)
   const today = getTodayDate();
-  const isUserOnCall = isCallStatusLoaded && shiftMap.has(today);
+  const todayShift = shiftMap.get(today);
+  const isUserOnCall = isCallStatusLoaded && !!todayShift && isOnDutyShift(todayShift);
 
   const handleSendHeart = async (friendId: string): Promise<void> => {
     // Token-based lock to prevent background refetch from overwriting optimistic update

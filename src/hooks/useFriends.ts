@@ -29,6 +29,17 @@ const REMOVE_FRIEND_MESSAGES: Record<RemoveFriendCode, string> = {
 };
 // NOTE: No date imports - all date logic is handled by backend (timezone-aware)
 
+export interface UseFriendsResult {
+  friends: Friend[];
+  loading: boolean;
+  error: string | null;
+  addFriend: (username: string) => Promise<AddFriendResult>;
+  removeFriend: (friendId: string) => Promise<RemoveFriendResult>;
+  refreshFriends: (options?: { force?: boolean }) => Promise<void>;
+  updateFriendHeartStatus: (friendId: string, canSendHeart: boolean) => void;
+  beginMutation: () => () => void;
+}
+
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
 
@@ -57,7 +68,7 @@ export function clearFriendsCache() {
   friendsCache.loadingPromise = null;
 }
 
-export function useFriends(userId: string | undefined) {
+export function useFriends(userId: string | undefined): UseFriendsResult {
   // Initialize from cache if same user (regardless of staleness for initial render)
   // This prevents loading spinner on remounts - we show cached data immediately
   // and refresh in background if stale

@@ -17,6 +17,20 @@ const SEND_HEART_MESSAGES: Record<SendHeartCode, string> = {
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 
+export interface UseHeartsResult {
+  heartsReceived: HeartWithSender[];
+  heartsSent: HeartWithSender[];
+  stats: HeartStats;
+  loading: boolean;
+  sendHeart: (recipientId: string, message?: string) => Promise<SendHeartResult>;
+  sendHeartWithOptimism: (recipientId: string, options?: {
+    onOptimisticUpdate?: () => void;
+    onRollback?: () => void;
+    message?: string;
+  }) => Promise<SendHeartResult>;
+  refreshHearts: (options?: { force?: boolean }) => Promise<void>;
+}
+
 // Stale time: don't refetch if data is less than 30 seconds old
 const STALE_TIME_MS = 30_000;
 
@@ -34,7 +48,7 @@ export function clearHeartsCache() {
   heartsCache.userId = null;
 }
 
-export function useHearts(userId: string | undefined) {
+export function useHearts(userId: string | undefined): UseHeartsResult {
   // Initialize from cache if same user (regardless of staleness for initial render)
   // This prevents loading spinner on remounts - we show cached data immediately
   // and refresh in background if stale

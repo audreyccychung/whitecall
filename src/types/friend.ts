@@ -1,11 +1,8 @@
 // Friend-related types
+import type { PersonData } from './common';
 
-export interface Friend {
-  id: string;
-  username: string;
-  display_name: string | null;
-  avatar_type: string;
-  avatar_color: string;
+export interface Friend extends PersonData {
+  id: string; // profile user id
   friendship_id: string;
   is_on_call?: boolean; // Derived from active call (today)
   next_call_date?: string; // Next call date (today or future, YYYY-MM-DD)

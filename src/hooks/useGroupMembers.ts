@@ -92,10 +92,9 @@ export function useGroupMembers(groupId: string | undefined) {
       }
 
       // SUCCESS - set members from RPC response
-      const membersList: GroupMember[] = (result.members || []).map((m: GroupMember) => ({
-        id: m.id,
-        group_id: m.group_id,
+      const membersList: GroupMember[] = (result.members || []).map((m: any) => ({
         user_id: m.user_id,
+        group_id: m.group_id,
         joined_at: m.joined_at,
         username: m.username,
         display_name: m.display_name,

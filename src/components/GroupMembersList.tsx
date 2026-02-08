@@ -78,7 +78,7 @@ export function GroupMembersList({
     };
 
     return (
-      <div key={member.id} className="bg-white rounded-xl shadow-soft overflow-hidden">
+      <div key={member.user_id} className="bg-white rounded-xl shadow-soft overflow-hidden">
         <div
           className={`flex items-center justify-between p-4 ${(!isCurrentUser || canRemove) ? 'cursor-pointer' : ''}`}
           onClick={handleCardClick}

@@ -1,4 +1,5 @@
 // Group-related types
+import type { PersonData } from './common';
 
 export interface Group {
   id: string;
@@ -9,15 +10,10 @@ export interface Group {
   is_owner?: boolean;
 }
 
-export interface GroupMember {
-  id: string;
-  group_id: string;
+export interface GroupMember extends PersonData {
   user_id: string;
+  group_id: string;
   joined_at: string;
-  username: string;
-  display_name: string | null;
-  avatar_type: string;
-  avatar_color: string;
   is_on_call: boolean;
   next_call_date: string | null; // YYYY-MM-DD or null if no upcoming calls
 }
@@ -99,12 +95,8 @@ export type GetGroupCallsCode =
   | 'UNKNOWN_ERROR';
 
 // Group calendar types
-export interface GroupMemberOnCall {
+export interface GroupMemberOnCall extends PersonData {
   user_id: string;
-  username: string;
-  display_name: string | null;
-  avatar_type: string;
-  avatar_color: string;
 }
 
 export interface GroupCalendarDay {
@@ -176,11 +168,7 @@ export type GetLeaderboardCode =
   | 'NOT_A_MEMBER'
   | 'UNKNOWN_ERROR';
 
-export interface LeaderboardEntry {
+export interface LeaderboardEntry extends PersonData {
   user_id: string;
-  username: string;
-  display_name: string | null;
-  avatar_type: string;
-  avatar_color: string;
   hearts_sent: number;
 }

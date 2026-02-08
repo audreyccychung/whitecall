@@ -1,6 +1,20 @@
 // Shared types used across multiple components
 
 /**
+ * Base display fields shared across Friend, GroupMember, GroupMemberOnCall, LeaderboardEntry.
+ * Every type that represents a "person" in the app extends this.
+ *
+ * Note: identifier field varies by type (Friend uses `id`, others use `user_id`),
+ * so it's not included here.
+ */
+export interface PersonData {
+  username: string;
+  display_name: string | null;
+  avatar_type: string;
+  avatar_color: string;
+}
+
+/**
  * Minimal person data needed to display a profile preview.
  * Used when we don't have full Friend data (e.g., group members who aren't friends).
  *
