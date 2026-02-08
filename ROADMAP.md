@@ -218,15 +218,29 @@
 
 ---
 
-## Future (V2.1+)
+## V2.1 - Type Cleanup & On-Call Fix ✓ COMPLETE
 
-### V2.1 - Short-term Improvements
-- [ ] Add explicit return type interfaces for `useHearts` and `useFriends` hooks
-- [ ] Create shared `PersonData` base type (dedupe Friend, GroupMember, LeaderboardEntry)
-- [ ] Remove redundant `id` field from GroupMember (keep only `user_id`)
-- [ ] Update group calendar views to show shift type colors
+### Type System
+- [x] Add `PersonData` base type (shared display fields across Friend, GroupMember, etc.)
+- [x] Friend, GroupMember, GroupMemberOnCall, LeaderboardEntry extend PersonData
+- [x] Remove redundant `id` field from GroupMember (keep only `user_id`)
+- [x] Add `UseHeartsResult` and `UseFriendsResult` return type interfaces
+
+### On-Call Status Fix
+- [x] Only on-duty shifts (`call`, `am`, `pm`, `night`) count as "on call"
+- [x] Fix 6 RPCs: get_group_calls, get_group_members, get_friends_with_status, send_heart, daily notification, streak reminder
+- [x] Add `isOnDutyShift()` frontend helper matching backend filter
+- [x] Fix HomePage on-call badge to check shift type
+
+### Deferred
+- [ ] Update group calendar views to show shift type colors (deferred — see V2.2)
+
+---
+
+## Future (V2.2+)
 
 ### V2.2 - Medium-term Features
+- [ ] Show shift type colors in group DayDetailModal (deferred from V2.1)
 - [ ] ICS calendar feed import (auto-populate calls from exported schedule)
 - [ ] Group statistics page (aggregate mood, support patterns)
 - [ ] "Most supported" vs "least supported" friend insights
