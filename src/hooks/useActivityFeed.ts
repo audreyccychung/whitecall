@@ -99,7 +99,8 @@ export function useActivityFeed(userId: string | undefined) {
       feedCache.activities = activitiesData;
       feedCache.lastFetchedAt = Date.now();
       feedCache.userId = userId;
-    } catch {
+    } catch (err) {
+      console.warn('[ActivityFeed] Failed to load feed:', err);
       setError(GET_FEED_MESSAGES.UNKNOWN_ERROR);
     } finally {
       setIsLoading(false);
@@ -120,33 +121,9 @@ export function useActivityFeed(userId: string | undefined) {
       const success = code === 'LIKED' || code === 'UNLIKED';
 
       if (success) {
-        // Update local state optimistically then refetch for truth
-        setActivities((prev) =>
-          prev.map((a) => {
-            if (a.id === activityId) {
-              const liked = code === 'LIKED';
-              return {
-                ...a,
-                user_has_liked: liked,
-                like_count: liked ? a.like_count + 1 : a.like_count - 1,
-              };
-            }
-            return a;
-          })
-        );
-
-        // Update cache too
-        feedCache.activities = feedCache.activities.map((a) => {
-          if (a.id === activityId) {
-            const liked = code === 'LIKED';
-            return {
-              ...a,
-              user_has_liked: liked,
-              like_count: liked ? a.like_count + 1 : a.like_count - 1,
-            };
-          }
-          return a;
-        });
+        // Refetch feed to get true like counts from the database
+        // No state guessing: backend is single source of truth
+        loadFeed({ force: true });
       }
 
       return {
@@ -155,14 +132,15 @@ export function useActivityFeed(userId: string | undefined) {
         message: TOGGLE_LIKE_MESSAGES[code] || TOGGLE_LIKE_MESSAGES.UNKNOWN_ERROR,
         liked: code === 'LIKED',
       };
-    } catch {
+    } catch (err) {
+      console.warn('[ActivityFeed] Failed to toggle like:', err);
       return {
         success: false,
         code: 'UNKNOWN_ERROR',
         message: TOGGLE_LIKE_MESSAGES.UNKNOWN_ERROR,
       };
     }
-  }, []);
+  }, [loadFeed]);
 
   // Initial load
   useEffect(() => {

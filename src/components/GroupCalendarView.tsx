@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useGroupCalls } from '../hooks/useGroupCalls';
 import { AvatarDisplay } from './AvatarDisplay';
 import { DayDetailModal } from './DayDetailModal';
+import { isToday } from '../utils/date';
 import type { GroupCalendarDay, GroupMemberOnCall } from '../types/group';
 
 // Format date for display (e.g., "Fri 17")
@@ -11,13 +12,6 @@ function formatDayHeader(dateStr: string): { dayName: string; dayNum: string } {
   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
   const dayNum = date.getDate().toString();
   return { dayName, dayNum };
-}
-
-// Check if date is today
-function isToday(dateStr: string): boolean {
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  return dateStr === todayStr;
 }
 
 interface CalendarDayCellProps {

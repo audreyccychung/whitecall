@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarDisplay } from './AvatarDisplay';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { formatRelativeTime } from '../utils/date';
 import type {
   ActivityLiker,
   GetLikersCode,
@@ -41,22 +42,6 @@ const DELETE_COMMENT_MESSAGES: Record<DeleteCommentCode, string> = {
   NOT_OWN_COMMENT: 'You can only delete your own comments.',
   UNKNOWN_ERROR: 'Could not delete comment.',
 };
-
-// Format relative time
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
 
 export function EngagementModal({ activityId, onClose }: EngagementModalProps) {
   const { user } = useAuth();

@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { toPng } from 'html-to-image';
 import { shareImage } from '../utils/share';
+import { downloadBlob } from '../utils/download';
 
 interface UseShareCardReturn {
   cardRef: React.RefObject<HTMLDivElement | null>;
@@ -49,7 +50,7 @@ export function useShareCard(): UseShareCardReturn {
   const generateAndDownload = useCallback(async () => {
     const blob = await generateImage();
     if (blob) {
-      await shareImage(blob, `whitecall-recap-${Date.now()}.png`);
+      downloadBlob(blob, `whitecall-recap-${Date.now()}.png`);
     }
   }, [generateImage]);
 

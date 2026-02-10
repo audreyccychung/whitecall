@@ -31,7 +31,6 @@ function App() {
           {/* Protected routes with bottom navigation */}
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             <Route path="/home" element={<HomePage />} />
-            <Route path="/friends" element={<Navigate to="/profile" replace />} />
             <Route path="/calls" element={<CallsPage />} />
             <Route path="/groups" element={<GroupsPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />

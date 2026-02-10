@@ -1,6 +1,7 @@
 // ICS file generator for calendar export
 import type { Call } from '../types/database';
 import { SHIFT_TYPE_MAP } from '../constants/shiftTypes';
+import { downloadBlob } from './download';
 
 /**
  * Generates an ICS (iCalendar) file content for a list of calls.
@@ -73,14 +74,5 @@ function formatICSDate(date: Date): string {
 export function downloadICS(calls: Call[], filename = 'whitecall-upcoming.ics'): void {
   const content = generateICS(calls);
   const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, filename);
 }

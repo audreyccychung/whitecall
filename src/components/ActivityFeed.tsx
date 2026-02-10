@@ -35,15 +35,11 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
   const { activities, isLoading, error, toggleLike, refetch } = useActivityFeed(userId);
   const [selectedActivityForLikers, setSelectedActivityForLikers] = useState<string | null>(null);
   const [selectedActivityForComments, setSelectedActivityForComments] = useState<string | null>(null);
-  // Track comment count deltas for optimistic updates (activityId -> delta)
-  const [commentCountDeltas, setCommentCountDeltas] = useState<Record<string, number>>({});
 
-  // Handle comment count change from modal
-  const handleCommentCountChange = (activityId: string, delta: number) => {
-    setCommentCountDeltas((prev) => ({
-      ...prev,
-      [activityId]: (prev[activityId] || 0) + delta,
-    }));
+  // Refetch feed when comments modal closes to get true comment counts
+  const handleCommentsClose = () => {
+    setSelectedActivityForComments(null);
+    refetch();
   };
 
   if (isLoading) {
@@ -105,7 +101,7 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
         </button>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {activities.map((activity) => (
           <ActivityFeedItem
             key={activity.id}
@@ -113,7 +109,6 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
             onToggleLike={toggleLike}
             onLikeCountClick={(id) => setSelectedActivityForLikers(id)}
             onCommentClick={(id) => setSelectedActivityForComments(id)}
-            commentCountDelta={commentCountDeltas[activity.id] || 0}
           />
         ))}
       </div>
@@ -127,8 +122,7 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
       {/* Comments Modal */}
       <CommentsModal
         activityId={selectedActivityForComments}
-        onClose={() => setSelectedActivityForComments(null)}
-        onCommentCountChange={handleCommentCountChange}
+        onClose={handleCommentsClose}
       />
     </div>
   );

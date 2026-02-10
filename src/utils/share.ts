@@ -3,6 +3,8 @@
  * No backend required - all client-side
  */
 
+import { downloadBlob } from './download';
+
 export async function shareImage(
   blob: Blob,
   filename: string = 'whitecall-recap.png'
@@ -27,17 +29,6 @@ export async function shareImage(
   }
 
   // Fallback: download
-  downloadImage(blob, filename);
+  downloadBlob(blob, filename);
   return { success: true, method: 'download' };
-}
-
-function downloadImage(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }

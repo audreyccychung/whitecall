@@ -4,12 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarDisplay } from './AvatarDisplay';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { formatRelativeTime } from '../utils/date';
 import type { ActivityComment, GetCommentsCode, AddCommentCode, DeleteCommentCode } from '../types/database';
 
 interface CommentsModalProps {
   activityId: string | null;
   onClose: () => void;
-  onCommentCountChange?: (activityId: string, delta: number) => void;
 }
 
 // Exhaustive mapping for get_activity_comments
@@ -44,23 +44,7 @@ const DELETE_COMMENT_MESSAGES: Record<DeleteCommentCode, string> = {
 
 const MAX_COMMENT_LENGTH = 280;
 
-// Format relative time (e.g., "2h ago", "1d ago")
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
-
-export function CommentsModal({ activityId, onClose, onCommentCountChange }: CommentsModalProps) {
+export function CommentsModal({ activityId, onClose }: CommentsModalProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<ActivityComment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -136,14 +120,9 @@ export function CommentsModal({ activityId, onClose, onCommentCountChange }: Com
         return;
       }
 
-      // Clear input and reload comments
+      // Clear input and reload comments from database
       setNewComment('');
       await loadComments();
-
-      // Notify parent of comment count change
-      if (onCommentCountChange) {
-        onCommentCountChange(activityId, 1);
-      }
     } catch {
       setSubmitError(ADD_COMMENT_MESSAGES.UNKNOWN_ERROR);
     } finally {
@@ -171,13 +150,8 @@ export function CommentsModal({ activityId, onClose, onCommentCountChange }: Com
         return;
       }
 
-      // Remove from local state
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
-
-      // Notify parent of comment count change
-      if (onCommentCountChange && activityId) {
-        onCommentCountChange(activityId, -1);
-      }
+      // Reload comments from database after successful delete
+      await loadComments();
     } catch {
       setSubmitError(DELETE_COMMENT_MESSAGES.UNKNOWN_ERROR);
     } finally {

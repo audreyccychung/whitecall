@@ -10,8 +10,6 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('[App] Service worker registered:', registration.scope)
-
         // Check for updates on page load
         registration.update()
 
@@ -21,9 +19,7 @@ if ('serviceWorker' in navigator) {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version available - for now, just log it
-                // In the future, you could show a "refresh for updates" toast
-                console.log('[App] New version available')
+                // New version available - could show a "refresh for updates" toast in future
               }
             })
           }

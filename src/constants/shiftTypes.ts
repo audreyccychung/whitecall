@@ -127,20 +127,3 @@ export function isShiftRatable(shiftType: ShiftType, workPattern: WorkPattern): 
 export function getPastAccentColor(accentColor: string): string {
   return accentColor + '59';
 }
-
-// Desaturated color for past dates - mixes toward gray while preserving hue identity
-// Returns a muted version of the original hex color
-export function getDesaturatedColor(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-
-  // Mix 55% toward gray (160, 160, 160) to desaturate while keeping hue recognizable
-  const mix = 0.55;
-  const gray = 160;
-  const dr = Math.round(r + (gray - r) * mix);
-  const dg = Math.round(g + (gray - g) * mix);
-  const db = Math.round(b + (gray - b) * mix);
-
-  return `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`;
-}

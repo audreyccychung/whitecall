@@ -25,11 +25,11 @@ export const formatRelativeTime = (dateString: string): string => {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
+  if (diffMins < 1) return 'just now';
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return formatDate(dateString);
+  return date.toLocaleDateString();
 };
 
 export const isToday = (dateString: string): boolean => {
@@ -68,9 +68,9 @@ export const formatCallDateBadge = (dateString: string): string => {
     date.getFullYear() === today.getFullYear();
 
   if (isDateToday) {
-    return 'On call today';
+    return 'On duty today';
   }
 
-  // Format as "Jan 15"
-  return `On call ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)}`;
+  // Format as "Next: Jan 15" — generic label since friend could be on any shift type
+  return `Next: ${new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)}`;
 };

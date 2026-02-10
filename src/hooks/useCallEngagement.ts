@@ -95,7 +95,8 @@ export function useCallEngagement(userId: string | undefined) {
       engagementCache.engagementMap = newMap;
       engagementCache.lastFetchedAt = Date.now();
       engagementCache.userId = userId;
-    } catch {
+    } catch (err) {
+      console.warn('[Engagement] Failed to load:', err);
       setError(GET_ENGAGEMENT_MESSAGES.UNKNOWN_ERROR);
     } finally {
       setIsLoading(false);

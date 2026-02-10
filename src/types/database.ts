@@ -17,7 +17,6 @@ export interface Profile {
   longest_streak: number;
   last_heart_sent_date: string | null; // YYYY-MM-DD format
   // Privacy settings
-  share_data_with_groups: boolean;
   share_activity_feed: boolean;
   notes_private: boolean; // When true, hides notes from activity feed
   // Onboarding

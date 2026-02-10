@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { Call, CallRating } from '../types/database';
 import type { HeartWithSender } from '../types/heart';
 import { RATING_SCORES } from '../constants/ratings';
+import { isOnDutyShift } from '../constants/shiftTypes';
 
 export interface ProfileStats {
   // Call stats
@@ -44,30 +45,28 @@ export function useProfileStats(
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    // Create lookup maps
-    const ratingsMap = new Map<string, CallRating>();
-    ratings.forEach(r => ratingsMap.set(r.call_date, r));
-
-    // Count hearts by shift date
-    const heartsByDate = new Map<string, number>();
-    heartsReceived.forEach(h => {
-      heartsByDate.set(h.shift_date, (heartsByDate.get(h.shift_date) || 0) + 1);
-    });
-
-    // Basic call stats
-    const totalCalls = calls.length;
-    const callsThisMonth = calls.filter(c => {
-      const d = new Date(c.call_date + 'T00:00:00');
+    // Helper: check if a YYYY-MM-DD date string is in the current month
+    const isThisMonth = (dateStr: string): boolean => {
+      const d = new Date(dateStr + 'T00:00:00');
       return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    }).length;
+    };
 
-    // Rating stats
-    const ratedCalls = ratings.length;
+    // --- Current month filters (all "This Month" stats use these) ---
+
+    // On-duty calls this month (call, am, pm, night only)
+    const callsThisMonth = calls.filter(c =>
+      isOnDutyShift(c.shift_type) && isThisMonth(c.call_date)
+    ).length;
+
+    // Ratings this month only
+    const ratingsThisMonth = ratings.filter(r => isThisMonth(r.call_date));
+    const ratedCalls = ratingsThisMonth.length;
+
     let moodSum = 0;
     let sleepSum = 0;
     let callsWithSleep = 0;
 
-    ratings.forEach(r => {
+    ratingsThisMonth.forEach(r => {
       moodSum += RATING_SCORES[r.rating];
       if (r.hours_slept !== null) {
         sleepSum += r.hours_slept;
@@ -78,15 +77,28 @@ export function useProfileStats(
     const avgMoodScore = ratedCalls > 0 ? moodSum / ratedCalls : null;
     const avgSleep = callsWithSleep > 0 ? sleepSum / callsWithSleep : null;
 
-    // Heart stats
-    const totalHeartsReceived = heartsReceived.length;
-    // Count unique shift dates that received hearts
-    const shiftsWithHearts = heartsByDate.size;
+    // Hearts received this month only
+    const heartsThisMonth = heartsReceived.filter(h => isThisMonth(h.shift_date));
+    const totalHeartsReceived = heartsThisMonth.length;
+
+    // Count unique shift dates that received hearts this month
+    const heartsByDateThisMonth = new Map<string, number>();
+    heartsThisMonth.forEach(h => {
+      heartsByDateThisMonth.set(h.shift_date, (heartsByDateThisMonth.get(h.shift_date) || 0) + 1);
+    });
+    const shiftsWithHearts = heartsByDateThisMonth.size;
     const avgHeartsPerCall = shiftsWithHearts > 0
       ? totalHeartsReceived / shiftsWithHearts
       : null;
 
-    // Build trend data from last 7 rated calls (sorted oldest to newest for chart)
+    // --- All-time data for trend chart (last 7 rated calls, not month-scoped) ---
+
+    // Hearts by date (all-time) for trend chart
+    const heartsByDate = new Map<string, number>();
+    heartsReceived.forEach(h => {
+      heartsByDate.set(h.shift_date, (heartsByDate.get(h.shift_date) || 0) + 1);
+    });
+
     const sortedRatings = [...ratings]
       .sort((a, b) => a.call_date.localeCompare(b.call_date))
       .slice(-7);
@@ -98,6 +110,9 @@ export function useProfileStats(
       hearts: heartsByDate.get(r.call_date) || 0,
     }));
 
+    // totalCalls = on-duty calls all-time (used by share card)
+    const totalCalls = calls.filter(c => isOnDutyShift(c.shift_type)).length;
+
     return {
       totalCalls,
       callsThisMonth,
@@ -108,7 +123,7 @@ export function useProfileStats(
       totalHeartsReceived,
       avgHeartsPerCall,
       trendData,
-      hasTrendData: ratedCalls >= 3,
+      hasTrendData: ratings.length >= 3,
     };
   }, [calls, ratings, heartsReceived]);
 }

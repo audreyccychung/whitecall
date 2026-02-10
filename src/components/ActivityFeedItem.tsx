@@ -1,7 +1,8 @@
 // Activity feed item - displays a single activity with like and comment buttons
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AvatarDisplay } from './AvatarDisplay';
 import { RatingIcon } from './RatingIcon';
+import { formatRelativeTime } from '../utils/date';
 import type { Activity, CallRatingValue } from '../types/database';
 import { RATING_LABEL } from '../types/database';
 
@@ -48,24 +49,6 @@ interface ActivityFeedItemProps {
   onToggleLike: (activityId: string) => Promise<{ success: boolean }>;
   onLikeCountClick?: (activityId: string) => void;
   onCommentClick?: (activityId: string) => void;
-  // External comment count delta (positive = added, negative = removed)
-  commentCountDelta?: number;
-}
-
-// Format relative time (e.g., "2h ago", "1d ago")
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
 }
 
 export function ActivityFeedItem({
@@ -73,38 +56,19 @@ export function ActivityFeedItem({
   onToggleLike,
   onLikeCountClick,
   onCommentClick,
-  commentCountDelta = 0,
 }: ActivityFeedItemProps) {
   const [isLiking, setIsLiking] = useState(false);
-  const [localLiked, setLocalLiked] = useState(activity.user_has_liked ?? false);
-  const [localLikeCount, setLocalLikeCount] = useState(activity.like_count);
 
-  // Comment count includes any delta from parent (for optimistic updates)
-  const localCommentCount = Math.max(0, activity.comment_count + commentCountDelta);
-
-  // Reset local state when activity changes
-  useEffect(() => {
-    setLocalLiked(activity.user_has_liked ?? false);
-    setLocalLikeCount(activity.like_count);
-  }, [activity.id, activity.user_has_liked, activity.like_count]);
+  // Display state directly from activity prop (single source of truth from backend)
+  const liked = activity.user_has_liked ?? false;
+  const likeCount = activity.like_count;
+  const commentCount = activity.comment_count;
 
   const handleLike = async () => {
     if (isLiking) return;
 
     setIsLiking(true);
-    // Optimistic update
-    const wasLiked = localLiked;
-    setLocalLiked(!wasLiked);
-    setLocalLikeCount((prev) => (wasLiked ? prev - 1 : prev + 1));
-
-    const result = await onToggleLike(activity.id);
-
-    if (!result.success) {
-      // Rollback on failure
-      setLocalLiked(wasLiked);
-      setLocalLikeCount((prev) => (wasLiked ? prev + 1 : prev - 1));
-    }
-
+    await onToggleLike(activity.id);
     setIsLiking(false);
   };
 
@@ -117,7 +81,7 @@ export function ActivityFeedItem({
   // Handle clicking the like count to show likers
   const handleLikeCountClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (localLikeCount > 0 && onLikeCountClick) {
+    if (likeCount > 0 && onLikeCountClick) {
       onLikeCountClick(activity.id);
     }
   };
@@ -131,69 +95,68 @@ export function ActivityFeedItem({
   };
 
   return (
-    <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-100">
-      {/* Avatar */}
-      <AvatarDisplay
-        avatarType={activity.avatar_type || 'cat'}
-        avatarColor={activity.avatar_color || '#94a3b8'}
-        size="small"
-      />
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-gray-900 truncate">{displayName}</span>
-          <span className="text-gray-400 text-sm">{formatRelativeTime(activity.created_at)}</span>
+    <div className="bg-white rounded-xl border border-gray-100 p-4">
+      {/* Top row: Avatar + Name + Time */}
+      <div className="flex items-center gap-3">
+        <AvatarDisplay
+          avatarType={activity.avatar_type || 'cat'}
+          avatarColor={activity.avatar_color || '#94a3b8'}
+          size="small"
+        />
+        <div className="flex-1 min-w-0">
+          <span className="font-medium text-gray-900 truncate block">{displayName}</span>
         </div>
+        <span className="text-gray-400 text-xs flex-shrink-0">{formatRelativeTime(activity.created_at)}</span>
+      </div>
 
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-gray-600 text-sm">Rated their call</span>
-          <RatingIcon rating={rating} size="sm" />
-          <span className="text-gray-700 text-sm font-medium">{ratingLabel}</span>
-          {hoursSlept !== null && hoursSlept !== undefined && (
-            <span className="text-gray-500 text-sm">
-              · {hoursSlept}h sleep
-            </span>
-          )}
-        </div>
-
-        {/* Notes - displayed if present */}
-        {notes && (
-          <p className="text-sm text-gray-500 mt-2 line-clamp-2 italic">
-            "{notes}"
-          </p>
+      {/* Rating row */}
+      <div className="flex items-center gap-2 mt-2.5 ml-11">
+        <span className="text-gray-500 text-sm">Rated</span>
+        <RatingIcon rating={rating} size="sm" />
+        <span className="text-gray-800 text-sm font-medium">{ratingLabel}</span>
+        {hoursSlept !== null && hoursSlept !== undefined && (
+          <span className="text-gray-400 text-sm">
+            · {hoursSlept}h sleep
+          </span>
         )}
       </div>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-2">
+      {/* Notes */}
+      {notes && (
+        <p className="text-sm text-gray-500 mt-2 ml-11 line-clamp-2 italic">
+          "{notes}"
+        </p>
+      )}
+
+      {/* Action buttons - bottom row, aligned with content */}
+      <div className="flex items-center gap-4 mt-2.5 ml-11">
         {/* Like button */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <button
             onClick={handleLike}
             disabled={isLiking}
             className={`p-1.5 rounded-full transition-colors ${
-              localLiked
+              liked
                 ? 'text-red-500 bg-red-50'
                 : 'text-gray-400 hover:text-red-400 hover:bg-red-50'
             }`}
-            aria-label={localLiked ? 'Unlike' : 'Like'}
+            aria-label={liked ? 'Unlike' : 'Like'}
           >
-            <HeartIcon filled={localLiked} className={isLiking ? 'animate-pulse' : ''} />
+            <HeartIcon filled={liked} className={isLiking ? 'animate-pulse' : ''} />
           </button>
-          {localLikeCount > 0 && (
+          {likeCount > 0 && (
             <button
               onClick={handleLikeCountClick}
               className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline min-w-[16px]"
               aria-label="View who liked this"
             >
-              {localLikeCount}
+              {likeCount}
             </button>
           )}
         </div>
 
         {/* Comment button */}
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <button
             onClick={handleCommentClick}
             className="p-1.5 rounded-full transition-colors text-gray-400 hover:text-sky-soft-500 hover:bg-sky-soft-50"
@@ -201,13 +164,13 @@ export function ActivityFeedItem({
           >
             <CommentIcon />
           </button>
-          {localCommentCount > 0 && (
+          {commentCount > 0 && (
             <button
               onClick={handleCommentClick}
               className="text-sm font-medium text-gray-500 hover:text-gray-700 hover:underline min-w-[16px]"
               aria-label="View comments"
             >
-              {localCommentCount}
+              {commentCount}
             </button>
           )}
         </div>

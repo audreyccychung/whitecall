@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
-  const [savingShareData, setSavingShareData] = useState(false);
   const [savingShareFeed, setSavingShareFeed] = useState(false);
   const [savingNotesPrivacy, setSavingNotesPrivacy] = useState(false);
   const [savingWorkPattern, setSavingWorkPattern] = useState(false);
@@ -47,25 +46,6 @@ export default function SettingsPage() {
       await unsubscribePush();
     } else {
       await subscribePush();
-    }
-  };
-
-  const handleShareDataToggle = async () => {
-    if (!profile) return;
-
-    setSavingShareData(true);
-    try {
-      const newValue = !profile.share_data_with_groups;
-      const { error } = await supabase.rpc('update_share_data_setting', {
-        p_share: newValue,
-      });
-
-      if (error) throw error;
-      await refreshProfile();
-    } catch (err) {
-      console.error('[SettingsPage] Failed to update share data setting:', err);
-    } finally {
-      setSavingShareData(false);
     }
   };
 
@@ -321,38 +301,6 @@ export default function SettingsPage() {
           {/* Privacy Section */}
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Privacy</p>
-
-            <button
-              onClick={handleShareDataToggle}
-              disabled={savingShareData}
-              className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">🔒</span>
-                <div className="text-left">
-                  <p className="font-medium text-gray-800">Share data with groups</p>
-                  <p className="text-sm text-gray-500">
-                    {profile.share_data_with_groups
-                      ? 'Your call ratings are visible to group members'
-                      : 'Your data is private from groups'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center">
-                {savingShareData ? (
-                  <div className="w-5 h-5 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <div className={`w-12 h-7 rounded-full transition-colors flex items-center ${
-                    profile.share_data_with_groups ? 'bg-green-500' : 'bg-gray-300'
-                  }`}>
-                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform mx-1 ${
-                      profile.share_data_with_groups ? 'translate-x-5' : 'translate-x-0'
-                    }`} />
-                  </div>
-                )}
-              </div>
-            </button>
 
             <button
               onClick={handleShareFeedToggle}

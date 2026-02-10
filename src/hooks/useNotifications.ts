@@ -102,7 +102,8 @@ export function useNotifications(userId: string | undefined) {
       notificationsCache.unreadCount = count;
       notificationsCache.lastFetchedAt = Date.now();
       notificationsCache.userId = userId;
-    } catch {
+    } catch (err) {
+      console.warn('[Notifications] Failed to load:', err);
       setError(GET_NOTIFICATIONS_MESSAGES.UNKNOWN_ERROR);
     } finally {
       setIsLoading(false);
@@ -124,8 +125,9 @@ export function useNotifications(userId: string | undefined) {
         setUnreadCount(result.count ?? 0);
         notificationsCache.unreadCount = result.count ?? 0;
       }
-    } catch {
-      // Silent fail for count refresh
+    } catch (err) {
+      // Non-blocking: count refresh failure shouldn't show error UI
+      console.warn('[Notifications] Failed to fetch unread count:', err);
     }
   }, [userId]);
 
@@ -166,7 +168,8 @@ export function useNotifications(userId: string | undefined) {
       }
 
       return { success: true };
-    } catch {
+    } catch (err) {
+      console.warn('[Notifications] Failed to mark as read:', err);
       return { success: false, error: MARK_READ_MESSAGES.UNKNOWN_ERROR };
     }
   }, [userId]);

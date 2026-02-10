@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AvatarDisplay } from './AvatarDisplay';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../contexts/AuthContext';
+import { formatRelativeTime } from '../utils/date';
 import type { Notification, CallRatingValue } from '../types/database';
 import { RATING_LABEL } from '../types/database';
 
@@ -25,22 +26,6 @@ function BellIcon({ hasUnread }: { hasUnread: boolean }) {
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
   );
-}
-
-// Format relative time
-function formatRelativeTime(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
-  return date.toLocaleDateString();
 }
 
 // Get notification message

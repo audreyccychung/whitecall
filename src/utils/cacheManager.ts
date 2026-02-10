@@ -4,6 +4,9 @@
 import { clearFriendsCache } from '../hooks/useFriends';
 import { clearHeartsCache } from '../hooks/useHearts';
 import { clearRatingsCache } from '../hooks/useCallRatings';
+import { clearActivityFeedCache } from '../hooks/useActivityFeed';
+import { clearNotificationsCache } from '../hooks/useNotifications';
+import { clearEngagementCache } from '../hooks/useCallEngagement';
 
 /**
  * Clear all module-level caches.
@@ -13,4 +16,7 @@ export function clearAllCaches() {
   clearFriendsCache();
   clearHeartsCache();
   clearRatingsCache();
+  clearActivityFeedCache();
+  clearNotificationsCache();
+  clearEngagementCache();
 }

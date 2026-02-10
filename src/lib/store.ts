@@ -16,8 +16,6 @@ interface AppState {
 
   // Shift status actions
   setShiftMap: (entries: Array<{ date: string; shiftType: ShiftType }>) => void;
-  setShift: (date: string, shiftType: ShiftType) => void;
-  removeShift: (date: string) => void;
 
   // Onboarding actions
   openOnboarding: () => void;
@@ -25,7 +23,7 @@ interface AppState {
   dismissOnboarding: () => void;
 }
 
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>((set) => ({
   // Initial state
   shiftMap: new Map(),
   isCallStatusLoaded: false,
@@ -39,16 +37,6 @@ export const useStore = create<AppState>((set, get) => ({
       map.set(date, shiftType);
     }
     set({ shiftMap: map, isCallStatusLoaded: true });
-  },
-  setShift: (date, shiftType) => {
-    const newMap = new Map(get().shiftMap);
-    newMap.set(date, shiftType);
-    set({ shiftMap: newMap });
-  },
-  removeShift: (date) => {
-    const newMap = new Map(get().shiftMap);
-    newMap.delete(date);
-    set({ shiftMap: newMap });
   },
 
   // Onboarding actions

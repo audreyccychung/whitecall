@@ -42,19 +42,6 @@ export const getAvatarEmoji = (type: AvatarType): string => {
   return emojiMap[type];
 };
 
-// Helper to get color value
-export const getAvatarColorValue = (color: AvatarColor): string => {
-  const colorMap: Record<AvatarColor, string> = {
-    pink: 'var(--color-pastel-pink)',
-    blue: 'var(--color-pastel-blue)',
-    purple: 'var(--color-pastel-purple)',
-    green: 'var(--color-pastel-green)',
-    yellow: 'var(--color-pastel-yellow)',
-    peach: 'var(--color-pastel-peach)',
-  };
-  return colorMap[color];
-};
-
 // All available avatar types
 export const AVATAR_TYPES: AvatarType[] = [
   'penguin',
