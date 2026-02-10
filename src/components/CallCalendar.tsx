@@ -17,7 +17,7 @@ import {
 } from 'date-fns';
 import type { CallRating, ShiftType, WorkPattern } from '../types/database';
 import { RatingIcon } from './RatingIcon';
-import { SHIFT_TYPE_MAP, getShiftTypesForPattern, getPastAccentColor, isShiftRatable } from '../constants/shiftTypes';
+import { SHIFT_TYPE_MAP, getShiftTypesForPattern, getPastAccentColor, isOnDutyShift } from '../constants/shiftTypes';
 
 interface CallCalendarProps {
   shiftMap: Map<string, ShiftType>; // YYYY-MM-DD -> shift type
@@ -136,8 +136,8 @@ export function CallCalendar({ shiftMap, ratingsMap, workPattern, onDateTap, onP
           const rating = ratingsMap?.get(dateStr);
           const hasRating = !!rating;
 
-          // Is this past shift ratable? (long-press opens rating modal)
-          const ratable = hasShift && isPast && isShiftRatable(shiftType!, workPattern);
+          // Is this past shift ratable? Only on-duty shifts (call/am/pm/night)
+          const ratable = hasShift && isPast && isOnDutyShift(shiftType!);
 
           // Get the shift config for coloring
           const shiftConfig = shiftType ? SHIFT_TYPE_MAP[shiftType] : null;

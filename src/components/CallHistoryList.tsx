@@ -1,10 +1,11 @@
-// List of past calls with ratings
+// List of past calls with ratings (on-duty shifts only)
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { format, parseISO, isBefore, startOfDay } from 'date-fns';
 import type { Call, CallRating } from '../types/database';
 import { RATING_EMOJI, RATING_LABEL } from '../types/database';
 import type { EngagementData } from '../hooks/useCallEngagement';
+import { isOnDutyShift } from '../constants/shiftTypes';
 
 interface CallHistoryListProps {
   calls: Call[];
@@ -23,11 +24,11 @@ export function CallHistoryList({
   onEngagementClick,
   isLoading,
 }: CallHistoryListProps) {
-  // Filter to past calls only, sorted by date descending
+  // Filter to past on-duty calls only (call/am/pm/night), sorted by date descending
   const pastCalls = useMemo(() => {
     const today = startOfDay(new Date());
     return calls
-      .filter((c) => isBefore(parseISO(c.call_date), today))
+      .filter((c) => isOnDutyShift(c.shift_type) && isBefore(parseISO(c.call_date), today))
       .sort((a, b) => b.call_date.localeCompare(a.call_date)); // Most recent first
   }, [calls]);
 

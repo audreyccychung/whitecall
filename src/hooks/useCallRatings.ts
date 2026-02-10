@@ -10,6 +10,7 @@ export type SaveRatingCode =
   | 'INVALID_RATING'
   | 'INVALID_HOURS_SLEPT'
   | 'NO_CALL_ON_DATE'
+  | 'NOT_ON_DUTY_SHIFT'
   | 'UNKNOWN_ERROR';
 
 export interface SaveRatingResult {
@@ -25,6 +26,7 @@ const SAVE_RATING_MESSAGES: Record<SaveRatingCode, string> = {
   INVALID_RATING: 'Invalid rating value.',
   INVALID_HOURS_SLEPT: 'Hours slept must be between 0 and 12.',
   NO_CALL_ON_DATE: 'You did not have a call on this date.',
+  NOT_ON_DUTY_SHIFT: 'Only on-duty shifts can be rated.',
   UNKNOWN_ERROR: 'Something went wrong. Please try again.',
 };
 

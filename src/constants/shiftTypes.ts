@@ -115,14 +115,6 @@ export function isOnDutyShift(shiftType: ShiftType): boolean {
   return ON_DUTY_SHIFT_TYPES.has(shiftType);
 }
 
-// Check if a shift type is ratable based on work pattern
-// Call-based: only 'call' type is ratable
-// Shift-based: all shift types are ratable
-export function isShiftRatable(shiftType: ShiftType, workPattern: WorkPattern): boolean {
-  if (workPattern === 'shift') return true;
-  return shiftType === 'call';
-}
-
 // Returns accentColor with 35% opacity for past day left-edge accents
 export function getPastAccentColor(accentColor: string): string {
   return accentColor + '59';

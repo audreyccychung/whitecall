@@ -7,6 +7,7 @@ import { useShareCard } from '../../hooks/useShareCard';
 import { MoodCircle } from '../MoodCircle';
 import { formatStat, getStatLabel, type StatKey } from '../../utils/statsRegistry';
 import { RATING_SCORES } from '../../constants/ratings';
+import { isOnDutyShift } from '../../constants/shiftTypes';
 
 // Stats displayed in the UI card (intentionally different from share card)
 const WEEKLY_RECAP_STATS: StatKey[] = ['calls', 'heartsReceived', 'avgMood'];
@@ -29,8 +30,8 @@ export function WeeklyRecap({ calls, ratings, heartsReceived }: WeeklyRecapProps
     weekAgo.setDate(weekAgo.getDate() - 7);
     const weekAgoStr = weekAgo.toISOString().split('T')[0];
 
-    // Filter to last 7 days
-    const weekCalls = calls.filter((c) => c.call_date >= weekAgoStr);
+    // Filter to last 7 days, on-duty shifts only (call/am/pm/night)
+    const weekCalls = calls.filter((c) => c.call_date >= weekAgoStr && isOnDutyShift(c.shift_type));
     const weekRatings = ratings.filter((r) => r.call_date >= weekAgoStr);
     const weekHearts = heartsReceived.filter((h) => h.shift_date >= weekAgoStr);
 
