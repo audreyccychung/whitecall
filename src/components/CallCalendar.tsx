@@ -204,11 +204,16 @@ export function CallCalendar({ shiftMap, ratingsMap, workPattern, onDateTap, onP
                 ${isClickable ? 'cursor-pointer' : 'cursor-default'}
               `}
             >
-              {/* Show date with rating icon for rated past shifts */}
+              {/* Show date with indicator dot or rating icon */}
               {isPast && hasShift && hasRating && ratable ? (
                 <div className="flex flex-col items-center leading-none gap-0.5">
                   <span>{format(day, 'd')}</span>
                   <RatingIcon rating={rating.rating} size="sm" />
+                </div>
+              ) : hasShift && isCurrentMonth && !isPast ? (
+                <div className="flex flex-col items-center leading-none gap-0.5">
+                  <span>{format(day, 'd')}</span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
                 </div>
               ) : (
                 format(day, 'd')
