@@ -83,22 +83,49 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
     try {
       const today = getTodayDate();
 
-      // Load hearts received
-      const { data: receivedData, error: receivedError } = await supabase
-        .from('hearts')
-        .select(
+      // Run data queries (capped at 200) and count queries in parallel
+      const [receivedResult, sentResult, receivedCountResult, sentCountResult] = await Promise.all([
+        // Recent hearts received (with sender info for display)
+        supabase
+          .from('hearts')
+          .select(
+            `
+            *,
+            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color)
           `
-          *,
-          sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color)
-        `
-        )
-        .eq('recipient_id', userId)
-        .order('created_at', { ascending: false });
+          )
+          .eq('recipient_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(200),
+        // Recent hearts sent (with sender info for display)
+        supabase
+          .from('hearts')
+          .select(
+            `
+            *,
+            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color)
+          `
+          )
+          .eq('sender_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(200),
+        // Exact total received (index-only, no row data transferred)
+        supabase
+          .from('hearts')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_id', userId),
+        // Exact total sent (index-only, no row data transferred)
+        supabase
+          .from('hearts')
+          .select('*', { count: 'exact', head: true })
+          .eq('sender_id', userId),
+      ]);
 
-      if (receivedError) throw receivedError;
+      if (receivedResult.error) throw receivedResult.error;
+      if (sentResult.error) throw sentResult.error;
 
       const received: HeartWithSender[] =
-        receivedData?.map((h: any) => ({
+        receivedResult.data?.map((h: any) => ({
           ...h,
           sender_username: h.sender.username,
           sender_display_name: h.sender.display_name,
@@ -108,22 +135,8 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
 
       setHeartsReceived(received);
 
-      // Load hearts sent
-      const { data: sentData, error: sentError } = await supabase
-        .from('hearts')
-        .select(
-          `
-          *,
-          sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color)
-        `
-        )
-        .eq('sender_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (sentError) throw sentError;
-
       const sent: HeartWithSender[] =
-        sentData?.map((h: any) => ({
+        sentResult.data?.map((h: any) => ({
           ...h,
           sender_username: h.sender.username,
           sender_display_name: h.sender.display_name,
@@ -133,13 +146,13 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
 
       setHeartsSent(sent);
 
-      // Calculate stats
+      // Calculate stats - use exact counts for totals, filtered data for today
       const receivedToday = received.filter((h) => h.shift_date === today).length;
       const sentToday = sent.filter((h) => h.shift_date === today).length;
 
       const newStats = {
-        total_received: received.length,
-        total_sent: sent.length,
+        total_received: receivedCountResult.count ?? received.length,
+        total_sent: sentCountResult.count ?? sent.length,
         received_today: receivedToday,
         sent_today: sentToday,
       };

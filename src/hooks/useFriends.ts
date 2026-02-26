@@ -177,6 +177,13 @@ export function useFriends(userId: string | undefined): UseFriendsResult {
             };
           }) || [];
 
+        // Guard: if a mutation started while this fetch was in-flight,
+        // discard stale results to protect optimistic updates.
+        // lastFetchedAt is deliberately NOT updated so the next call refetches fresh data.
+        if (friendsCache.pendingMutations.size > 0 && !force) {
+          return;
+        }
+
         setFriends(friendsList);
         lastFetchedAt.current = Date.now();
         // Update module-level cache for instant remounts
