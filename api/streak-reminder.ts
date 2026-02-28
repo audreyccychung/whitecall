@@ -1,8 +1,8 @@
 // Vercel Cron: Streak reminder - "Send a heart to keep your streak!"
 // Schedule: 5:30 PM Hong Kong time (09:30 UTC)
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from './lib/supabase';
-import { sendPushToUser } from './lib/send-push';
+import { supabase } from './_lib/supabase.js';
+import { sendPushToUser } from './_lib/send-push.js';
 
 export const config = {
   maxDuration: 60,

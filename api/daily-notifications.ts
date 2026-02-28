@@ -1,8 +1,8 @@
 // Vercel Cron: Daily notifications - "X friends on call today"
 // Schedule: 10:00 AM Hong Kong time (02:00 UTC)
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from './lib/supabase';
-import { sendPushToUser } from './lib/send-push';
+import { supabase } from './_lib/supabase.js';
+import { sendPushToUser } from './_lib/send-push.js';
 
 export const config = {
   // Vercel cron requires this

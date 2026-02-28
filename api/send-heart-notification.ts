@@ -2,8 +2,8 @@
 // Called fire-and-forget from frontend. Heart is already committed.
 // Reuses existing sendPushToUser() utility (web-push library).
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from './lib/supabase';
-import { sendPushToUser } from './lib/send-push';
+import { supabase } from './_lib/supabase.js';
+import { sendPushToUser } from './_lib/send-push.js';
 
 type ResultCode =
   | 'SUCCESS'
