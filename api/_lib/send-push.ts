@@ -1,6 +1,6 @@
 // Push notification sender for Vercel API routes
 // Uses web-push library for Web Push protocol
-import * as webpush from 'web-push';
+import webpush from 'web-push';
 import { supabase } from './supabase.js';
 
 // Configure VAPID
