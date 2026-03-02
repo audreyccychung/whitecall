@@ -239,8 +239,49 @@
 
 ## Future (V2.2+)
 
-### V2.2 - Medium-term Features
+### V2.2 - Friend Profile Page + Comparison Calendar
+
+**Concept:** Replace FriendProfileModal with a full profile page (like Instagram profiles, but the "feed" is a comparison calendar).
+
+**Navigation:** Detail route, NOT a new tab. Bottom nav stays at 4 tabs (Home, Calendar, Groups, Profile). Friend profile is a drilldown page — back button returns to previous screen.
+
+**Entry points (all existing friend tap targets → now navigate instead of opening modal):**
+- [ ] Profile page → Friends section → tap avatar → `/friend/:id`
+- [ ] Home page → Friends on call list → tap friend → `/friend/:id`
+- [ ] Group page → Member list → tap member → `/friend/:id`
+- [ ] Remove FriendProfileModal entirely, replace all usages with navigation to `/friend/:id`
+
+**Friend Profile Page layout:**
+- [ ] **Header:** avatar (large), display name, @username, `...` overflow menu
+- [ ] **`...` menu contains:** View call ratings & stats, Remove friend
+- [ ] **Comparison calendar (hero content):** month grid, each day cell split top/bottom
+  - Top half: friend's shift type color
+  - Bottom half: your shift type color
+  - Both free: highlighted accent (green glow or star icon) — "free day together"
+  - Past days: muted/desaturated (same pattern as own calendar)
+- [ ] **"Free days together" banner:** count of upcoming matching free days (like group "next free day" feature)
+- [ ] **Legend:** two rows — "Their schedule" colors + "Your schedule" colors + "Both free" indicator
+- [ ] **Send heart button:** if friend is on call today, show heart action on the page
+
+**Data requirements:**
+- [ ] New RPC or extend existing: fetch friend's full shift map (not just next 30 days of calls)
+- [ ] RLS: friends can view each other's shift types (extends existing "friends can view shifts" policy)
+- [ ] No ratings/sleep data exposed — that stays private unless friend shares via `...` menu stats
+
+**CalendarGrid changes:**
+- [ ] Add `comparison` mode prop (renders split cells instead of single-color cells)
+- [ ] Accept second shift map (`friendShiftMap`) for overlay
+- [ ] Disable tap-to-edit and long-press-to-rate in comparison mode (read-only)
+
+**Migration from modal:**
+- [ ] Move "remove friend" to `...` menu (standard pattern: Instagram, Slack, WhatsApp)
+- [ ] Move "upcoming calls" list — no longer needed as standalone; calendar replaces it
+- [ ] Keep "add friend" button for group member context (non-friend profiles)
+
+**Also in this version:**
 - [ ] Show shift type colors in group DayDetailModal (deferred from V2.1)
+
+### V2.3 - Medium-term Features
 - [ ] ICS calendar feed import (auto-populate calls from exported schedule)
 - [ ] Group statistics page (aggregate mood, support patterns)
 - [ ] "Most supported" vs "least supported" friend insights
