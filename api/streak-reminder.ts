@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await Promise.all(
       users.map(async (user: { user_id: string; current_streak: number }) => {
         const result = await sendPushToUser(user.user_id, {
-          title: 'WhiteCall',
+          title: 'Streak reminder',
           body: `Send a heart to keep your ${user.current_streak}-day streak!`,
           tag: 'streak-reminder',
           data: { type: 'streak_reminder', url: '/home' },

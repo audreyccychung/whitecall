@@ -79,8 +79,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 6. Send push notification
     const result = await sendPushToUser(recipient_id, {
-      title: 'WhiteCall',
-      body: `${senderName} sent you a white heart!`,
+      title: senderName,
+      body: 'Sent you a white heart!',
       tag: 'heart-received',
       data: { type: 'heart_received', url: '/home' },
     });

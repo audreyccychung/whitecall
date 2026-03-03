@@ -84,8 +84,8 @@ serve(async (req: Request) => {
 
     // Build notification payload
     const notificationPayload = JSON.stringify({
-      title: 'WhiteCall',
-      body: `${senderName} ${message}`,
+      title: senderName,
+      body: message,
       icon: '/icons/icon-192.svg',
       badge: '/icons/icon-192.svg',
       tag: 'heart-notification',

@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       users.map(async (user: { user_id: string; friends_on_call: number }) => {
         const friendText = user.friends_on_call === 1 ? 'friend is' : 'friends are';
         const result = await sendPushToUser(user.user_id, {
-          title: 'WhiteCall',
+          title: 'Friends on call',
           body: `${user.friends_on_call} ${friendText} on call today. Send support!`,
           tag: 'daily-reminder',
           data: { type: 'daily_reminder', url: '/home' },
