@@ -8,7 +8,7 @@ const DISMISSED_KEY = 'whitecall-install-dismissed';
 
 export function InstallPrompt() {
   const [show, setShow] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [platform, setPlatform] = useState<'ios-safari' | 'ios-other' | 'android'>('android');
 
   useEffect(() => {
     // Don't show if already dismissed
@@ -21,17 +21,20 @@ export function InstallPrompt() {
       return;
     }
 
-    // Check if iOS Safari
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
     const isSafari = /safari/.test(userAgent) && !/chrome|crios|fxios/.test(userAgent);
-
-    // Check if Android
     const isAndroid = /android/.test(userAgent);
 
     // Only show on mobile devices
     if (isIOSDevice || isAndroid) {
-      setIsIOS(isIOSDevice && isSafari);
+      if (isIOSDevice && isSafari) {
+        setPlatform('ios-safari');
+      } else if (isIOSDevice) {
+        setPlatform('ios-other');
+      } else {
+        setPlatform('android');
+      }
       // Delay showing to not interrupt initial load
       const timer = setTimeout(() => setShow(true), 2000);
       return () => clearTimeout(timer);
@@ -63,20 +66,53 @@ export function InstallPrompt() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 text-sm">Add WhiteCall to Home Screen</h3>
+              <h3 className="font-semibold text-gray-900 text-sm">Install WhiteCall</h3>
+              <p className="text-xs text-gray-400 mt-0.5 mb-1.5">Use it like a real app — no App Store needed!</p>
 
-              {isIOS ? (
-                <p className="text-xs text-gray-500 mt-1">
-                  Tap <span className="inline-flex items-center">
-                    <svg className="w-4 h-4 mx-0.5 text-sky-soft-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                  </span> then "Add to Home Screen"
-                </p>
+              {platform === 'ios-safari' ? (
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">1.</span> Tap the share button <span className="inline-flex items-center">
+                      <svg className="w-4 h-4 mx-0.5 text-sky-soft-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                    </span> at the bottom of your screen
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">2.</span> Scroll down and tap <span className="font-semibold">"Add to Home Screen"</span>
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">3.</span> Tap <span className="font-semibold">"Add"</span> in the top right
+                  </p>
+                </div>
+              ) : platform === 'ios-other' ? (
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600">
+                    To install, open this page in <span className="font-semibold">Safari</span>:
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">1.</span> Copy this link: <span className="font-semibold text-sky-soft-600">whitecall.app</span>
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">2.</span> Open <span className="font-semibold">Safari</span> and paste it
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">3.</span> Tap <span className="inline-flex items-center">
+                      <svg className="w-4 h-4 mx-0.5 text-sky-soft-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                    </span> then <span className="font-semibold">"Add to Home Screen"</span>
+                  </p>
+                </div>
               ) : (
-                <p className="text-xs text-gray-500 mt-1">
-                  Tap menu <span className="font-medium">⋮</span> then "Add to Home screen"
-                </p>
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">1.</span> Tap the menu <span className="font-semibold">⋮</span> in the top right
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    <span className="font-semibold text-gray-700">2.</span> Tap <span className="font-semibold">"Add to Home screen"</span> or <span className="font-semibold">"Install app"</span>
+                  </p>
+                </div>
               )}
             </div>
 
