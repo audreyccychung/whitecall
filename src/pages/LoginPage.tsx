@@ -77,7 +77,7 @@ export default function LoginPage() {
         {/* Logo/Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">WhiteCall 🤍</h1>
-          <p className="text-gray-600">Support your colleagues on call</p>
+          <p className="text-gray-600">Support your friends on call</p>
         </div>
 
         {/* Login Form */}
