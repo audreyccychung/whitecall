@@ -10,7 +10,7 @@ export function FriendsStep() {
 
       {/* Description */}
       <p className="text-gray-600 mb-6">
-        Add colleagues by their username to support each other
+        Add friends by their username to support each other
       </p>
 
       {/* Visual demo - add friend form */}
@@ -45,7 +45,7 @@ export function FriendsStep() {
 
       {/* Caption */}
       <p className="text-sm text-gray-500 mt-4">
-        Share your username with colleagues
+        Share your username with friends
       </p>
     </div>
   );
