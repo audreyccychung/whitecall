@@ -50,7 +50,7 @@ export function clearHeartsCache() {
 
 // Fire-and-forget: trigger push notification after heart is sent
 // No await, no UI state, no error display. Silent best-effort.
-const triggerHeartNotification = (recipientId: string, shiftDate: string) => {
+const triggerHeartNotification = (recipientId: string) => {
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (!session?.access_token) return;
     fetch('/api/send-heart-notification', {
@@ -59,7 +59,7 @@ const triggerHeartNotification = (recipientId: string, shiftDate: string) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ recipient_id: recipientId, shift_date: shiftDate }),
+      body: JSON.stringify({ recipient_id: recipientId }),
     }).catch(() => {}); // best-effort, silent
   }).catch(() => {});
 };
@@ -239,12 +239,10 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
     incrementSentToday();
 
     // Call the single source of truth: send_heart DB function
-    // Pass user's local date to avoid server timezone issues
-    const shiftDate = getTodayDate();
+    // Server computes recipient's date from their timezone
     const { data, error } = await supabase.rpc('send_heart', {
       p_recipient_id: recipientId,
       p_message: message,
-      p_shift_date: shiftDate,
     });
 
     // Network or RPC error - rollback
@@ -264,7 +262,7 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
 
     if (code === 'SUCCESS') {
       // Success - optimistic update was correct, no refetch needed
-      triggerHeartNotification(recipientId, shiftDate);
+      triggerHeartNotification(recipientId);
       return { success: true, code, heart_id: result.heart_id };
     }
 
@@ -300,11 +298,10 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
     incrementSentToday();
 
     // Call the single source of truth: send_heart DB function
-    const shiftDate = getTodayDate();
+    // Server computes recipient's date from their timezone
     const { data, error } = await supabase.rpc('send_heart', {
       p_recipient_id: recipientId,
       p_message: options?.message || 'wishes you a white call!',
-      p_shift_date: shiftDate,
     });
 
     // Network or RPC error - rollback
@@ -325,7 +322,7 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
 
     if (code === 'SUCCESS') {
       // Success - optimistic update was correct
-      triggerHeartNotification(recipientId, shiftDate);
+      triggerHeartNotification(recipientId);
       return { success: true, code, heart_id: result.heart_id };
     }
 
