@@ -37,3 +37,13 @@ export interface RemoveFriendResult {
   code: RemoveFriendCode;
   error?: string; // Present when success is false
 }
+
+// Public user preview for /add/:username landing page (anon-accessible)
+export interface UserPreview {
+  valid: boolean;
+  username?: string;
+  display_name?: string | null;
+  avatar_type?: string;
+  avatar_color?: string;
+  reason?: 'USER_NOT_FOUND' | 'UNKNOWN_ERROR';
+}

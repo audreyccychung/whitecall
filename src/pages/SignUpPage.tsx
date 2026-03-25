@@ -1,6 +1,6 @@
 // Sign up page
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -14,6 +14,8 @@ export default function SignUpPage() {
   const [emailSent, setEmailSent] = useState(false);
 
   const { signUp, signInWithGoogle } = useAuth();
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +77,7 @@ export default function SignUpPage() {
             Click the link in the email to activate your account, then you can create your profile.
           </p>
           <Link
-            to="/login"
+            to={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'}
             className="text-sky-soft-600 hover:text-sky-soft-700 font-medium"
           >
             Back to login
@@ -209,7 +211,7 @@ export default function SignUpPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <Link to="/login" className="text-sky-soft-600 hover:text-sky-soft-700 font-medium">
+            <Link to={redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login'} className="text-sky-soft-600 hover:text-sky-soft-700 font-medium">
               Sign in
             </Link>
           </p>

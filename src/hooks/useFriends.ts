@@ -8,10 +8,11 @@ import type {
   AddFriendCode,
   RemoveFriendResult,
   RemoveFriendCode,
+  UserPreview,
 } from '../types/friend';
 
 // Exhaustive mapping: every code maps to exactly one message
-const ADD_FRIEND_MESSAGES: Record<AddFriendCode, string> = {
+export const ADD_FRIEND_MESSAGES: Record<AddFriendCode, string> = {
   SUCCESS: 'Friend added!',
   USER_NOT_FOUND: 'User not found. Check the username and try again.',
   ALREADY_FRIENDS: 'You are already friends with this user.',
@@ -38,6 +39,7 @@ export interface UseFriendsResult {
   refreshFriends: (options?: { force?: boolean }) => Promise<void>;
   updateFriendHeartStatus: (friendId: string, canSendHeart: boolean) => void;
   beginMutation: () => () => void;
+  getUserPreview: (username: string) => Promise<UserPreview>;
 }
 
 // Stale time: don't refetch if data is less than 30 seconds old
@@ -328,6 +330,32 @@ export function useFriends(userId: string | undefined): UseFriendsResult {
     };
   };
 
+  // Get public user preview (anon-accessible, for /add/:username landing page)
+  const getUserPreview = async (username: string): Promise<UserPreview> => {
+    const { data, error } = await supabase.rpc('get_user_preview', {
+      p_username: username.trim(),
+    });
+
+    if (error) {
+      return { valid: false, reason: 'UNKNOWN_ERROR' };
+    }
+
+    // Parse directly — this RPC returns {valid, ...} not {code, ...}
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data) as UserPreview;
+      } catch {
+        return { valid: false, reason: 'UNKNOWN_ERROR' };
+      }
+    }
+
+    if (data && typeof data === 'object') {
+      return data as UserPreview;
+    }
+
+    return { valid: false, reason: 'UNKNOWN_ERROR' };
+  };
+
   return {
     friends,
     loading: isInitialLoad, // Only true until first successful load
@@ -337,5 +365,6 @@ export function useFriends(userId: string | undefined): UseFriendsResult {
     refreshFriends: loadFriends,
     updateFriendHeartStatus,
     beginMutation,
+    getUserPreview,
   };
 }

@@ -2,7 +2,7 @@
 // NOTE: This page only checks authentication status.
 // Profile/onboarding checks are handled by ProtectedRoute (single source of truth).
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
@@ -15,13 +15,15 @@ export default function LoginPage() {
 
   const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // Redirect to /home if authenticated (ProtectedRoute will handle profile check)
+  // Redirect after authenticated — honor ?redirect= param (for invite links)
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/home', { replace: true });
+      const redirect = searchParams.get('redirect') || '/home';
+      navigate(redirect, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, searchParams]);
 
   // Show loading while checking auth state
   if (authLoading) {

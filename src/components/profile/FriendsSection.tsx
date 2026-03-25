@@ -30,13 +30,15 @@ export function FriendsSection({ userId, username }: FriendsSectionProps) {
   const handleShare = async () => {
     if (!username) return;
 
-    const shareText = `Add me on WhiteCall\nMy username: ${username}\nhttps://whitecall.app`;
+    const inviteUrl = `${window.location.origin}/add/${username}`;
+    const shareText = `Add me on WhiteCall! \u{1F90D}\n${inviteUrl}`;
 
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'Add me on WhiteCall',
           text: shareText,
+          url: inviteUrl,
         });
         return;
       } catch {
@@ -45,7 +47,7 @@ export function FriendsSection({ userId, username }: FriendsSectionProps) {
     }
 
     try {
-      await navigator.clipboard.writeText(shareText);
+      await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
