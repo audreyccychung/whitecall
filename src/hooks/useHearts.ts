@@ -107,7 +107,7 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
           .select(
             `
             *,
-            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color)
+            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color, avatar_url)
           `
           )
           .eq('recipient_id', userId)
@@ -119,7 +119,7 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
           .select(
             `
             *,
-            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color)
+            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color, avatar_url)
           `
           )
           .eq('sender_id', userId)
@@ -147,6 +147,7 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
           sender_display_name: h.sender.display_name,
           sender_avatar_type: h.sender.avatar_type,
           sender_avatar_color: h.sender.avatar_color,
+          sender_avatar_url: h.sender.avatar_url,
         })) || [];
 
       setHeartsReceived(received);
@@ -158,6 +159,7 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
           sender_display_name: h.sender.display_name,
           sender_avatar_type: h.sender.avatar_type,
           sender_avatar_color: h.sender.avatar_color,
+          sender_avatar_url: h.sender.avatar_url,
         })) || [];
 
       setHeartsSent(sent);

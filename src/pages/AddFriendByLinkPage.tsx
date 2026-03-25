@@ -115,6 +115,7 @@ export default function AddFriendByLinkPage() {
               <AvatarDisplay
                 avatarType={preview.avatar_type!}
                 avatarColor={preview.avatar_color!}
+                avatarUrl={preview.avatar_url}
                 size="large"
               />
             </div>

@@ -94,6 +94,7 @@ export function GroupMembersList({
             <AvatarDisplay
               avatarType={member.avatar_type}
               avatarColor={member.avatar_color}
+              avatarUrl={member.avatar_url}
               size="medium"
             />
 

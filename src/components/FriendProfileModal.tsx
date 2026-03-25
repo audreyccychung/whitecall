@@ -115,6 +115,7 @@ export function FriendProfileModal({ friend, onClose, showAddFriend, onAddFriend
                 <AvatarDisplay
                   avatarType={friend.avatar_type}
                   avatarColor={friend.avatar_color}
+                  avatarUrl={friend.avatar_url}
                   size="large"
                 />
                 <div>

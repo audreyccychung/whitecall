@@ -45,5 +45,6 @@ export interface UserPreview {
   display_name?: string | null;
   avatar_type?: string;
   avatar_color?: string;
+  avatar_url?: string | null;
   reason?: 'USER_NOT_FOUND' | 'UNKNOWN_ERROR';
 }

@@ -169,6 +169,7 @@ export default function SettingsPage() {
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
+                avatarUrl={profile?.avatar_url}
                 size="medium"
               />
               {/* Hover overlay */}
@@ -463,6 +464,7 @@ export default function SettingsPage() {
           <EditAvatarModal
             currentType={profile.avatar_type}
             currentColor={profile.avatar_color}
+            currentAvatarUrl={profile?.avatar_url}
             onClose={() => setShowAvatarModal(false)}
           />
         )}

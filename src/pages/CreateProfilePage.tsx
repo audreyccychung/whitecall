@@ -1,5 +1,5 @@
 // Profile creation page (post-signup)
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -7,13 +7,44 @@ import { useAuth } from '../contexts/AuthContext';
 import { AvatarSelector } from '../components/AvatarSelector';
 import type { AvatarType, AvatarColor } from '../types/avatar';
 
+// Resize image to max 400x400 JPEG before upload
+function resizeImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height) {
+        if (width > maxSize) { height = Math.round((height * maxSize) / width); width = maxSize; }
+      } else {
+        if (height > maxSize) { width = Math.round((width * maxSize) / height); height = maxSize; }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Failed to create image'))),
+        'image/jpeg',
+        0.8
+      );
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export default function CreateProfilePage() {
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [avatarType, setAvatarType] = useState<AvatarType>('penguin');
   const [avatarColor, setAvatarColor] = useState<AvatarColor>('blue');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { user, profile, authStatus, profileStatus, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -145,6 +176,39 @@ export default function CreateProfilePage() {
         throw insertError;
       }
 
+      // Upload profile photo if selected
+      if (photoFile) {
+        try {
+          const resized = await resizeImage(photoFile);
+          const filePath = `${user.id}/avatar.jpg`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, resized, {
+              contentType: 'image/jpeg',
+              upsert: true,
+            });
+
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage
+              .from('avatars')
+              .getPublicUrl(filePath);
+
+            // Save the URL to profile
+            await supabase.rpc('update_profile', {
+              p_avatar_type: null,
+              p_avatar_color: null,
+              p_username: null,
+              p_display_name: null,
+              p_avatar_url: `${urlData.publicUrl}?t=${Date.now()}`,
+            });
+          }
+          // Photo upload failure is non-critical — emoji avatar is the fallback
+        } catch {
+          // Silent fail — photo upload is optional
+        }
+      }
+
       // Refresh profile in AuthContext so HomePage has it immediately
       await refreshProfile();
 
@@ -171,7 +235,55 @@ export default function CreateProfilePage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Avatar Selection */}
+          {/* Photo Upload */}
+          <div className="flex flex-col items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setPhotoFile(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                }
+              }}
+              className="hidden"
+            />
+            {photoPreview ? (
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full overflow-hidden">
+                  <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoFile(null);
+                    setPhotoPreview(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  className="absolute -top-1 -right-1 w-6 h-6 bg-red-400 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-500"
+                >
+                  &times;
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-sky-soft-400 hover:text-sky-soft-500 transition-colors"
+              >
+                <svg className="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="text-[10px]">Photo</span>
+              </button>
+            )}
+            <p className="text-xs text-gray-400">Optional — or choose an avatar below</p>
+          </div>
+
+          {/* Emoji Avatar Selection */}
           <AvatarSelector
             selectedType={avatarType}
             selectedColor={avatarColor}

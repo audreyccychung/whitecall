@@ -101,6 +101,7 @@ export function ActivityFeedItem({
         <AvatarDisplay
           avatarType={activity.avatar_type || 'cat'}
           avatarColor={activity.avatar_color || '#94a3b8'}
+          avatarUrl={activity.avatar_url}
           size="small"
         />
         <div className="flex-1 min-w-0">

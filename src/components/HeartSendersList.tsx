@@ -49,6 +49,7 @@ export function HeartSendersList({ hearts, maxVisible = 5, onTap, compact = fals
             <AvatarDisplay
               avatarType={heart.sender_avatar_type}
               avatarColor={heart.sender_avatar_color}
+              avatarUrl={heart.sender_avatar_url}
               size={avatarSize}
             />
           </div>

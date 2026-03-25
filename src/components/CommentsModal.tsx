@@ -230,6 +230,7 @@ export function CommentsModal({ activityId, onClose }: CommentsModalProps) {
                       <AvatarDisplay
                         avatarType={comment.avatar_type || 'cat'}
                         avatarColor={comment.avatar_color || '#94a3b8'}
+                        avatarUrl={comment.avatar_url}
                         size="small"
                       />
                       <div className="flex-1 min-w-0">

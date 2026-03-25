@@ -35,6 +35,7 @@ function FriendCard({
         <AvatarDisplay
           avatarType={friend.avatar_type}
           avatarColor={friend.avatar_color}
+          avatarUrl={friend.avatar_url}
           size="medium"
         />
 

@@ -86,6 +86,7 @@ export function DayDetailModal({ day, onClose, onMemberClick }: DayDetailModalPr
                         <AvatarDisplay
                           avatarType={member.avatar_type}
                           avatarColor={member.avatar_color}
+                          avatarUrl={member.avatar_url}
                           size="small"
                         />
                         <div>

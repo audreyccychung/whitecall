@@ -14,6 +14,7 @@ export interface HeartWithSender extends Heart {
   sender_display_name: string | null;
   sender_avatar_type: string;
   sender_avatar_color: string;
+  sender_avatar_url?: string | null;
 }
 
 export interface SendHeartRequest {

@@ -128,6 +128,7 @@ export function LikersModal({ activityId, onClose }: LikersModalProps) {
                       <AvatarDisplay
                         avatarType={liker.avatar_type}
                         avatarColor={liker.avatar_color}
+                        avatarUrl={liker.avatar_url}
                         size="small"
                       />
                       <div className="flex-1 min-w-0">

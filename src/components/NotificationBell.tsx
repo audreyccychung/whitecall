@@ -156,6 +156,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
       <AvatarDisplay
         avatarType={notification.actor_avatar_type}
         avatarColor={notification.actor_avatar_color}
+        avatarUrl={notification.actor_avatar_url}
         size="small"
       />
 

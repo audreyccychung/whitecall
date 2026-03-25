@@ -229,6 +229,7 @@ export function EngagementModal({ activityId, onClose }: EngagementModalProps) {
                             <AvatarDisplay
                               avatarType={liker.avatar_type}
                               avatarColor={liker.avatar_color}
+                              avatarUrl={liker.avatar_url}
                               size="tiny"
                             />
                             <span className="text-sm text-gray-700 truncate max-w-[100px]">
@@ -260,6 +261,7 @@ export function EngagementModal({ activityId, onClose }: EngagementModalProps) {
                             <AvatarDisplay
                               avatarType={comment.avatar_type || 'cat'}
                               avatarColor={comment.avatar_color || '#94a3b8'}
+                              avatarUrl={comment.avatar_url}
                               size="small"
                             />
                             <div className="flex-1 min-w-0">

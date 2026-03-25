@@ -114,6 +114,7 @@ export default function HomePage() {
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
+                avatarUrl={profile?.avatar_url}
                 size="small"
               />
               {isUserOnCall && stats.received_today > 0 && (
@@ -155,6 +156,7 @@ export default function HomePage() {
                     <AvatarDisplay
                       avatarType={friend.avatar_type}
                       avatarColor={friend.avatar_color}
+                      avatarUrl={friend.avatar_url}
                       size="small"
                     />
                     <p className="text-sm font-medium text-gray-700 truncate">

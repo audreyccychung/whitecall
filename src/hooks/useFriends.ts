@@ -142,7 +142,7 @@ export function useFriends(userId: string | undefined): UseFriendsResult {
           // Get friend profiles
           supabase
             .from('profiles')
-            .select('id, username, display_name, avatar_type, avatar_color')
+            .select('id, username, display_name, avatar_type, avatar_color, avatar_url')
             .in('id', friendIds),
           // Get all friend status data from timezone-aware DB function
           supabase.rpc('get_friends_with_status'),

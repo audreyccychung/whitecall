@@ -34,6 +34,7 @@ function LeaderboardRow({ entry, rank }: LeaderboardRowProps) {
       <AvatarDisplay
         avatarType={entry.avatar_type}
         avatarColor={entry.avatar_color}
+        avatarUrl={entry.avatar_url}
         size="small"
       />
 

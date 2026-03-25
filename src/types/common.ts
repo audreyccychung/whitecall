@@ -12,6 +12,7 @@ export interface PersonData {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
+  avatar_url?: string | null;
 }
 
 /**
@@ -27,6 +28,7 @@ export interface PersonPreview {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
+  avatar_url?: string | null;
   // Optional fields for richer display
   is_on_call?: boolean;
   next_call_date?: string | null;

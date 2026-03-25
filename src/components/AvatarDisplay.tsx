@@ -1,9 +1,11 @@
 // Reusable avatar display component
+import { useState } from 'react';
 import { getAvatarEmoji } from '../types/avatar';
 
 interface AvatarDisplayProps {
   avatarType: string;
   avatarColor: string;
+  avatarUrl?: string | null;
   size?: 'tiny' | 'small' | 'medium' | 'large' | 'xl';
   className?: string;
 }
@@ -19,11 +21,30 @@ const sizeClasses = {
 export function AvatarDisplay({
   avatarType,
   avatarColor,
+  avatarUrl,
   size = 'medium',
   className = '',
 }: AvatarDisplayProps) {
+  const [imgError, setImgError] = useState(false);
   const emoji = getAvatarEmoji(avatarType as any);
 
+  // Show photo if available and not broken
+  if (avatarUrl && !imgError) {
+    return (
+      <div
+        className={`${sizeClasses[size]} rounded-full overflow-hidden flex-shrink-0 ${className}`}
+      >
+        <img
+          src={avatarUrl}
+          alt="Profile photo"
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      </div>
+    );
+  }
+
+  // Fallback: emoji avatar
   return (
     <div
       className={`${sizeClasses[size]} rounded-full flex items-center justify-center ${className}`}

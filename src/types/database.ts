@@ -12,6 +12,7 @@ export interface Profile {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
+  avatar_url: string | null;
   // Streak tracking (auto-updated by DB trigger on heart send)
   current_streak: number;
   longest_streak: number;
@@ -109,6 +110,7 @@ export interface Activity {
   username?: string;
   avatar_type?: string;
   avatar_color?: string;
+  avatar_url?: string | null;
   user_has_liked?: boolean;
 }
 
@@ -145,6 +147,7 @@ export interface ActivityLiker {
   display_name: string | null;
   avatar_type: string;
   avatar_color: string;
+  avatar_url?: string | null;
   created_at: string;
 }
 
@@ -190,6 +193,7 @@ export interface ActivityComment {
   display_name?: string | null;
   avatar_type?: string;
   avatar_color?: string;
+  avatar_url?: string | null;
 }
 
 export type AddCommentCode = 'SUCCESS' | 'NOT_FOUND' | 'UNAUTHORIZED' | 'NOT_FRIENDS' | 'CANNOT_COMMENT_OWN' | 'CONTENT_TOO_LONG' | 'CONTENT_EMPTY' | 'UNKNOWN_ERROR';
@@ -231,6 +235,7 @@ export interface Notification {
   actor_display_name: string | null;
   actor_avatar_type: string;
   actor_avatar_color: string;
+  actor_avatar_url?: string | null;
   call_date: string | null;
   rating: string | null;
   comment_preview: string | null;

@@ -58,6 +58,7 @@ function CalendarDayCell({ day, onClick }: CalendarDayCellProps) {
                   key={member.user_id}
                   avatarType={member.avatar_type}
                   avatarColor={member.avatar_color}
+                  avatarUrl={member.avatar_url}
                   size="tiny"
                 />
               ))}

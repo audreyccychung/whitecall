@@ -155,6 +155,7 @@ export function FriendsSection({ userId, username }: FriendsSectionProps) {
                 <AvatarDisplay
                   avatarType={friend.avatar_type}
                   avatarColor={friend.avatar_color}
+                  avatarUrl={friend.avatar_url}
                   size="small"
                 />
                 <p className="text-[10px] text-gray-600 max-w-full truncate">

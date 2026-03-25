@@ -125,6 +125,7 @@ export default function ProfilePage() {
               <AvatarDisplay
                 avatarType={profile.avatar_type}
                 avatarColor={profile.avatar_color}
+                avatarUrl={profile?.avatar_url}
                 size="medium"
               />
               {/* Settings button - bottom right of avatar */}
