@@ -197,8 +197,8 @@ export default function CallsPage() {
           ) : upcomingCalls.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-5xl mb-4">📅</p>
-              <p className="text-gray-600">No upcoming calls</p>
-              <p className="text-sm text-gray-500 mt-1">Tap a date above to add one</p>
+              <p className="font-medium text-gray-700">No upcoming calls scheduled</p>
+              <p className="text-sm text-gray-500 mt-1">Tap any date on the calendar above to log a shift</p>
             </div>
           ) : (
             <div className="space-y-2">

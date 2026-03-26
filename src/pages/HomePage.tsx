@@ -18,6 +18,7 @@ import { NotificationBell } from '../components/NotificationBell';
 import { OnboardingModal } from '../components/onboarding/OnboardingModal';
 import { PullToRefreshWrapper } from '../components/PullToRefreshWrapper';
 import { isOnDutyShift } from '../constants/shiftTypes';
+import { FriendCardSkeleton } from '../components/ui/SkeletonCard';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -88,8 +89,41 @@ export default function HomePage() {
 
   if (!profile || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
+        <header className="bg-white shadow-soft">
+          <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+            <div className="h-7 w-28 animate-pulse bg-gray-200 rounded" />
+            <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />
+          </div>
+        </header>
+        <main className="max-w-4xl mx-auto px-4 py-4 space-y-4">
+          {/* User status card skeleton */}
+          <div className="bg-white rounded-xl shadow-soft p-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 animate-pulse bg-gray-200 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-40 animate-pulse bg-gray-200 rounded" />
+                <div className="h-3 w-24 animate-pulse bg-gray-200 rounded" />
+              </div>
+            </div>
+          </div>
+          {/* Friends on call skeleton */}
+          <div className="bg-white rounded-xl shadow-soft p-4 space-y-1.5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-3.5 w-28 animate-pulse bg-gray-200 rounded" />
+              <div className="h-3 w-12 animate-pulse bg-gray-200 rounded" />
+            </div>
+            <FriendCardSkeleton />
+            <FriendCardSkeleton />
+            <FriendCardSkeleton />
+          </div>
+          {/* Activity feed skeleton */}
+          <div className="bg-white rounded-2xl shadow-soft-lg p-6 space-y-3">
+            <div className="h-4 w-24 animate-pulse bg-gray-200 rounded mx-auto" />
+            <div className="h-3 w-full animate-pulse bg-gray-200 rounded" />
+            <div className="h-3 w-4/5 animate-pulse bg-gray-200 rounded" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -195,6 +229,7 @@ export default function HomePage() {
           <div className="bg-white rounded-xl shadow-soft p-3 text-center">
             <p className="text-xl mb-0.5">😌</p>
             <p className="text-xs text-gray-500">No friends on call today</p>
+            <p className="text-xs text-gray-400 mt-0.5">Invite colleagues so you can support each other</p>
           </div>
         )}
 
@@ -203,9 +238,12 @@ export default function HomePage() {
           {showFeed ? (
             <ActivityFeed userId={user?.id} />
           ) : (
-            <div className="text-center py-4">
-              <p className="text-sm font-semibold text-gray-700 mb-3">Support Feed</p>
-              <div className="w-8 h-8 border-3 border-sky-soft-300 border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="space-y-3">
+              <div className="h-4 w-24 animate-pulse bg-gray-200 rounded" />
+              <div className="h-3 w-full animate-pulse bg-gray-200 rounded" />
+              <div className="h-3 w-4/5 animate-pulse bg-gray-200 rounded" />
+              <div className="h-3 w-full animate-pulse bg-gray-200 rounded" />
+              <div className="h-3 w-3/5 animate-pulse bg-gray-200 rounded" />
             </div>
           )}
         </div>

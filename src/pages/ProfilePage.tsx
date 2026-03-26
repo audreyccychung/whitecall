@@ -80,8 +80,46 @@ export default function ProfilePage() {
 
   if (!profile || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
+        <header className="bg-white shadow-soft">
+          <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+            <div className="h-7 w-20 animate-pulse bg-gray-200 rounded" />
+          </div>
+        </header>
+        <main className="max-w-4xl mx-auto px-4 py-6 space-y-5">
+          {/* Hero card skeleton */}
+          <div className="bg-white rounded-2xl shadow-soft-lg p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 animate-pulse bg-gray-200 rounded-full flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 w-32 animate-pulse bg-gray-200 rounded" />
+                <div className="h-3.5 w-20 animate-pulse bg-gray-200 rounded" />
+              </div>
+            </div>
+          </div>
+          {/* Stats grid skeleton */}
+          <div className="grid grid-cols-4 gap-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl shadow-soft p-3 flex flex-col items-center gap-2">
+                <div className="h-6 w-10 animate-pulse bg-gray-200 rounded" />
+                <div className="h-3 w-14 animate-pulse bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+          {/* Call history skeleton */}
+          <div className="bg-white rounded-2xl shadow-soft-lg p-5 space-y-2">
+            <div className="h-5 w-24 animate-pulse bg-gray-200 rounded mb-4" />
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div className="space-y-1.5">
+                  <div className="h-4 w-36 animate-pulse bg-gray-200 rounded" />
+                  <div className="h-3 w-24 animate-pulse bg-gray-200 rounded" />
+                </div>
+                <div className="w-8 h-8 animate-pulse bg-gray-200 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }

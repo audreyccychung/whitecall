@@ -1,11 +1,13 @@
 // List of past calls with ratings (on-duty shifts only)
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, parseISO, isBefore, startOfDay } from 'date-fns';
 import type { Call, CallRating } from '../types/database';
 import { RATING_EMOJI, RATING_LABEL } from '../types/database';
 import type { EngagementData } from '../hooks/useCallEngagement';
 import { isOnDutyShift } from '../constants/shiftTypes';
+import { CallHistorySkeleton } from './ui/SkeletonCard';
 
 interface CallHistoryListProps {
   calls: Call[];
@@ -24,6 +26,8 @@ export function CallHistoryList({
   onEngagementClick,
   isLoading,
 }: CallHistoryListProps) {
+  const navigate = useNavigate();
+
   // Filter to past on-duty calls only (call/am/pm/night), sorted by date descending
   const pastCalls = useMemo(() => {
     const today = startOfDay(new Date());
@@ -34,9 +38,10 @@ export function CallHistoryList({
 
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <div className="w-12 h-12 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-gray-600">Loading history...</p>
+      <div className="space-y-2">
+        <CallHistorySkeleton />
+        <CallHistorySkeleton />
+        <CallHistorySkeleton />
       </div>
     );
   }
@@ -44,9 +49,15 @@ export function CallHistoryList({
   if (pastCalls.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-5xl mb-4">📋</p>
-        <p className="text-gray-600">No past calls yet</p>
-        <p className="text-sm text-gray-500 mt-1">Your call history will appear here</p>
+        <p className="text-5xl mb-3">📋</p>
+        <p className="font-medium text-gray-700">No calls to show yet</p>
+        <p className="text-sm text-gray-500 mt-1">Head to the Calls tab to log your schedule</p>
+        <button
+          onClick={() => navigate('/calls')}
+          className="mt-4 px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+        >
+          Go to Calls
+        </button>
       </div>
     );
   }

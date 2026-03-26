@@ -6,6 +6,7 @@ import { AddFriendForm } from '../AddFriendForm';
 import { AvatarDisplay } from '../AvatarDisplay';
 import { FriendProfileModal } from '../FriendProfileModal';
 import type { Friend } from '../../types/friend';
+import { FriendCardSkeleton } from '../ui/SkeletonCard';
 
 interface FriendsSectionProps {
   userId: string | undefined;
@@ -134,14 +135,22 @@ export function FriendsSection({ userId, username }: FriendsSectionProps) {
 
       {/* Friends Grid */}
       {loading ? (
-        <div className="text-center py-4">
-          <div className="w-6 h-6 border-2 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <div className="space-y-1.5">
+          <FriendCardSkeleton />
+          <FriendCardSkeleton />
+          <FriendCardSkeleton />
         </div>
       ) : friends.length === 0 ? (
         <div className="text-center py-4">
-          <p className="text-3xl mb-1">👋</p>
-          <p className="text-sm text-gray-500">No friends yet</p>
-          <p className="text-xs text-gray-400 mt-1">Add friends to support them on call</p>
+          <p className="text-3xl mb-2">👋</p>
+          <p className="text-sm font-medium text-gray-700">Add friends to see who's on call</p>
+          <p className="text-xs text-gray-500 mt-1">Share your username or search for colleagues</p>
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="mt-3 px-4 py-2 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Add a friend
+          </button>
         </div>
       ) : (
         <>

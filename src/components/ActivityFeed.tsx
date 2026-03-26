@@ -79,10 +79,9 @@ export function ActivityFeed({ userId }: ActivityFeedProps) {
           <h2 className="text-lg font-semibold text-gray-900">Support Feed</h2>
         </div>
         <div className="text-center py-6">
-          <p className="text-4xl mb-2">🤫</p>
-          <p className="text-gray-500 text-sm">
-            No activity yet. When your friends rate their calls, you'll see them here.
-          </p>
+          <p className="text-4xl mb-3">🤝</p>
+          <p className="font-medium text-gray-700">Your support feed is empty</p>
+          <p className="text-sm text-gray-500 mt-1">Rate your calls and support friends to see activity here</p>
         </div>
       </div>
     );
