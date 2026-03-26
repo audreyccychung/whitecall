@@ -1,6 +1,8 @@
-// Modal for editing user avatar — Photo or Emoji tabs
-import { useState, useRef } from 'react';
+// Modal for editing user avatar — Photo (with crop) or Emoji tabs
+import { useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import Cropper from 'react-easy-crop';
+import type { Area } from 'react-easy-crop';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { AvatarSelector } from './AvatarSelector';
@@ -13,39 +15,37 @@ interface EditAvatarModalProps {
   onClose: () => void;
 }
 
-// Resize image to max 400x400 JPEG before upload (~30-80KB)
-function resizeImage(file: File): Promise<Blob> {
+// Crop the image using canvas, output as 400x400 JPEG blob
+function getCroppedBlob(imageSrc: string, crop: Area): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      const maxSize = 400;
-      let { width, height } = img;
-
-      if (width > height) {
-        if (width > maxSize) {
-          height = Math.round((height * maxSize) / width);
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width = Math.round((width * maxSize) / height);
-          height = maxSize;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = 400;
+      canvas.height = 400;
       const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, width, height);
+
+      ctx.drawImage(
+        img,
+        crop.x,
+        crop.y,
+        crop.width,
+        crop.height,
+        0,
+        0,
+        400,
+        400
+      );
+
       canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error('Failed to create image'))),
+        (blob) => (blob ? resolve(blob) : reject(new Error('Failed to crop image'))),
         'image/jpeg',
-        0.8
+        0.85
       );
     };
     img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    img.crossOrigin = 'anonymous';
+    img.src = imageSrc;
   });
 }
 
@@ -59,8 +59,17 @@ export function EditAvatarModal({
   const [tab, setTab] = useState<'photo' | 'emoji'>(currentAvatarUrl ? 'photo' : 'emoji');
   const [selectedType, setSelectedType] = useState<AvatarType>(currentType as AvatarType);
   const [selectedColor, setSelectedColor] = useState<AvatarColor>(currentColor as AvatarColor);
+
+  // Photo states
   const [photoPreview, setPhotoPreview] = useState<string | null>(currentAvatarUrl || null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+
+  // Crop states
+  const [cropSrc, setCropSrc] = useState<string | null>(null); // image being cropped
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,9 +82,35 @@ export function EditAvatarModal({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
     setError(null);
+    // Open crop view instead of setting preview directly
+    const url = URL.createObjectURL(file);
+    setCropSrc(url);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    // Store file ref for later (we'll use the cropped blob, not this directly)
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
+    setCroppedArea(croppedAreaPixels);
+  }, []);
+
+  const handleCropConfirm = async () => {
+    if (!cropSrc || !croppedArea) return;
+    try {
+      const blob = await getCroppedBlob(cropSrc, croppedArea);
+      const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(blob));
+      setCropSrc(null);
+    } catch {
+      setError('Failed to crop image. Try a different photo.');
+    }
+  };
+
+  const handleCropCancel = () => {
+    setCropSrc(null);
   };
 
   const handleRemovePhoto = () => {
@@ -97,15 +132,14 @@ export function EditAvatarModal({
       let avatarUrl: string | null = null;
 
       if (tab === 'photo' && photoFile) {
-        // Resize and upload (with 1 auto-retry)
-        const resized = await resizeImage(photoFile);
+        // Upload cropped photo (with 1 auto-retry)
         const filePath = `${user.id}/avatar.jpg`;
 
         let uploadError = null;
         for (let attempt = 0; attempt < 2; attempt++) {
           const result = await supabase.storage
             .from('avatars')
-            .upload(filePath, resized, {
+            .upload(filePath, photoFile, {
               contentType: 'image/jpeg',
               upsert: true,
             });
@@ -124,7 +158,6 @@ export function EditAvatarModal({
           .from('avatars')
           .getPublicUrl(filePath);
 
-        // Append cache-buster so the browser loads the new image
         avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
       }
 
@@ -138,13 +171,10 @@ export function EditAvatarModal({
       };
 
       if (tab === 'photo' && avatarUrl) {
-        // Set photo URL, clear emoji won't happen (avatar_type/color stay as fallback)
         updateParams.p_avatar_url = avatarUrl;
       } else if (tab === 'photo' && !photoPreview && currentAvatarUrl) {
-        // Remove photo (user clicked remove)
         updateParams.p_avatar_url = '';
       } else if (tab === 'emoji' && currentAvatarUrl) {
-        // Switching to emoji — clear photo
         updateParams.p_avatar_url = '';
         updateParams.p_avatar_type = selectedType;
         updateParams.p_avatar_color = selectedColor;
@@ -176,6 +206,75 @@ export function EditAvatarModal({
       setSaving(false);
     }
   };
+
+  // Crop view — shown when user selects a new photo
+  if (cropSrc) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center"
+      >
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          className="bg-white w-full sm:w-auto sm:max-w-md sm:rounded-2xl rounded-t-2xl p-6 modal-safe-bottom sm:pb-6"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h2 className="text-lg font-bold text-gray-800 mb-4">Position your photo</h2>
+
+          {/* Crop area */}
+          <div className="relative w-full rounded-xl overflow-hidden bg-gray-900" style={{ height: 300 }}>
+            <Cropper
+              image={cropSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
+
+          {/* Zoom slider */}
+          <div className="flex items-center gap-3 mt-4 px-2">
+            <span className="text-xs text-gray-400">-</span>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.1}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+              className="flex-1 accent-sky-soft-500"
+            />
+            <span className="text-xs text-gray-400">+</span>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-5 flex gap-3">
+            <button
+              onClick={handleCropCancel}
+              className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleCropConfirm}
+              className="flex-1 py-3 bg-sky-soft-500 text-white rounded-xl font-medium hover:bg-sky-soft-600 transition-colors"
+            >
+              Confirm
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
