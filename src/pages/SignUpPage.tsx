@@ -62,7 +62,7 @@ export default function SignUpPage() {
   // Show success message after signup
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(165deg, #0369a1 0%, #0ea5e9 40%, #38bdf8 100%)' }}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -88,7 +88,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(165deg, #0369a1 0%, #0ea5e9 40%, #38bdf8 100%)' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

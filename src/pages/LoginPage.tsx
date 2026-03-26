@@ -28,7 +28,7 @@ export default function LoginPage() {
   // Show loading while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-soft-50 to-white-call-100">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(165deg, #0369a1 0%, #0ea5e9 40%, #38bdf8 100%)' }}>
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
@@ -70,7 +70,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(165deg, #0369a1 0%, #0ea5e9 40%, #38bdf8 100%)' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
