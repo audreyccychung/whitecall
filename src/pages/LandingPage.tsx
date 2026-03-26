@@ -419,56 +419,6 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* How it works */}
-      <section className="py-16 sm:py-24 px-6 bg-white">
-        <div className="max-w-4xl mx-auto">
-          <motion.h2
-            {...fadeUp}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            whileInView="animate"
-            initial="initial"
-            className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-16"
-          >
-            Three taps. That's it.
-          </motion.h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8">
-            {[
-              {
-                emoji: '👋',
-                title: 'Add your friends',
-                desc: 'Connect with the people you\'re training alongside.',
-              },
-              {
-                emoji: '📅',
-                title: 'Share your schedule',
-                desc: 'Log your overnight, your short call, your post-call day.',
-              },
-              {
-                emoji: '🤍',
-                title: 'Send a white heart',
-                desc: 'One tap. They\'ll know you\'re thinking of them.',
-              },
-            ].map((step, i) => (
-              <motion.div
-                key={i}
-                {...fadeUp}
-                transition={{ duration: 0.6, delay: i * 0.15 }}
-                viewport={{ once: true }}
-                whileInView="animate"
-                initial="initial"
-                className="text-center"
-              >
-                <p className="text-5xl mb-4">{step.emoji}</p>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{step.title}</h3>
-                <p className="text-gray-500 leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Calendar showcase — prominent feature */}
       <section className="py-16 sm:py-24 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
@@ -635,6 +585,56 @@ export default function LandingPage() {
                 <p className="text-3xl mb-3">{feature.emoji}</p>
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">{feature.title}</h3>
                 <p className="text-gray-500 text-sm leading-relaxed">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works — 3 taps */}
+      <section className="py-16 sm:py-24 px-6 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <motion.h2
+            {...fadeUp}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            whileInView="animate"
+            initial="initial"
+            className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-16"
+          >
+            Three taps. That's it.
+          </motion.h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8">
+            {[
+              {
+                emoji: '👋',
+                title: 'Add your friends',
+                desc: 'Connect with the people you\'re training alongside.',
+              },
+              {
+                emoji: '📅',
+                title: 'Share your schedule',
+                desc: 'Log your overnight, your short call, your post-call day.',
+              },
+              {
+                emoji: '🤍',
+                title: 'Send a white heart',
+                desc: 'One tap. They\'ll know you\'re thinking of them.',
+              },
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                {...fadeUp}
+                transition={{ duration: 0.6, delay: i * 0.15 }}
+                viewport={{ once: true }}
+                whileInView="animate"
+                initial="initial"
+                className="text-center"
+              >
+                <p className="text-5xl mb-4">{step.emoji}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-gray-500 leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
