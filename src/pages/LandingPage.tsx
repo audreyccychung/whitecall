@@ -26,73 +26,82 @@ function PhoneMockup({ children, className = '' }: { children: React.ReactNode; 
   );
 }
 
-// Mock home screen — friends on call with heart buttons
+// Mock home screen — matches real HomePage layout exactly
 function MockHomeScreen() {
   const friends = [
-    { name: 'Sarah', emoji: '🐱', color: 'bg-pink-200', sent: false },
-    { name: 'Jason', emoji: '🐻', color: 'bg-blue-200', sent: true },
-    { name: 'Wing Yan', emoji: '🐰', color: 'bg-purple-200', sent: false },
+    { name: 'Sarah', emoji: '🐱', color: '#ffd6e8', sent: false },
+    { name: 'Jason', emoji: '🐻', color: '#d6e8ff', sent: true },
+    { name: 'Wing Yan', emoji: '🐰', color: '#e8d6ff', sent: false },
   ];
   return (
-    <div className="h-full bg-gradient-to-br from-sky-50 to-white overflow-hidden">
-      {/* Header */}
-      <div className="bg-white px-4 py-3 shadow-sm">
-        <p className="font-bold text-gray-800">WhiteCall</p>
+    <div className="h-full overflow-hidden" style={{ background: 'linear-gradient(to bottom right, #f0f9ff, #fafafa)' }}>
+      {/* Header — matches real: white bg, shadow-soft, title left, bell right */}
+      <div className="bg-white px-4 py-2.5 flex items-center justify-between" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <p className="font-bold text-gray-800 text-sm">WhiteCall</p>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
       </div>
-      <div className="px-4 py-3 space-y-3">
-        {/* User status */}
-        <div className="bg-white rounded-xl p-3 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-full bg-green-200 flex items-center justify-center text-lg">🐶</div>
-            <div>
-              <p className="text-sm font-medium text-gray-800">You received 3 hearts today</p>
-              <p className="text-xs text-gray-500">On call · 12h remaining</p>
+      <div className="px-3 py-2.5 space-y-2.5">
+        {/* Streak banner — matches real: orange gradient */}
+        <div className="rounded-xl px-3 py-1.5 flex items-center justify-center gap-1.5" style={{ background: 'linear-gradient(to right, #ffedd5, #fef3c7)' }}>
+          <span className="text-sm">🔥</span>
+          <span className="font-semibold text-orange-700" style={{ fontSize: 11 }}>8-day streak!</span>
+        </div>
+        {/* User status — matches real: white card, avatar + heart counter */}
+        <div className="bg-white rounded-xl p-2.5" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: '#d6ffe8' }}>🐶</div>
+              {/* Heart badge */}
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-pink-100 rounded-full flex items-center justify-center" style={{ fontSize: 9 }}>3</div>
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-800" style={{ fontSize: 13 }}>You received 3 🤍 today</p>
+              <p className="text-gray-500" style={{ fontSize: 10 }}>On call · Keep going!</p>
             </div>
           </div>
         </div>
-        {/* Streak */}
-        <div className="bg-gradient-to-r from-orange-100 to-amber-100 rounded-xl px-4 py-2 flex items-center justify-center gap-2">
-          <span>🔥</span>
-          <span className="font-semibold text-orange-700 text-sm">8-day streak!</span>
-        </div>
-        {/* Friends on call */}
-        <div className="bg-white rounded-xl p-3 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-gray-700">Friends on call</p>
-            <p className="text-xs text-gray-400">3 today</p>
+        {/* Friends on call — matches real: white card, section header, friend rows */}
+        <div className="bg-white rounded-xl p-3" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="font-semibold text-gray-700" style={{ fontSize: 11 }}>Friends on call</p>
+            <p className="text-gray-400" style={{ fontSize: 10 }}>3 today</p>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {friends.map((f) => (
-              <div key={f.name} className="flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-lg">
+              <div key={f.name} className="flex items-center justify-between py-1.5 px-2 rounded-lg" style={{ backgroundColor: '#f9fafb' }}>
                 <div className="flex items-center gap-2">
-                  <div className={`w-8 h-8 rounded-full ${f.color} flex items-center justify-center text-sm`}>{f.emoji}</div>
-                  <p className="text-sm font-medium text-gray-700">{f.name}</p>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: f.color, fontSize: 14 }}>{f.emoji}</div>
+                  <p className="font-medium text-gray-700" style={{ fontSize: 12 }}>{f.name}</p>
                 </div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${f.sent ? 'bg-pink-100' : 'bg-sky-100'}`}>
-                  <span className="text-sm">{f.sent ? '💗' : '🤍'}</span>
-                </div>
+                {f.sent ? (
+                  <span className="px-3 py-1 rounded-full text-sky-soft-400" style={{ fontSize: 10, backgroundColor: '#e0f2fe' }}>Sent 🤍</span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full text-white font-medium" style={{ fontSize: 10, backgroundColor: 'rgba(59,130,246,0.9)' }}>Send 🤍</span>
+                )}
               </div>
             ))}
           </div>
         </div>
-        {/* Activity feed preview */}
-        <div className="bg-white rounded-xl p-3 shadow-sm">
-          <p className="text-xs font-semibold text-gray-700 mb-2">Support Feed</p>
+        {/* Activity feed — matches real: white card with shadow-soft-lg */}
+        <div className="bg-white rounded-2xl p-3" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
+          <p className="font-semibold text-gray-700 mb-2" style={{ fontSize: 11 }}>Support Feed</p>
           <div className="space-y-2">
-            <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-full bg-pink-200 flex items-center justify-center text-xs mt-0.5">🐱</div>
-              <div>
-                <p className="text-xs text-gray-600"><span className="font-medium">Sarah</span> rated her call</p>
-                <p className="text-xs text-gray-400">Great · 5h sleep · 😴</p>
+            {[
+              { name: 'Sarah', emoji: '🐱', color: '#ffd6e8', rating: 'Great', sleep: '5h', icon: '⚪' },
+              { name: 'Jason', emoji: '🐻', color: '#d6e8ff', rating: 'Okay', sleep: '2h', icon: '⬛' },
+            ].map((item) => (
+              <div key={item.name} className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: item.color, fontSize: 10 }}>{item.emoji}</div>
+                <div className="flex-1">
+                  <p className="text-gray-600" style={{ fontSize: 10 }}><span className="font-medium">{item.name}</span> rated their call</p>
+                  <p className="text-gray-400" style={{ fontSize: 9 }}>{item.icon} {item.rating} · 😴 {item.sleep} sleep</p>
+                </div>
+                <span style={{ fontSize: 10 }}>❤️</span>
               </div>
-            </div>
-            <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-200 flex items-center justify-center text-xs mt-0.5">🐻</div>
-              <div>
-                <p className="text-xs text-gray-600"><span className="font-medium">Jason</span> rated his call</p>
-                <p className="text-xs text-gray-400">Okay · 2h sleep · 😴</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -100,74 +109,95 @@ function MockHomeScreen() {
   );
 }
 
-// Mock profile screen — insights preview
+// Mock profile screen — matches real ProfilePage layout
 function MockProfileScreen() {
-  const bars = [3, 2, 5, 1, 4, 3, 6, 2, 4, 3];
-  const barColors = ['#6b7280', '#1f2937', '#d1d5db', '#1f2937', '#ffffff', '#6b7280', '#d1d5db', '#1f2937', '#6b7280', '#d1d5db'];
+  const sleepData = [
+    { h: 3, mood: '#6b7280' }, { h: 2, mood: '#1f2937' }, { h: 5, mood: '#d1d5db' },
+    { h: 1, mood: '#1f2937' }, { h: 4, mood: '#f9fafb' }, { h: 3, mood: '#6b7280' },
+    { h: 6, mood: '#d1d5db' }, { h: 2, mood: '#1f2937' }, { h: 4, mood: '#6b7280' },
+    { h: 3, mood: '#d1d5db' },
+  ];
   return (
-    <div className="h-full bg-gradient-to-br from-sky-50 to-white overflow-hidden">
-      <div className="bg-white px-4 py-3 shadow-sm">
-        <p className="font-bold text-gray-800">Profile</p>
+    <div className="h-full overflow-hidden" style={{ background: 'linear-gradient(to bottom right, #f0f9ff, #fafafa)' }}>
+      {/* Header */}
+      <div className="bg-white px-4 py-2.5" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <p className="font-bold text-gray-800 text-sm">Profile</p>
       </div>
-      <div className="px-4 py-3 space-y-3">
-        {/* Hero */}
-        <div className="bg-white rounded-xl p-3 shadow-sm flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-green-200 flex items-center justify-center text-xl">🐶</div>
-          <div>
-            <p className="font-bold text-gray-800 text-sm">Audrey</p>
-            <p className="text-xs text-gray-500">@audreychung</p>
+      <div className="px-3 py-2.5 space-y-2.5">
+        {/* Hero — matches real: white card, avatar + name + share button */}
+        <div className="bg-white rounded-2xl p-3 flex items-center gap-3" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
+          <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl" style={{ backgroundColor: '#d6ffe8' }}>🐶</div>
+          <div className="flex-1">
+            <p className="font-bold text-gray-800" style={{ fontSize: 13 }}>Audrey</p>
+            <p className="text-gray-500" style={{ fontSize: 10 }}>@audreychung</p>
+          </div>
+          <span className="px-2.5 py-1.5 rounded-xl text-sky-soft-600 flex items-center gap-1" style={{ fontSize: 10, backgroundColor: '#f0f9ff' }}>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            Share
+          </span>
+        </div>
+        {/* This Month stats — matches real: 4 stat cards */}
+        <div>
+          <p className="text-gray-700 font-medium uppercase px-0.5 mb-1" style={{ fontSize: 9, letterSpacing: '0.05em' }}>This Month</p>
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { label: 'Calls', value: '6' },
+              { label: 'Avg Quality', value: '●', valueColor: '#6b7280' },
+              { label: 'Avg Sleep', value: '3.2h' },
+              { label: 'Avg Support', value: '2.1 🤍' },
+            ].map((s) => (
+              <div key={s.label} className="rounded-lg p-1.5 text-center" style={{ backgroundColor: '#f9fafb' }}>
+                <p className="font-bold text-gray-800" style={{ fontSize: 12, color: s.valueColor }}>{s.value}</p>
+                <p className="text-gray-500" style={{ fontSize: 7 }}>{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
-        {/* Stats */}
-        <div className="grid grid-cols-4 gap-1.5">
-          {[
-            { label: 'Calls', value: '6' },
-            { label: 'Quality', value: '●' },
-            { label: 'Avg Sleep', value: '3.2h' },
-            { label: 'Support', value: '2.1 🤍' },
-          ].map((s) => (
-            <div key={s.label} className="bg-gray-50 rounded-lg p-2 text-center">
-              <p className="text-sm font-bold text-gray-800">{s.value}</p>
-              <p className="text-[10px] text-gray-500">{s.label}</p>
+        {/* Insights — matches real: white card with tabs + sleep chart */}
+        <div className="bg-white rounded-2xl p-3" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-gray-500 font-medium" style={{ fontSize: 11 }}>Insights</p>
+            <div className="flex gap-0.5 rounded-md p-0.5" style={{ backgroundColor: '#f3f4f6' }}>
+              <span className="px-2 py-0.5 rounded bg-white text-gray-800 font-medium" style={{ fontSize: 9, boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>Trends</span>
+              <span className="px-2 py-0.5 rounded text-gray-500" style={{ fontSize: 9 }}>Patterns</span>
             </div>
-          ))}
-        </div>
-        {/* Sleep chart */}
-        <div className="bg-white rounded-xl p-3 shadow-sm">
-          <p className="text-xs font-semibold text-gray-700 mb-2">Sleep Over Time</p>
-          <div className="flex items-end gap-1" style={{ height: 60 }}>
-            {bars.map((h, i) => (
+          </div>
+          {/* Sleep sparkline */}
+          <p className="text-gray-500 font-medium mb-1" style={{ fontSize: 9 }}>Sleep Over Time</p>
+          <div className="flex items-end gap-0.5 mb-1" style={{ height: 50 }}>
+            <div className="flex flex-col justify-between h-full pr-1" style={{ fontSize: 7, color: '#9ca3af', width: 18 }}>
+              <span>7h</span>
+              <span>0</span>
+            </div>
+            {sleepData.map((d, i) => (
               <div
                 key={i}
                 className="flex-1 rounded-t"
                 style={{
-                  height: `${(h / 6) * 100}%`,
-                  backgroundColor: barColors[i],
-                  border: barColors[i] === '#ffffff' ? '1px solid #d1d5db' : 'none',
+                  height: `${(d.h / 7) * 100}%`,
+                  backgroundColor: d.mood,
+                  border: d.mood === '#f9fafb' ? '1px solid #d1d5db' : 'none',
+                  minHeight: 2,
                 }}
               />
             ))}
           </div>
-          <p className="text-[10px] text-gray-400 text-center mt-1">Avg 3.2h · 10 calls</p>
-        </div>
-        {/* Rating breakdown */}
-        <div className="bg-white rounded-xl p-3 shadow-sm">
-          <p className="text-xs font-semibold text-gray-700 mb-2">Ratings</p>
+          <p className="text-center text-gray-400" style={{ fontSize: 8 }}>Avg 3.2h · 10 calls</p>
+          {/* Rating breakdown */}
+          <p className="text-gray-500 font-medium mt-2 mb-1" style={{ fontSize: 9 }}>Rating Breakdown</p>
           {[
             { label: 'Great', pct: 15, color: '#f9fafb', border: true },
             { label: 'Good', pct: 35, color: '#d1d5db', border: false },
             { label: 'Okay', pct: 35, color: '#6b7280', border: false },
             { label: 'Rough', pct: 15, color: '#1f2937', border: false },
           ].map((r) => (
-            <div key={r.label} className="flex items-center gap-2 mb-1">
-              <div
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: r.color, border: r.border ? '1px solid #d1d5db' : 'none' }}
-              />
-              <span className="text-[10px] text-gray-500 w-8">{r.label}</span>
-              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div key={r.label} className="flex items-center gap-1.5 mb-0.5">
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color, border: r.border ? '1px solid #d1d5db' : 'none' }} />
+              <span className="text-gray-500" style={{ fontSize: 8, width: 28 }}>{r.label}</span>
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#f1f5f9' }}>
                 <div className="h-full rounded-full" style={{ width: `${r.pct}%`, backgroundColor: r.color, border: r.border ? '1px solid #d1d5db' : 'none' }} />
               </div>
+              <span className="text-gray-400" style={{ fontSize: 8, width: 16, textAlign: 'right' }}>{r.pct}%</span>
             </div>
           ))}
         </div>
