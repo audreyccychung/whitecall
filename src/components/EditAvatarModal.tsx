@@ -97,16 +97,22 @@ export function EditAvatarModal({
       let avatarUrl: string | null = null;
 
       if (tab === 'photo' && photoFile) {
-        // Resize and upload
+        // Resize and upload (with 1 auto-retry)
         const resized = await resizeImage(photoFile);
         const filePath = `${user.id}/avatar.jpg`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, resized, {
-            contentType: 'image/jpeg',
-            upsert: true,
-          });
+        let uploadError = null;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const result = await supabase.storage
+            .from('avatars')
+            .upload(filePath, resized, {
+              contentType: 'image/jpeg',
+              upsert: true,
+            });
+          uploadError = result.error;
+          if (!uploadError) break;
+          if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
+        }
 
         if (uploadError) {
           setError('Upload failed. Please try again.');

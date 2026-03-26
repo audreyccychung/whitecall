@@ -27,7 +27,7 @@ const MONTHLY_UI_STATS: StatKey[] = ['calls', 'avgMood', 'avgSleep', 'avgSupport
 export default function ProfilePage() {
   const { user, profile } = useAuth();
   const { calls, loading: callsLoading } = useCalls(user?.id);
-  const { ratings, ratingsMap, isLoading: ratingsLoading } = useCallRatings(user?.id);
+  const { ratings, ratingsMap, isLoading: ratingsLoading, refetch: refetchRatings } = useCallRatings(user?.id);
   const { engagementMap, isLoading: engagementLoading } = useCallEngagement(user?.id);
   const { heartsReceived, stats: heartStats, loading: heartsLoading } = useHearts(user?.id);
 
@@ -270,6 +270,7 @@ export default function ProfilePage() {
             callDate={ratingModal.callDate}
             existingRating={ratingModal.existingRating}
             onClose={closeRatingModal}
+            onSaved={refetchRatings}
           />
         )}
       </AnimatePresence>

@@ -284,6 +284,7 @@ export default function CallsPage() {
             callDate={ratingModal.callDate}
             existingRating={ratingModal.existingRating}
             onClose={closeRatingModal}
+            onSaved={refetchRatings}
           />
         )}
       </AnimatePresence>
