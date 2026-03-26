@@ -1,11 +1,16 @@
-// Hook to fetch a friend's upcoming calls
-import { useState, useEffect } from 'react';
+// Hook to fetch a friend's calls (with shift type for overlap calendar)
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { getTodayDate } from '../utils/date';
+import type { ShiftType } from '../types/database';
 
 interface FriendCall {
   id: string;
   call_date: string;
+  shift_type: ShiftType;
+}
+
+function formatDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function useFriendCalls(friendId: string | null) {
@@ -24,26 +29,26 @@ export function useFriendCalls(friendId: string | null) {
       setError(null);
 
       try {
-        const today = getTodayDate();
+        // Fetch 3 months: 1 month back + 2 months forward (for calendar navigation)
+        const start = new Date();
+        start.setMonth(start.getMonth() - 1);
+        start.setDate(1);
+        const end = new Date();
+        end.setMonth(end.getMonth() + 3);
+        end.setDate(0); // last day of month+2
 
-        // Calculate date 30 days from now
-        const thirtyDaysLater = new Date();
-        thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
-        const endDate = `${thirtyDaysLater.getFullYear()}-${String(thirtyDaysLater.getMonth() + 1).padStart(2, '0')}-${String(thirtyDaysLater.getDate()).padStart(2, '0')}`;
-
-        // Fetch friend's calls for next 30 days
         // RLS policy "Friends can view shifts" allows this
         const { data, error: fetchError } = await supabase
           .from('calls')
-          .select('id, call_date')
+          .select('id, call_date, shift_type')
           .eq('user_id', friendId)
-          .gte('call_date', today)
-          .lte('call_date', endDate)
+          .gte('call_date', formatDate(start))
+          .lte('call_date', formatDate(end))
           .order('call_date', { ascending: true });
 
         if (fetchError) throw fetchError;
 
-        setCalls(data || []);
+        setCalls((data || []) as FriendCall[]);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load calls');
       } finally {
@@ -54,5 +59,12 @@ export function useFriendCalls(friendId: string | null) {
     loadCalls();
   }, [friendId]);
 
-  return { calls, loading, error };
+  // Build a Map<string, ShiftType> for calendar lookup
+  const shiftMap = useMemo(() => {
+    const map = new Map<string, ShiftType>();
+    calls.forEach((c) => map.set(c.call_date, c.shift_type));
+    return map;
+  }, [calls]);
+
+  return { calls, shiftMap, loading, error };
 }
