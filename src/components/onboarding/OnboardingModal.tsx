@@ -5,12 +5,13 @@ import { WelcomeStep } from './steps/WelcomeStep';
 import { CallsStep } from './steps/CallsStep';
 import { FriendsStep } from './steps/FriendsStep';
 import { GroupsStep } from './steps/GroupsStep';
+import { InsightsStep } from './steps/InsightsStep';
 
 interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -37,6 +38,8 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
         return <FriendsStep />;
       case 3:
         return <GroupsStep />;
+      case 4:
+        return <InsightsStep />;
       default:
         return null;
     }
