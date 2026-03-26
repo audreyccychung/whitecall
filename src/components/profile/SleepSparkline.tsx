@@ -37,17 +37,23 @@ export function SleepSparkline({ data, avgSleep }: SleepSparklineProps) {
   const maxSleep = Math.max(...points.map(p => p.sleep!));
   const ceiling = maxSleep <= 4 ? 5 : maxSleep <= 6 ? 7 : maxSleep <= 8 ? 9 : 12;
 
-  // SVG dimensions
+  // SVG dimensions — leave room for Y-axis labels on the left
   const width = 300;
-  const height = 80;
-  const padX = 4;
-  const padY = 4;
-  const chartW = width - padX * 2;
+  const height = 88;
+  const labelW = 28; // space for "8h" labels
+  const padX = 6;
+  const padY = 6;
+  const chartL = labelW + 4; // chart starts after labels
+  const chartW = width - chartL - padX;
   const chartH = height - padY * 2;
+
+  // Y-axis tick values: 0, midpoint, ceiling
+  const midTick = Math.round(ceiling / 2);
+  const yTicks = [0, midTick, ceiling];
 
   // Map data to SVG coordinates
   const coords = points.map((p, i) => ({
-    x: padX + (i / (points.length - 1)) * chartW,
+    x: chartL + (i / (points.length - 1)) * chartW,
     y: padY + chartH - (p.sleep! / ceiling) * chartH,
     mood: p.mood,
   }));
@@ -63,11 +69,38 @@ export function SleepSparkline({ data, avgSleep }: SleepSparklineProps) {
   return (
     <div>
       <h4 className="text-xs font-medium text-gray-500 mb-2">Sleep Over Time</h4>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height: 80 }}>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height: 88 }}>
+        {/* Y-axis labels and gridlines */}
+        {yTicks.map((tick) => {
+          const y = padY + chartH - (tick / ceiling) * chartH;
+          return (
+            <g key={tick}>
+              <text
+                x={labelW - 2}
+                y={y + 3}
+                textAnchor="end"
+                fill="#9ca3af"
+                fontSize={9}
+                fontFamily="Inter, system-ui, sans-serif"
+              >
+                {tick}h
+              </text>
+              <line
+                x1={chartL}
+                y1={y}
+                x2={width - padX}
+                y2={y}
+                stroke="#f1f5f9"
+                strokeWidth={0.75}
+              />
+            </g>
+          );
+        })}
+
         {/* Average line */}
         {avgY !== null && (
           <line
-            x1={padX}
+            x1={chartL}
             y1={avgY}
             x2={width - padX}
             y2={avgY}
