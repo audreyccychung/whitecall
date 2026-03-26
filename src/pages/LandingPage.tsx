@@ -230,28 +230,28 @@ function MockProfileScreen() {
   );
 }
 
-// Mock calendar screen — matches real CallCalendar with shift colors
+// Mock calendar screen — based on Audrey's real April 2026 schedule
 function MockCalendarScreen() {
-  // Simulate a q5d March schedule with mixed shift types
+  const call = { color: '#7dd3fc', accent: '#38bdf8' };
+  const off = { color: '#5eead4', accent: '#2dd4bf' };
+  const work = { color: '#c4b5fd', accent: '#a78bfa' };
+  const half = { color: '#fdba74', accent: '#fb923c' };
+
+  // April 2026 — based on Audrey's real schedule from screenshot
   const shifts: Record<number, { color: string; accent: string }> = {
-    3: { color: '#7dd3fc', accent: '#38bdf8' },   // call
-    8: { color: '#7dd3fc', accent: '#38bdf8' },   // call
-    9: { color: '#fda4af', accent: '#fb7185' },   // post-call
-    13: { color: '#7dd3fc', accent: '#38bdf8' },  // call
-    14: { color: '#fda4af', accent: '#fb7185' },  // post-call
-    18: { color: '#7dd3fc', accent: '#38bdf8' },  // call
-    22: { color: '#5eead4', accent: '#2dd4bf' },  // day off
-    23: { color: '#7dd3fc', accent: '#38bdf8' },  // call
-    24: { color: '#fda4af', accent: '#fb7185' },  // post-call
-    28: { color: '#7dd3fc', accent: '#38bdf8' },  // call
+    1: work, 2: call, 3: half, 4: off,
+    5: off, 6: off, 7: work, 8: call, 9: call, 10: off, 11: off,
+    12: off, 13: work, 14: call, 15: call, 16: call, 17: call, 18: work,
+    19: half, 20: work, 21: work, 22: call, 23: call, 24: off, 25: work,
+    26: off, 27: half, 28: half, 29: call, 30: half,
   };
-  // Rating dots for past calls (grayscale)
+  // Rating dots for past rated calls
   const ratings: Record<number, string> = {
-    3: '#d1d5db', 8: '#6b7280', 13: '#1f2937', 18: '#f9fafb',
+    2: '#d1d5db', 8: '#6b7280', 9: '#f9fafb', 14: '#1f2937', 15: '#d1d5db', 16: '#6b7280',
   };
-  const today = 27;
-  const daysInMonth = 31;
-  const startDay = 6; // March 2026 starts on Saturday (0=Sun)
+  const today = 17;
+  const daysInMonth = 30;
+  const startDay = 3; // April 2026 starts on Wednesday (0=Sun)
 
   const cells = [];
   // Empty cells before month starts
@@ -272,7 +272,7 @@ function MockCalendarScreen() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-400" style={{ fontSize: 14 }}>&#8249;</span>
             <div className="text-center">
-              <p className="font-bold text-gray-800" style={{ fontSize: 13 }}>March 2026</p>
+              <p className="font-bold text-gray-800" style={{ fontSize: 13 }}>April 2026</p>
               <p className="text-sky-soft-600" style={{ fontSize: 9 }}>Today</p>
             </div>
             <span className="text-gray-400" style={{ fontSize: 14 }}>&#8250;</span>
@@ -339,12 +339,13 @@ function MockCalendarScreen() {
             })}
           </div>
 
-          {/* Legend */}
+          {/* Legend — matches real: Call, Off, Work, Half */}
           <div className="flex gap-3 mt-2 justify-center">
             {[
               { color: '#7dd3fc', label: 'Call' },
-              { color: '#fda4af', label: 'Post' },
               { color: '#5eead4', label: 'Off' },
+              { color: '#c4b5fd', label: 'Work' },
+              { color: '#fdba74', label: 'Half' },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: item.color }} />
@@ -503,9 +504,9 @@ export default function LandingPage() {
               <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                 {[
                   { color: '#7dd3fc', label: 'Call' },
-                  { color: '#c4b5fd', label: 'Night' },
-                  { color: '#5eead4', label: 'Day Off' },
-                  { color: '#fda4af', label: 'Post-Call' },
+                  { color: '#5eead4', label: 'Off' },
+                  { color: '#c4b5fd', label: 'Work' },
+                  { color: '#fdba74', label: 'Half' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-1.5">
                     <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }} />
