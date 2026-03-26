@@ -237,17 +237,17 @@ function MockCalendarScreen() {
   const work = { color: '#c4b5fd', accent: '#a78bfa' };
   const half = { color: '#fdba74', accent: '#fb923c' };
 
-  // April 2026 — based on Audrey's real schedule from screenshot
+  // April 2026 — copied from Audrey's real calendar screenshot
   const shifts: Record<number, { color: string; accent: string }> = {
     1: work, 2: call, 3: half, 4: off,
-    5: off, 6: off, 7: work, 8: call, 9: call, 10: off, 11: off,
-    12: off, 13: work, 14: call, 15: call, 16: call, 17: call, 18: work,
-    19: half, 20: work, 21: work, 22: call, 23: call, 24: off, 25: work,
+    5: off, 6: off, 7: work, 8: call, 9: call, 10: half, 11: off,
+    12: off, 13: work, 14: work, 15: call, 16: call, 17: off, 18: work,
+    19: half, 20: work, 21: work, 22: work, 23: call, 24: off, 25: work,
     26: off, 27: half, 28: half, 29: call, 30: half,
   };
   // Rating dots for past rated calls
   const ratings: Record<number, string> = {
-    2: '#d1d5db', 8: '#6b7280', 9: '#f9fafb', 14: '#1f2937', 15: '#d1d5db', 16: '#6b7280',
+    2: '#6b7280', 8: '#d1d5db', 9: '#f9fafb', 15: '#1f2937', 16: '#6b7280',
   };
   const today = 17;
   const daysInMonth = 30;
