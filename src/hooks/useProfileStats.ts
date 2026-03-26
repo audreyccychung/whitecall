@@ -54,6 +54,128 @@ export interface TrendPoint {
 }
 
 
+// Shareable insights stats — same fields as ProfileStats insights, but computed for a date range
+export interface ShareInsights {
+  sleepTrend: TrendPoint[];
+  allTimeSleepAvg: number | null;
+  ratingDistribution: RatingDistribution;
+  avgGapDays: number | null;
+  totalCalls: number;
+  callsByDayOfWeek: number[];
+  allTimeHeartsReceived: number;
+  callsWithHeartsPercent: number | null;
+  periodLabel: string;
+}
+
+export type SharePeriod = 'this_month' | 'last_3_months' | 'all_time';
+
+/**
+ * Compute insight stats filtered to a date range (for share cards).
+ * Reuses the same computation logic as the main hook but scoped to a period.
+ */
+export function computeShareInsights(
+  calls: Call[],
+  ratings: CallRating[],
+  heartsReceived: HeartWithSender[],
+  period: SharePeriod
+): ShareInsights {
+  const now = new Date();
+
+  // Determine cutoff date
+  let cutoffDate: string | null = null; // null = all time
+  let periodLabel = 'All Time';
+
+  if (period === 'this_month') {
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    cutoffDate = `${y}-${m}-01`;
+    periodLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  } else if (period === 'last_3_months') {
+    const d = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    cutoffDate = `${y}-${m}-01`;
+    const startMonth = d.toLocaleString('default', { month: 'short' });
+    const endMonth = now.toLocaleString('default', { month: 'short', year: 'numeric' });
+    periodLabel = `${startMonth} – ${endMonth}`;
+  }
+
+  const inRange = (dateStr: string) => cutoffDate === null || dateStr >= cutoffDate;
+
+  // Filter data
+  const filteredCalls = calls.filter(c => isOnDutyShift(c.shift_type) && inRange(c.call_date));
+  const filteredRatings = ratings.filter(r => inRange(r.call_date));
+  const filteredHearts = heartsReceived.filter(h => inRange(h.shift_date));
+
+  // Hearts by date
+  const heartsByDate = new Map<string, number>();
+  filteredHearts.forEach(h => {
+    heartsByDate.set(h.shift_date, (heartsByDate.get(h.shift_date) || 0) + 1);
+  });
+
+  // Sleep trend (last 20 in range)
+  const sortedRatings = [...filteredRatings].sort((a, b) => a.call_date.localeCompare(b.call_date));
+  const last20 = sortedRatings.slice(-20);
+  const sleepTrend: TrendPoint[] = last20.map(r => ({
+    date: r.call_date,
+    mood: RATING_SCORES[r.rating],
+    sleep: r.hours_slept,
+    hearts: heartsByDate.get(r.call_date) || 0,
+  }));
+
+  // Sleep average
+  let sleepSum = 0;
+  let sleepCount = 0;
+  filteredRatings.forEach(r => {
+    if (r.hours_slept !== null) { sleepSum += r.hours_slept; sleepCount++; }
+  });
+  const allTimeSleepAvg = sleepCount > 0 ? sleepSum / sleepCount : null;
+
+  // Rating distribution
+  const ratingDistribution: RatingDistribution = { rough: 0, okay: 0, good: 0, great: 0 };
+  filteredRatings.forEach(r => ratingDistribution[r.rating]++);
+
+  // Avg gap
+  const sortedDates = filteredCalls.map(c => c.call_date).sort();
+  let avgGapDays: number | null = null;
+  if (sortedDates.length >= 2) {
+    let totalGap = 0;
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i - 1] + 'T00:00:00');
+      const curr = new Date(sortedDates[i] + 'T00:00:00');
+      totalGap += (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    }
+    avgGapDays = totalGap / (sortedDates.length - 1);
+  }
+
+  // Day of week
+  const callsByDayOfWeek = [0, 0, 0, 0, 0, 0, 0];
+  filteredCalls.forEach(c => {
+    const d = new Date(c.call_date + 'T00:00:00');
+    const jsDay = d.getDay();
+    callsByDayOfWeek[jsDay === 0 ? 6 : jsDay - 1]++;
+  });
+
+  // Hearts support %
+  const totalCalls = filteredCalls.length;
+  const uniqueDatesWithHearts = new Set(filteredHearts.map(h => h.shift_date));
+  const callsWithHeartsPercent = totalCalls > 0
+    ? (uniqueDatesWithHearts.size / totalCalls) * 100
+    : null;
+
+  return {
+    sleepTrend,
+    allTimeSleepAvg,
+    ratingDistribution,
+    avgGapDays,
+    totalCalls,
+    callsByDayOfWeek,
+    allTimeHeartsReceived: filteredHearts.length,
+    callsWithHeartsPercent,
+    periodLabel,
+  };
+}
+
 export function useProfileStats(
   calls: Call[],
   ratings: CallRating[],

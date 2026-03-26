@@ -14,6 +14,7 @@ interface InsightsShareCardProps {
   callsWithHeartsPercent: number | null;
   currentStreak: number;
   longestStreak: number;
+  periodLabel?: string;
 }
 
 // Grayscale mood colors (rough=black → great=white)
@@ -58,6 +59,7 @@ export const InsightsShareCard = forwardRef<HTMLDivElement, InsightsShareCardPro
       callsWithHeartsPercent,
       currentStreak,
       longestStreak,
+      periodLabel,
     } = props;
 
     const ratingTotal = ratingDistribution.rough + ratingDistribution.okay +
@@ -92,7 +94,9 @@ export const InsightsShareCard = forwardRef<HTMLDivElement, InsightsShareCardPro
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
             <div style={{ fontSize: '48px', fontWeight: 600, color: '#0ea5e9' }}>WhiteCall</div>
-            <div style={{ fontSize: '32px', fontWeight: 500, color: '#94a3b8' }}>My Insights</div>
+            <div style={{ fontSize: '32px', fontWeight: 500, color: '#94a3b8' }}>
+              {periodLabel || 'All Time'}
+            </div>
           </div>
 
           {/* Sleep Trend */}

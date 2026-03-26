@@ -203,6 +203,9 @@ export default function ProfilePage() {
             stats={stats}
             currentStreak={profile.current_streak ?? 0}
             longestStreak={profile.longest_streak ?? 0}
+            calls={calls}
+            ratings={ratings}
+            heartsReceived={heartsReceived}
           />
         </motion.div>
 
