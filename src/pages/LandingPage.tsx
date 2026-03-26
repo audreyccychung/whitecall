@@ -367,9 +367,14 @@ export default function LandingPage() {
     return <Navigate to="/home" replace />;
   }
 
-  // Brief neutral state while checking auth (usually <300ms with cached session)
+  // Brief neutral state while checking auth — match hero gradient so no flash
   if (authStatus === 'initializing') {
-    return <div className="min-h-screen bg-white" />;
+    return (
+      <div
+        className="min-h-screen"
+        style={{ background: 'linear-gradient(165deg, #0369a1 0%, #0ea5e9 40%, #38bdf8 100%)' }}
+      />
+    );
   }
 
   return (

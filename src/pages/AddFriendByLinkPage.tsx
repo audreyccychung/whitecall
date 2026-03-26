@@ -130,19 +130,19 @@ export default function AddFriendByLinkPage() {
               </div>
             )}
 
-            {/* Not logged in */}
+            {/* Not logged in — signup primary since most invite recipients are new */}
             {!user && (
               <div className="space-y-3">
                 <Link
-                  to={`/login?redirect=/add/${username}`}
+                  to={`/signup?redirect=/add/${username}`}
                   className="block w-full py-3 bg-sky-soft-500 text-white rounded-xl font-medium hover:bg-sky-soft-600 transition-colors"
                 >
-                  Sign in to add friend
+                  Sign up to add friend
                 </Link>
                 <p className="text-sm text-gray-500">
-                  Don't have an account?{' '}
-                  <Link to={`/signup?redirect=/add/${username}`} className="text-sky-soft-600 font-medium">
-                    Sign up
+                  Already have an account?{' '}
+                  <Link to={`/login?redirect=/add/${username}`} className="text-sky-soft-600 font-medium">
+                    Sign in
                   </Link>
                 </p>
               </div>
