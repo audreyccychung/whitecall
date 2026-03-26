@@ -10,7 +10,9 @@ import { useGroupInvite } from '../hooks/useGroupInvite';
 import { useFriends } from '../hooks/useFriends';
 import { GroupMembersList } from '../components/GroupMembersList';
 import { AddMemberForm } from '../components/AddMemberForm';
-import { GroupCalendarView } from '../components/GroupCalendarView';
+import { GroupOverlapCalendar } from '../components/GroupOverlapCalendar';
+import { useGroupCalls } from '../hooks/useGroupCalls';
+import { AvatarDisplay } from '../components/AvatarDisplay';
 import { GroupLeaderboard } from '../components/GroupLeaderboard';
 import { FriendProfileModal } from '../components/FriendProfileModal';
 import type { GroupMember, GroupMemberOnCall } from '../types/group';
@@ -25,6 +27,7 @@ export default function GroupDetailPage() {
   const { sendHeartWithOptimism, heartsSent } = useHearts(user?.id);
   const { generateInviteCode, buildInviteUrl, isGenerating } = useGroupInvite();
   const { friends, addFriend } = useFriends(user?.id);
+  const { members: calMembers, callsMap, loading: calLoading } = useGroupCalls(id);
 
   const [deleting, setDeleting] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
@@ -257,15 +260,55 @@ export default function GroupDetailPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Group Schedule Calendar */}
+        {/* On call today strip + Group overlap calendar */}
         {id && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-2xl shadow-soft-lg p-6"
           >
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Group Schedule</h2>
-            <GroupCalendarView groupId={id} onMemberClick={handleCalendarMemberClick} />
+            {/* On call today strip */}
+            {members.filter(m => m.is_on_call).length > 0 && (
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">On call today</p>
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {members.filter(m => m.is_on_call).map((m) => (
+                    <button
+                      key={m.user_id}
+                      onClick={() => handleCalendarMemberClick(m)}
+                      className="flex items-center gap-1.5 px-2 py-1 bg-sky-soft-50 rounded-full flex-shrink-0"
+                    >
+                      <AvatarDisplay
+                        avatarType={m.avatar_type}
+                        avatarColor={m.avatar_color}
+                        avatarUrl={m.avatar_url}
+                        size="tiny"
+                      />
+                      <span className="text-xs font-medium text-sky-soft-700">
+                        {(m.display_name || m.username).split(' ')[0]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Overlap calendar */}
+            {calLoading ? (
+              <div className="py-8 text-center">
+                <div className="w-8 h-8 border-3 border-sky-soft-400 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Loading schedules...</p>
+              </div>
+            ) : (
+              <GroupOverlapCalendar
+                myUserId={user?.id || ''}
+                members={calMembers.map(m => ({
+                  userId: m.user_id,
+                  name: m.display_name || m.username,
+                }))}
+                callsMap={callsMap}
+              />
+            )}
           </motion.div>
         )}
 

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { handleRpcResponse } from '../utils/rpc';
 import type { GroupCalendarDay, GroupMemberOnCall, GetGroupCallsCode } from '../types/group';
+import type { ShiftType } from '../types/database';
 
 // Error message mapping (1:1 with result codes)
 const GET_GROUP_CALLS_MESSAGES: Record<GetGroupCallsCode, string> = {
@@ -37,6 +38,8 @@ interface UseGroupCallsResult {
   calendarDays: GroupCalendarDay[];
   members: GroupMemberOnCall[];
   nextFreeDay: string | null;
+  // For overlap calendar: date -> userId -> shiftType
+  callsMap: Map<string, Map<string, ShiftType>>;
   loading: boolean;
   error: string | null;
   errorCode: GetGroupCallsCode | null;
@@ -50,6 +53,7 @@ export function useGroupCalls(
   const [calendarDays, setCalendarDays] = useState<GroupCalendarDay[]>([]);
   const [members, setMembers] = useState<GroupMemberOnCall[]>([]);
   const [nextFreeDay, setNextFreeDay] = useState<string | null>(null);
+  const [callsMap, setCallsMap] = useState<Map<string, Map<string, ShiftType>>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<GetGroupCallsCode | null>(null);
@@ -67,13 +71,16 @@ export function useGroupCalls(
     setErrorCode(null);
 
     try {
-      // Calculate date range
+      // Calculate date range: 1 month back + daysAhead forward (for overlap calendar navigation)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const startDate = new Date(today);
+      startDate.setMonth(startDate.getMonth() - 1);
+      startDate.setDate(1);
       const endDate = new Date(today);
-      endDate.setDate(endDate.getDate() + daysAhead - 1);
+      endDate.setDate(endDate.getDate() + Math.max(daysAhead - 1, 60));
 
-      const startDateStr = formatDate(today);
+      const startDateStr = formatDate(startDate);
       const endDateStr = formatDate(endDate);
 
       // Call RPC
@@ -89,7 +96,7 @@ export function useGroupCalls(
       const result = handleRpcResponse<{
         code: string;
         members?: GroupMemberOnCall[];
-        calls?: { user_id: string; call_date: string }[];
+        calls?: { user_id: string; call_date: string; shift_type?: string }[];
       }>(data);
       const code = result.code as GetGroupCallsCode;
 
@@ -99,12 +106,24 @@ export function useGroupCalls(
         setCalendarDays([]);
         setMembers([]);
         setNextFreeDay(null);
+        setCallsMap(new Map());
         return;
       }
 
       // Parse members and calls from RPC response
       const membersData: GroupMemberOnCall[] = result.members || [];
-      const callsData: { user_id: string; call_date: string }[] = result.calls || [];
+      const callsData: { user_id: string; call_date: string; shift_type?: string }[] = result.calls || [];
+
+      // Build overlap calendar map: date -> userId -> shiftType
+      const overlapMap = new Map<string, Map<string, ShiftType>>();
+      for (const call of callsData) {
+        if (!overlapMap.has(call.call_date)) {
+          overlapMap.set(call.call_date, new Map());
+        }
+        if (call.shift_type) {
+          overlapMap.get(call.call_date)!.set(call.user_id, call.shift_type as ShiftType);
+        }
+      }
 
       // Create member lookup map
       const memberMap = new Map<string, GroupMemberOnCall>();
@@ -141,6 +160,7 @@ export function useGroupCalls(
       setMembers(membersData);
       setCalendarDays(days);
       setNextFreeDay(freeDay?.date || null);
+      setCallsMap(overlapMap);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load calls');
       setErrorCode('UNKNOWN_ERROR');
@@ -157,6 +177,7 @@ export function useGroupCalls(
     calendarDays,
     members,
     nextFreeDay,
+    callsMap,
     loading,
     error,
     errorCode,

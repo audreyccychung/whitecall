@@ -1,4 +1,4 @@
-// Overlap calendar: two-row week strips showing both users' shifts
+// Group overlap calendar: N rows per week (one per member), month view
 import { useState } from 'react';
 import {
   startOfMonth,
@@ -18,29 +18,41 @@ import {
 import type { ShiftType } from '../types/database';
 import { getShiftCellStyle } from '../utils/shiftStyles';
 
-interface OverlapCalendarProps {
-  myShiftMap: Map<string, ShiftType>;
-  friendShiftMap: Map<string, ShiftType>;
-  friendName: string;
+interface GroupMemberInfo {
+  userId: string;
+  name: string;
 }
 
-export function OverlapCalendar({ myShiftMap, friendShiftMap, friendName }: OverlapCalendarProps) {
+interface GroupOverlapCalendarProps {
+  myUserId: string;
+  members: GroupMemberInfo[];
+  // date (YYYY-MM-DD) -> userId -> ShiftType
+  callsMap: Map<string, Map<string, ShiftType>>;
+}
+
+export function GroupOverlapCalendar({ myUserId, members, callsMap }: GroupOverlapCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const calStart = startOfWeek(monthStart);
   const calEnd = endOfWeek(monthEnd);
-
-  // Get all weeks in the calendar range
   const weeks = eachWeekOfInterval({ start: calStart, end: calEnd });
-
   const today = startOfDay(new Date());
 
-  // Truncate friend name to first name
-  const shortName = friendName.split(' ')[0];
-  // Ensure label fits: max 5 chars
-  const friendLabel = shortName.length > 5 ? shortName.slice(0, 5) : shortName;
+  // Sort members: current user first, then alphabetical
+  const sortedMembers = [...members].sort((a, b) => {
+    if (a.userId === myUserId) return -1;
+    if (b.userId === myUserId) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  // Truncate name for row label
+  const getLabel = (m: GroupMemberInfo) => {
+    if (m.userId === myUserId) return 'You';
+    const first = m.name.split(' ')[0];
+    return first.length > 5 ? first.slice(0, 5) : first;
+  };
 
   return (
     <div>
@@ -89,7 +101,7 @@ export function OverlapCalendar({ myShiftMap, friendShiftMap, friendName }: Over
         });
 
         return (
-          <div key={weekStart.toISOString()} className="mb-1.5">
+          <div key={weekStart.toISOString()} className="mb-2">
             {/* Date numbers */}
             <div className="grid gap-0.5" style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}>
               <div />
@@ -112,61 +124,44 @@ export function OverlapCalendar({ myShiftMap, friendShiftMap, friendName }: Over
               })}
             </div>
 
-            {/* Your shifts */}
-            <div className="grid gap-0.5 mt-0.5" style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}>
-              <div className="text-right pr-1 flex items-center justify-end" style={{ fontSize: 8, color: '#9ca3af', fontWeight: 600 }}>
-                You
+            {/* Member rows */}
+            {sortedMembers.map((member) => (
+              <div
+                key={member.userId}
+                className="grid gap-0.5 mt-0.5"
+                style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}
+              >
+                <div
+                  className="text-right pr-1 flex items-center justify-end"
+                  style={{ fontSize: 8, color: '#9ca3af', fontWeight: 600 }}
+                >
+                  {getLabel(member)}
+                </div>
+                {weekDays.map((day) => {
+                  const dateStr = format(day, 'yyyy-MM-dd');
+                  const inMonth = isSameMonth(day, currentMonth);
+                  const isPast = isBefore(day, today);
+                  const isTodayDate = isToday(day);
+
+                  if (!inMonth) return <div key={day.toISOString()} style={{ height: 16 }} />;
+
+                  const dayMap = callsMap.get(dateStr);
+                  const shift = dayMap?.get(member.userId) as ShiftType | undefined;
+
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className="rounded"
+                      style={{
+                        height: 16,
+                        ...getShiftCellStyle(shift, isPast),
+                        ...(isTodayDate ? { outline: '1.5px solid #38bdf8', outlineOffset: -1 } : {}),
+                      }}
+                    />
+                  );
+                })}
               </div>
-              {weekDays.map((day) => {
-                const dateStr = format(day, 'yyyy-MM-dd');
-                const inMonth = isSameMonth(day, currentMonth);
-                const isPast = isBefore(day, today);
-                const isTodayDate = isToday(day);
-                const shift = myShiftMap.get(dateStr);
-
-                if (!inMonth) return <div key={day.toISOString()} style={{ height: 20 }} />;
-
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className="rounded"
-                    style={{
-                      height: 20,
-                      ...getShiftCellStyle(shift, isPast),
-                      ...(isTodayDate ? { outline: '1.5px solid #38bdf8', outlineOffset: -1 } : {}),
-                    }}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Friend's shifts */}
-            <div className="grid gap-0.5 mt-0.5" style={{ gridTemplateColumns: '36px repeat(7, 1fr)' }}>
-              <div className="text-right pr-1 flex items-center justify-end" style={{ fontSize: 8, color: '#9ca3af', fontWeight: 600 }}>
-                {friendLabel}
-              </div>
-              {weekDays.map((day) => {
-                const dateStr = format(day, 'yyyy-MM-dd');
-                const inMonth = isSameMonth(day, currentMonth);
-                const isPast = isBefore(day, today);
-                const isTodayDate = isToday(day);
-                const shift = friendShiftMap.get(dateStr);
-
-                if (!inMonth) return <div key={day.toISOString()} style={{ height: 20 }} />;
-
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className="rounded"
-                    style={{
-                      height: 20,
-                      ...getShiftCellStyle(shift, isPast),
-                      ...(isTodayDate ? { outline: '1.5px solid #38bdf8', outlineOffset: -1 } : {}),
-                    }}
-                  />
-                );
-              })}
-            </div>
+            ))}
           </div>
         );
       })}
