@@ -12,13 +12,13 @@ const fadeUp = {
 // Phone frame wrapper for product mockups
 function PhoneMockup({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`relative mx-auto ${className}`} style={{ width: 280 }}>
+    <div className={`relative mx-auto w-[240px] sm:w-[280px] ${className}`}>
       {/* Phone frame */}
-      <div className="bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl">
+      <div className="bg-gray-900 rounded-[2rem] sm:rounded-[2.5rem] p-2.5 sm:p-3 shadow-2xl">
         {/* Notch */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-gray-900 rounded-b-2xl z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 sm:w-28 h-5 sm:h-6 bg-gray-900 rounded-b-xl sm:rounded-b-2xl z-10" />
         {/* Screen */}
-        <div className="bg-white rounded-[2rem] overflow-hidden" style={{ height: 520 }}>
+        <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden h-[440px] sm:h-[520px]">
           {children}
         </div>
       </div>
@@ -230,6 +230,134 @@ function MockProfileScreen() {
   );
 }
 
+// Mock calendar screen — matches real CallCalendar with shift colors
+function MockCalendarScreen() {
+  // Simulate a q5d March schedule with mixed shift types
+  const shifts: Record<number, { color: string; accent: string }> = {
+    3: { color: '#7dd3fc', accent: '#38bdf8' },   // call
+    8: { color: '#7dd3fc', accent: '#38bdf8' },   // call
+    9: { color: '#fda4af', accent: '#fb7185' },   // post-call
+    13: { color: '#7dd3fc', accent: '#38bdf8' },  // call
+    14: { color: '#fda4af', accent: '#fb7185' },  // post-call
+    18: { color: '#7dd3fc', accent: '#38bdf8' },  // call
+    22: { color: '#5eead4', accent: '#2dd4bf' },  // day off
+    23: { color: '#7dd3fc', accent: '#38bdf8' },  // call
+    24: { color: '#fda4af', accent: '#fb7185' },  // post-call
+    28: { color: '#7dd3fc', accent: '#38bdf8' },  // call
+  };
+  // Rating dots for past calls (grayscale)
+  const ratings: Record<number, string> = {
+    3: '#d1d5db', 8: '#6b7280', 13: '#1f2937', 18: '#f9fafb',
+  };
+  const today = 27;
+  const daysInMonth = 31;
+  const startDay = 6; // March 2026 starts on Saturday (0=Sun)
+
+  const cells = [];
+  // Empty cells before month starts
+  for (let i = 0; i < startDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  // Pad to complete last row
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  return (
+    <div className="h-full overflow-hidden" style={{ background: 'linear-gradient(to bottom right, #f0f9ff, #fafafa)' }}>
+      <div className="bg-white px-4 py-2.5" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+        <p className="font-bold text-gray-800 text-sm">Calls</p>
+      </div>
+      <div className="px-2.5 py-2">
+        {/* Calendar card */}
+        <div className="bg-white rounded-2xl p-3" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
+          {/* Month header */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-gray-400" style={{ fontSize: 14 }}>&#8249;</span>
+            <div className="text-center">
+              <p className="font-bold text-gray-800" style={{ fontSize: 13 }}>March 2026</p>
+              <p className="text-sky-soft-600" style={{ fontSize: 9 }}>Today</p>
+            </div>
+            <span className="text-gray-400" style={{ fontSize: 14 }}>&#8250;</span>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-0.5 mb-1">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+              <div key={d} className="text-center text-gray-500 font-medium" style={{ fontSize: 8 }}>{d}</div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-0.5">
+            {cells.map((day, i) => {
+              if (day === null) return <div key={i} className="aspect-square" />;
+              const shift = shifts[day];
+              const isToday = day === today;
+              const isPast = day < today;
+              const rating = ratings[day];
+
+              const cellStyle: React.CSSProperties = {};
+              if (isToday && shift) {
+                cellStyle.backgroundColor = shift.color + '14';
+                cellStyle.boxShadow = `inset 2px 0 0 0 ${shift.accent}, 0 0 0 1.5px #38bdf8`;
+                cellStyle.color = '#0369a1';
+                cellStyle.fontWeight = 600;
+              } else if (isToday) {
+                cellStyle.backgroundColor = '#f0f9ff';
+                cellStyle.boxShadow = '0 0 0 1.5px #38bdf8';
+                cellStyle.color = '#0369a1';
+                cellStyle.fontWeight = 600;
+              } else if (shift && !isPast) {
+                cellStyle.backgroundColor = shift.color + '14';
+                cellStyle.boxShadow = `inset 2px 0 0 0 ${shift.accent}`;
+              } else if (shift && isPast) {
+                cellStyle.backgroundColor = shift.color + '0a';
+                cellStyle.boxShadow = `inset 2px 0 0 0 ${shift.accent}60`;
+                cellStyle.color = '#9ca3af';
+              } else if (isPast) {
+                cellStyle.color = '#d1d5db';
+              }
+
+              return (
+                <div
+                  key={i}
+                  className="aspect-square rounded-lg flex flex-col items-center justify-center relative"
+                  style={cellStyle}
+                >
+                  <span style={{ fontSize: 9 }}>{day}</span>
+                  {/* Rating dot for past rated calls */}
+                  {rating && (
+                    <div
+                      className="rounded-full mt-0.5"
+                      style={{
+                        width: 5, height: 5,
+                        backgroundColor: rating,
+                        border: rating === '#f9fafb' ? '0.5px solid #d1d5db' : 'none',
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex gap-3 mt-2 justify-center">
+            {[
+              { color: '#7dd3fc', label: 'Call' },
+              { color: '#fda4af', label: 'Post' },
+              { color: '#5eead4', label: 'Off' },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: item.color }} />
+                <span className="text-gray-500" style={{ fontSize: 7 }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const { authStatus } = useAuth();
 
@@ -256,10 +384,10 @@ export default function LandingPage() {
           className="max-w-4xl relative z-10"
         >
           <p className="text-6xl mb-6">🤍</p>
-          <h1 className="text-5xl sm:text-7xl font-bold text-white tracking-tight mb-4">
+          <h1 className="text-4xl sm:text-7xl font-bold text-white tracking-tight mb-4">
             White call.
           </h1>
-          <p className="text-xl sm:text-2xl text-white/80 font-light leading-relaxed mb-10 max-w-lg mx-auto">
+          <p className="text-lg sm:text-2xl text-white/80 font-light leading-relaxed mb-10 max-w-lg mx-auto">
             Let your friends know you're thinking of them on call.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -291,7 +419,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-16 sm:py-24 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <motion.h2
             {...fadeUp}
@@ -340,8 +468,58 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Calendar showcase — prominent feature */}
+      <section className="py-16 sm:py-24 px-6 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-10 sm:gap-16">
+            {/* Phone with calendar */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <PhoneMockup>
+                <MockCalendarScreen />
+              </PhoneMockup>
+            </motion.div>
+
+            {/* Text */}
+            <motion.div
+              {...fadeUp}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              viewport={{ once: true }}
+              whileInView="animate"
+              initial="initial"
+              className="flex-1 text-center sm:text-left"
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+                Your call schedule,<br />beautifully organized.
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed mb-6">
+                Tap to log shifts. See your month at a glance. Color-coded by type —
+                call, work, day off, post-call. Rate past calls to track how you're doing.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                {[
+                  { color: '#7dd3fc', label: 'Call' },
+                  { color: '#c4b5fd', label: 'Night' },
+                  { color: '#5eead4', label: 'Day Off' },
+                  { color: '#fda4af', label: 'Post-Call' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }} />
+                    <span className="text-sm text-gray-600">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Emotional beat */}
-      <section className="py-24 px-6 bg-gray-50">
+      <section className="py-16 sm:py-24 px-6 bg-gray-50">
         <motion.div
           {...fadeUp}
           transition={{ duration: 0.6 }}
@@ -359,7 +537,7 @@ export default function LandingPage() {
       </section>
 
       {/* Profile insights — with phone mockup */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-16 sm:py-24 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center gap-12 sm:gap-16">
             {/* Text */}
@@ -408,7 +586,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features grid */}
-      <section className="py-24 px-6 bg-gray-50">
+      <section className="py-16 sm:py-24 px-6 bg-gray-50">
         <div className="max-w-4xl mx-auto">
           <motion.h2
             {...fadeUp}
