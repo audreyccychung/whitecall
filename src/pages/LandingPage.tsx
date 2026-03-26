@@ -53,7 +53,7 @@ function MockHomeScreen() {
         <div className="bg-white rounded-xl p-2.5" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
           <div className="flex items-center gap-2.5">
             <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: '#d6ffe8' }}>🐶</div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: '#ffd6e8' }}>🐰</div>
               {/* Heart badge */}
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-pink-100 rounded-full flex items-center justify-center" style={{ fontSize: 9 }}>3</div>
             </div>
@@ -126,7 +126,7 @@ function MockProfileScreen() {
       <div className="px-3 py-2.5 space-y-2.5">
         {/* Hero — matches real: white card, avatar + name + share button */}
         <div className="bg-white rounded-2xl p-3 flex items-center gap-3" style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.12)' }}>
-          <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl" style={{ backgroundColor: '#d6ffe8' }}>🐶</div>
+          <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl" style={{ backgroundColor: '#ffd6e8' }}>🐰</div>
           <div className="flex-1">
             <p className="font-bold text-gray-800" style={{ fontSize: 13 }}>Audrey</p>
             <p className="text-gray-500" style={{ fontSize: 10 }}>@audreychung</p>
