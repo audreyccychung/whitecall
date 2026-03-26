@@ -1,6 +1,8 @@
 // Tabbed insights section: Trends (sleep + ratings) and Patterns (frequency + day of week + support)
 import { useState } from 'react';
 import type { ProfileStats } from '../../hooks/useProfileStats';
+import { useShareCard } from '../../hooks/useShareCard';
+import { ShareButton, SharePreviewModal, InsightsShareCard } from '../share';
 import { SleepSparkline } from './SleepSparkline';
 import { RatingBreakdown } from './RatingBreakdown';
 import { CallFrequency } from './CallFrequency';
@@ -17,12 +19,23 @@ type Tab = 'trends' | 'patterns';
 
 export function InsightsSection({ stats, currentStreak, longestStreak }: InsightsSectionProps) {
   const [tab, setTab] = useState<Tab>('trends');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const insightsShare = useShareCard();
+
+  const handleShare = async () => {
+    await insightsShare.generateAndShare();
+    setShowShareModal(false);
+  };
 
   return (
+    <>
     <div className="bg-white rounded-2xl shadow-soft-lg p-5">
-      {/* Header + Tab toggle */}
+      {/* Header + Share + Tab toggle */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-gray-500">Insights</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-gray-500">Insights</h3>
+          <ShareButton onClick={() => setShowShareModal(true)} />
+        </div>
         <div className="flex gap-1 bg-gray-100 rounded-lg p-0.5">
           <button
             onClick={() => setTab('trends')}
@@ -71,5 +84,28 @@ export function InsightsSection({ stats, currentStreak, longestStreak }: Insight
         </div>
       )}
     </div>
+
+    {/* Share Modal */}
+    <SharePreviewModal
+      isOpen={showShareModal}
+      onClose={() => setShowShareModal(false)}
+      onShare={handleShare}
+      isGenerating={insightsShare.isGenerating}
+    >
+      <InsightsShareCard
+        ref={insightsShare.cardRef}
+        sleepTrend={stats.sleepTrend}
+        allTimeSleepAvg={stats.allTimeSleepAvg}
+        ratingDistribution={stats.ratingDistribution}
+        avgGapDays={stats.avgGapDays}
+        totalCalls={stats.totalCalls}
+        callsByDayOfWeek={stats.callsByDayOfWeek}
+        allTimeHeartsReceived={stats.allTimeHeartsReceived}
+        callsWithHeartsPercent={stats.callsWithHeartsPercent}
+        currentStreak={currentStreak}
+        longestStreak={longestStreak}
+      />
+    </SharePreviewModal>
+    </>
   );
 }

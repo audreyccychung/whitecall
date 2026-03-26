@@ -24,7 +24,7 @@ export function CallFrequency({ avgGapDays, callsThisMonth, lastMonthCalls, tota
       {/* Rotation headline */}
       {rotationNumber !== null && totalCalls >= 5 && (
         <div className="mb-3">
-          <p className="text-2xl font-bold text-gray-800">q{rotationNumber}</p>
+          <p className="text-2xl font-bold text-gray-800">q{rotationNumber}d</p>
           <p className="text-xs text-gray-500">
             Every {avgGapDays!.toFixed(1)} days on average
           </p>
