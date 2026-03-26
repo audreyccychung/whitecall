@@ -162,25 +162,49 @@ function MockProfileScreen() {
               <span className="px-2 py-0.5 rounded text-gray-500" style={{ fontSize: 9 }}>Patterns</span>
             </div>
           </div>
-          {/* Sleep sparkline */}
+          {/* Sleep sparkline — dots + line like real SleepSparkline.tsx */}
           <p className="text-gray-500 font-medium mb-1" style={{ fontSize: 9 }}>Sleep Over Time</p>
-          <div className="flex items-end gap-0.5 mb-1" style={{ height: 50 }}>
-            <div className="flex flex-col justify-between h-full pr-1" style={{ fontSize: 7, color: '#9ca3af', width: 18 }}>
-              <span>7h</span>
-              <span>0</span>
-            </div>
-            {sleepData.map((d, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-t"
-                style={{
-                  height: `${(d.h / 7) * 100}%`,
-                  backgroundColor: d.mood,
-                  border: d.mood === '#f9fafb' ? '1px solid #d1d5db' : 'none',
-                  minHeight: 2,
-                }}
+          <div className="relative" style={{ height: 55 }}>
+            <svg viewBox="0 0 220 50" className="w-full h-full">
+              {/* Y-axis labels */}
+              <text x="12" y="8" textAnchor="end" fill="#9ca3af" fontSize="6">7h</text>
+              <text x="12" y="28" textAnchor="end" fill="#9ca3af" fontSize="6">3h</text>
+              <text x="12" y="48" textAnchor="end" fill="#9ca3af" fontSize="6">0</text>
+              {/* Gridlines */}
+              <line x1="18" y1="5" x2="216" y2="5" stroke="#f1f5f9" strokeWidth="0.5" />
+              <line x1="18" y1="25" x2="216" y2="25" stroke="#f1f5f9" strokeWidth="0.5" />
+              <line x1="18" y1="45" x2="216" y2="45" stroke="#f1f5f9" strokeWidth="0.5" />
+              {/* Average line */}
+              <line x1="18" y1="27" x2="216" y2="27" stroke="#d1d5db" strokeWidth="0.75" strokeDasharray="3 2" />
+              {/* Line connecting dots */}
+              <polyline
+                points={sleepData.map((d, i) => {
+                  const x = 18 + (i / (sleepData.length - 1)) * 198;
+                  const y = 45 - (d.h / 7) * 40;
+                  return `${x},${y}`;
+                }).join(' ')}
+                fill="none"
+                stroke="#9ca3af"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
               />
-            ))}
+              {/* Dots colored by mood */}
+              {sleepData.map((d, i) => {
+                const x = 18 + (i / (sleepData.length - 1)) * 198;
+                const y = 45 - (d.h / 7) * 40;
+                return (
+                  <circle
+                    key={i}
+                    cx={x}
+                    cy={y}
+                    r={3}
+                    fill={d.mood}
+                    stroke={d.mood === '#f9fafb' ? '#9ca3af' : d.mood}
+                    strokeWidth={1.2}
+                  />
+                );
+              })}
+            </svg>
           </div>
           <p className="text-center text-gray-400" style={{ fontSize: 8 }}>Avg 3.2h · 10 calls</p>
           {/* Rating breakdown */}
