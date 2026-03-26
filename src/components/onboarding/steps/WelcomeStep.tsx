@@ -23,7 +23,7 @@ export function WelcomeStep() {
             </div>
             <div className="text-left">
               <p className="font-medium text-gray-800 text-sm">Sarah</p>
-              <p className="text-xs text-red-500">On call today</p>
+              <p className="text-xs text-sky-soft-600">On call today</p>
             </div>
           </div>
           {/* Heart button mock */}
