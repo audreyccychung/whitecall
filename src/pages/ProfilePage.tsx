@@ -12,12 +12,14 @@ import { useBadges } from '../hooks/useBadges';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { MoodCircle } from '../components/MoodCircle';
 import { StatCard } from '../components/profile/StatCard';
+import { CallTimeline } from '../components/profile/CallTimeline';
 import { InsightsSection } from '../components/profile/InsightsSection';
 import { FriendsSection } from '../components/profile/FriendsSection';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
 import { EngagementModal } from '../components/EngagementModal';
 import { SharePickerModal } from '../components/share';
+import { PullToRefreshWrapper } from '../components/PullToRefreshWrapper';
 import { formatStat, getStatLabel, type StatKey } from '../utils/statsRegistry';
 import type { CallRating } from '../types/database';
 
@@ -26,10 +28,10 @@ const MONTHLY_UI_STATS: StatKey[] = ['calls', 'avgMood', 'avgSleep', 'avgSupport
 
 export default function ProfilePage() {
   const { user, profile } = useAuth();
-  const { calls, loading: callsLoading } = useCalls(user?.id);
+  const { calls, loading: callsLoading, refreshCalls } = useCalls(user?.id);
   const { ratings, ratingsMap, isLoading: ratingsLoading, refetch: refetchRatings } = useCallRatings(user?.id);
   const { engagementMap, isLoading: engagementLoading } = useCallEngagement(user?.id);
-  const { heartsReceived, stats: heartStats, loading: heartsLoading } = useHearts(user?.id);
+  const { heartsReceived, stats: heartStats, loading: heartsLoading, refreshHearts } = useHearts(user?.id);
 
   // Compute stats
   const stats = useProfileStats(calls, ratings, heartsReceived);
@@ -64,6 +66,15 @@ export default function ProfilePage() {
     setRatingModal({ isOpen: false, callDate: '' });
   };
 
+  // Pull-to-refresh: force-refetch calls, ratings, and hearts from the server
+  const handleRefresh = async (): Promise<void> => {
+    await Promise.all([
+      refreshCalls(),
+      refetchRatings(),
+      refreshHearts({ force: true }),
+    ]);
+  };
+
   // Get current month name
   const currentMonth = new Date().toLocaleString('default', { month: 'long' });
 
@@ -88,6 +99,7 @@ export default function ProfilePage() {
   };
 
   return (
+    <PullToRefreshWrapper onRefresh={handleRefresh}>
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
@@ -185,6 +197,15 @@ export default function ProfilePage() {
               />
             ))}
           </div>
+        </motion.div>
+
+        {/* Call Timeline - bead-on-a-string view of last 3 months */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+        >
+          <CallTimeline calls={calls} ratingsMap={ratingsMap} />
         </motion.div>
 
         {/* Insights - Trends & Patterns */}
@@ -294,5 +315,6 @@ export default function ProfilePage() {
         heartsReceived={heartsReceived}
       />
     </div>
+    </PullToRefreshWrapper>
   );
 }

@@ -16,13 +16,14 @@ import { HeartSendersList } from '../components/HeartSendersList';
 import { ActivityFeed } from '../components/ActivityFeed';
 import { NotificationBell } from '../components/NotificationBell';
 import { OnboardingModal } from '../components/onboarding/OnboardingModal';
+import { PullToRefreshWrapper } from '../components/PullToRefreshWrapper';
 import { isOnDutyShift } from '../constants/shiftTypes';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
-  const { stats, sendHeartWithOptimism, heartsReceived } = useHearts(user?.id);
+  const { stats, sendHeartWithOptimism, heartsReceived, refreshHearts } = useHearts(user?.id);
   const [heartsPulse, setHeartsPulse] = useState(false);
-  const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation } = useFriends(user?.id);
+  const { friends, loading: friendsLoading, updateFriendHeartStatus, beginMutation, refreshFriends } = useFriends(user?.id);
 
   // Onboarding for new users
   const { showOnboarding, completeOnboarding } = useOnboarding();
@@ -45,6 +46,14 @@ export default function HomePage() {
   const today = getTodayDate();
   const todayShift = shiftMap.get(today);
   const isUserOnCall = isCallStatusLoaded && !!todayShift && isOnDutyShift(todayShift);
+
+  // Pull-to-refresh: force-refetch friends and hearts from the server
+  const handleRefresh = async (): Promise<void> => {
+    await Promise.all([
+      refreshHearts({ force: true }),
+      refreshFriends({ force: true }),
+    ]);
+  };
 
   const handleSendHeart = async (friendId: string): Promise<void> => {
     // Token-based lock to prevent background refetch from overwriting optimistic update
@@ -86,6 +95,7 @@ export default function HomePage() {
   }
 
   return (
+    <PullToRefreshWrapper onRefresh={handleRefresh}>
     <div className="min-h-screen bg-gradient-to-br from-sky-soft-50 to-white-call-100">
       {/* Header */}
       <header className="bg-white shadow-soft">
@@ -208,5 +218,6 @@ export default function HomePage() {
         )}
       </AnimatePresence>
     </div>
+    </PullToRefreshWrapper>
   );
 }
