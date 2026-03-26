@@ -99,49 +99,65 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
     try {
       const today = getTodayDate();
 
-      // Run data queries (capped at 200) and count queries in parallel
-      const [receivedResult, sentResult, receivedCountResult, sentCountResult] = await Promise.all([
-        // Recent hearts received (with sender info for display)
-        supabase
-          .from('hearts')
-          .select(
-            `
-            *,
-            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color, avatar_url)
-          `
-          )
-          .eq('recipient_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(200),
-        // Recent hearts sent (with sender info for display)
-        supabase
-          .from('hearts')
-          .select(
-            `
-            *,
-            sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color, avatar_url)
-          `
-          )
-          .eq('sender_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(200),
-        // Exact total received (index-only, no row data transferred)
-        supabase
-          .from('hearts')
-          .select('*', { count: 'exact', head: true })
-          .eq('recipient_id', userId),
-        // Exact total sent (index-only, no row data transferred)
-        supabase
-          .from('hearts')
-          .select('*', { count: 'exact', head: true })
-          .eq('sender_id', userId),
-      ]);
+      let received: HeartWithSender[] = [];
+      let sent: HeartWithSender[] = [];
+      let totalReceived = 0;
+      let totalSent = 0;
 
-      if (receivedResult.error) throw receivedResult.error;
-      if (sentResult.error) throw sentResult.error;
+      // Try single RPC first (1 query instead of 4)
+      const { data: rpcData, error: rpcError } = await supabase.rpc('get_heart_stats', {
+        p_limit: 200,
+      });
 
-      const received: HeartWithSender[] =
-        receivedResult.data?.map((h: any) => ({
+      if (!rpcError && rpcData?.code === 'SUCCESS') {
+        // RPC available — parse response
+        received = (rpcData.hearts_received || []).map((h: any) => ({
+          ...h,
+          sender_username: h.sender_username,
+          sender_display_name: h.sender_display_name,
+          sender_avatar_type: h.sender_avatar_type,
+          sender_avatar_color: h.sender_avatar_color,
+          sender_avatar_url: h.sender_avatar_url,
+        }));
+        sent = (rpcData.hearts_sent || []).map((h: any) => ({
+          ...h,
+          sender_username: h.sender_username,
+          sender_display_name: h.sender_display_name,
+          sender_avatar_type: h.sender_avatar_type,
+          sender_avatar_color: h.sender_avatar_color,
+          sender_avatar_url: h.sender_avatar_url,
+        }));
+        totalReceived = rpcData.total_received ?? received.length;
+        totalSent = rpcData.total_sent ?? sent.length;
+      } else {
+        // Fallback: 4 parallel queries (RPC not yet deployed)
+        const [receivedResult, sentResult, receivedCountResult, sentCountResult] = await Promise.all([
+          supabase
+            .from('hearts')
+            .select(`*, sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color, avatar_url)`)
+            .eq('recipient_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(200),
+          supabase
+            .from('hearts')
+            .select(`*, sender:profiles!hearts_sender_id_fkey(username, display_name, avatar_type, avatar_color, avatar_url)`)
+            .eq('sender_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(200),
+          supabase
+            .from('hearts')
+            .select('*', { count: 'exact', head: true })
+            .eq('recipient_id', userId),
+          supabase
+            .from('hearts')
+            .select('*', { count: 'exact', head: true })
+            .eq('sender_id', userId),
+        ]);
+
+        if (receivedResult.error) throw receivedResult.error;
+        if (sentResult.error) throw sentResult.error;
+
+        received = receivedResult.data?.map((h: any) => ({
           ...h,
           sender_username: h.sender.username,
           sender_display_name: h.sender.display_name,
@@ -149,34 +165,34 @@ export function useHearts(userId: string | undefined): UseHeartsResult {
           sender_avatar_color: h.sender.avatar_color,
           sender_avatar_url: h.sender.avatar_url,
         })) || [];
+
+        sent = sentResult.data?.map((h: any) => ({
+          ...h,
+          sender_username: h.sender.username,
+          sender_display_name: h.sender.display_name,
+          sender_avatar_type: h.sender.avatar_type,
+          sender_avatar_color: h.sender.avatar_color,
+          sender_avatar_url: h.sender.avatar_url,
+        })) || [];
+
+        totalReceived = receivedCountResult.count ?? received.length;
+        totalSent = sentCountResult.count ?? sent.length;
+      }
 
       setHeartsReceived(received);
-
-      const sent: HeartWithSender[] =
-        sentResult.data?.map((h: any) => ({
-          ...h,
-          sender_username: h.sender.username,
-          sender_display_name: h.sender.display_name,
-          sender_avatar_type: h.sender.avatar_type,
-          sender_avatar_color: h.sender.avatar_color,
-          sender_avatar_url: h.sender.avatar_url,
-        })) || [];
-
       setHeartsSent(sent);
 
-      // Calculate stats - use exact counts for totals, filtered data for today
       const receivedToday = received.filter((h) => h.shift_date === today).length;
       const sentToday = sent.filter((h) => h.shift_date === today).length;
 
       const newStats = {
-        total_received: receivedCountResult.count ?? received.length,
-        total_sent: sentCountResult.count ?? sent.length,
+        total_received: totalReceived,
+        total_sent: totalSent,
         received_today: receivedToday,
         sent_today: sentToday,
       };
       setStats(newStats);
       lastFetchedAt.current = Date.now();
-      // Update module-level cache for instant remounts
       heartsCache.stats = newStats;
       heartsCache.lastFetchedAt = lastFetchedAt.current;
       heartsCache.userId = userId;

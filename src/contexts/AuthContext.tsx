@@ -75,39 +75,56 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Options:
   //   showLoading: true (default) - sets profileStatus to 'loading' (shows spinner)
   //   showLoading: false - silent background refresh (no spinner)
-  const loadUserData = async (userId: string, options?: { showLoading?: boolean }): Promise<boolean> => {
+  const loadUserData = async (userId: string, options?: { showLoading?: boolean; retries?: number }): Promise<boolean> => {
     const showLoading = options?.showLoading ?? true;
+    const maxRetries = options?.retries ?? 2;
     if (showLoading) {
       setProfileStatus('loading');
     }
-    try {
-      setError(null);
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
 
-      if (profileError) {
-        // PGRST116 = no rows found, which is expected for new users who haven't created a profile yet
-        if (profileError.code === 'PGRST116') {
-          setProfile(null);
-          setProfileStatus('missing');
-          return false;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        setError(null);
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (profileError) {
+          // PGRST116 = no rows found, which is expected for new users who haven't created a profile yet
+          // This is a definitive "no profile" — no retry needed
+          if (profileError.code === 'PGRST116') {
+            setProfile(null);
+            setProfileStatus('missing');
+            return false;
+          }
+          throw profileError;
         }
-        throw profileError;
-      }
 
-      setProfile(profileData);
-      setProfileStatus('exists');
-      return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load profile';
-      setError(message);
-      // On error, treat as missing to avoid infinite loading
-      setProfileStatus('missing');
-      return false;
+        setProfile(profileData);
+        setProfileStatus('exists');
+        // Cache profile for instant render on next app open
+        try {
+          sessionStorage.setItem(`wc_profile_${userId}`, JSON.stringify(profileData));
+        } catch {
+          // sessionStorage full or unavailable — no-op
+        }
+        return true;
+      } catch (err) {
+        // If we have retries left, wait briefly and try again
+        if (attempt < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+          continue;
+        }
+        // All retries exhausted — this is a network error, NOT a missing profile
+        const message = err instanceof Error ? err.message : 'Failed to load profile';
+        setError(message);
+        setProfileStatus('missing');
+        return false;
+      }
     }
+    return false;
   };
 
   useEffect(() => {
@@ -119,9 +136,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Wait for profile to load before transitioning state
-          await loadUserData(session.user.id);
-          setAuthStatus('signed_in');
+          // Try cached profile for instant render (no spinner on reopen)
+          const cached = sessionStorage.getItem(`wc_profile_${session.user.id}`);
+          if (cached) {
+            try {
+              const cachedProfile = JSON.parse(cached) as Profile;
+              setProfile(cachedProfile);
+              setProfileStatus('exists');
+              setAuthStatus('signed_in');
+              // Background refresh — no spinner, overwrites cached data with fresh
+              loadUserData(session.user.id, { showLoading: false });
+            } catch {
+              // Corrupted cache — fall through to normal load
+              sessionStorage.removeItem(`wc_profile_${session.user.id}`);
+              await loadUserData(session.user.id);
+              setAuthStatus('signed_in');
+            }
+          } else {
+            // No cache (first time) — must wait for profile load
+            await loadUserData(session.user.id);
+            setAuthStatus('signed_in');
+          }
         } else {
           // No user = no profile to load, set profile status to idle
           setProfileStatus('idle');
@@ -231,6 +266,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setProfile(null);
     // Clear all module-level caches to prevent data leakage between users
     clearAllCaches();
+    // Clear sessionStorage profile cache
+    try {
+      const keys = Object.keys(sessionStorage);
+      keys.forEach((key) => {
+        if (key.startsWith('wc_profile_')) sessionStorage.removeItem(key);
+      });
+    } catch {
+      // sessionStorage unavailable — no-op
+    }
   };
 
   const refreshProfile = async () => {

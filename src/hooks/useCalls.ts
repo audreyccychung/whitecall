@@ -1,8 +1,25 @@
 // Call/shift management hook - syncs with global Zustand store
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useStore } from '../lib/store';
 import type { Call, ShiftType } from '../types/database';
+
+// Stale time: don't refetch if data is less than 30 seconds old
+const STALE_TIME_MS = 30_000;
+
+// Module-level cache to persist across component remounts
+const callsCache = {
+  calls: [] as Call[],
+  lastFetchedAt: 0,
+  userId: null as string | null,
+};
+
+// Clear cache on logout (called from cacheManager)
+export function clearCallsCache() {
+  callsCache.calls = [];
+  callsCache.lastFetchedAt = 0;
+  callsCache.userId = null;
+}
 
 interface UseCallsReturn {
   calls: Call[];
@@ -15,21 +32,33 @@ interface UseCallsReturn {
 }
 
 export function useCalls(userId: string | undefined): UseCallsReturn {
-  const [calls, setCalls] = useState<Call[]>([]);
-  const [loading, setLoading] = useState(true);
+  const hasCachedData =
+    userId &&
+    callsCache.userId === userId &&
+    callsCache.lastFetchedAt > 0;
+
+  const [calls, setCalls] = useState<Call[]>(hasCachedData ? callsCache.calls : []);
+  const [loading, setLoading] = useState(!hasCachedData);
   const [error, setError] = useState<string | null>(null);
+  const lastFetchedAt = useRef<number>(hasCachedData ? callsCache.lastFetchedAt : 0);
 
   // Global store action - syncs shift data for cross-component access
   const setShiftMap = useStore((state) => state.setShiftMap);
 
-  const loadCalls = async () => {
+  const loadCalls = async (options?: { force?: boolean }) => {
+    const force = options?.force ?? false;
+
+    if (!force && Date.now() - lastFetchedAt.current < STALE_TIME_MS) {
+      return;
+    }
+
     if (!userId) {
       setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      if (!hasCachedData) setLoading(true);
       setError(null);
 
       const { data, error: fetchError } = await supabase
@@ -40,9 +69,15 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
 
       if (fetchError) throw fetchError;
 
-      setCalls(data || []);
+      const callsData = data || [];
+      setCalls(callsData);
       // Sync to global store
-      setShiftMap((data || []).map((c) => ({ date: c.call_date, shiftType: c.shift_type })));
+      setShiftMap(callsData.map((c) => ({ date: c.call_date, shiftType: c.shift_type })));
+      // Update cache
+      lastFetchedAt.current = Date.now();
+      callsCache.calls = callsData;
+      callsCache.lastFetchedAt = lastFetchedAt.current;
+      callsCache.userId = userId;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load calls');
     } finally {
@@ -51,7 +86,18 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
   };
 
   useEffect(() => {
-    loadCalls();
+    loadCalls({ force: true });
+  }, [userId]);
+
+  // Refetch on visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadCalls();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [userId]);
 
   // Upsert a shift for a given date (create or update)
@@ -74,7 +120,7 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
       if (upsertError) throw upsertError;
 
       // Refetch from DB to confirm success (no state guessing)
-      await loadCalls();
+      await loadCalls({ force: true });
 
       return { success: true };
     } catch (err) {
@@ -114,7 +160,7 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
       if (deleteError) throw deleteError;
 
       // Refetch from DB to confirm success (no state guessing)
-      await loadCalls();
+      await loadCalls({ force: true });
 
       return { success: true };
     } catch (err) {
@@ -132,6 +178,6 @@ export function useCalls(userId: string | undefined): UseCallsReturn {
     setShift,
     clearShift,
     deleteCall,
-    refreshCalls: loadCalls,
+    refreshCalls: () => loadCalls({ force: true }),
   };
 }

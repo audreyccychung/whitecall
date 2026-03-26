@@ -5,6 +5,13 @@ import type { HeartWithSender } from '../types/heart';
 import { RATING_SCORES } from '../constants/ratings';
 import { isOnDutyShift } from '../constants/shiftTypes';
 
+export interface RatingDistribution {
+  rough: number;
+  okay: number;
+  good: number;
+  great: number;
+}
+
 export interface ProfileStats {
   // Call stats
   totalCalls: number;
@@ -25,6 +32,18 @@ export interface ProfileStats {
   // Trend data (last 7 rated calls, oldest first)
   trendData: TrendPoint[];
   hasTrendData: boolean; // true if >= 3 rated calls
+
+  // --- Insights: Trends tab ---
+  sleepTrend: TrendPoint[]; // last 20 rated calls with sleep (for sparkline)
+  allTimeSleepAvg: number | null; // all-time average sleep
+  ratingDistribution: RatingDistribution; // all-time rating counts
+
+  // --- Insights: Patterns tab ---
+  avgGapDays: number | null; // average days between on-duty calls
+  lastMonthCalls: number; // on-duty calls last month
+  callsByDayOfWeek: number[]; // [Mon, Tue, Wed, Thu, Fri, Sat, Sun] all-time on-duty
+  allTimeHeartsReceived: number; // total hearts all-time
+  callsWithHeartsPercent: number | null; // % of calls that got >= 1 heart
 }
 
 export interface TrendPoint {
@@ -111,7 +130,81 @@ export function useProfileStats(
     }));
 
     // totalCalls = on-duty calls all-time (used by share card)
-    const totalCalls = calls.filter(c => isOnDutyShift(c.shift_type)).length;
+    const onDutyCalls = calls.filter(c => isOnDutyShift(c.shift_type));
+    const totalCalls = onDutyCalls.length;
+
+    // --- Insights: Trends tab ---
+
+    // Sleep trend: last 20 rated calls (for sparkline)
+    const allSortedRatings = [...ratings]
+      .sort((a, b) => a.call_date.localeCompare(b.call_date));
+    const last20 = allSortedRatings.slice(-20);
+    const sleepTrend: TrendPoint[] = last20.map(r => ({
+      date: r.call_date,
+      mood: RATING_SCORES[r.rating],
+      sleep: r.hours_slept,
+      hearts: heartsByDate.get(r.call_date) || 0,
+    }));
+
+    // All-time sleep average
+    let allTimeSleepSum = 0;
+    let allTimeSleepCount = 0;
+    ratings.forEach(r => {
+      if (r.hours_slept !== null) {
+        allTimeSleepSum += r.hours_slept;
+        allTimeSleepCount++;
+      }
+    });
+    const allTimeSleepAvg = allTimeSleepCount > 0 ? allTimeSleepSum / allTimeSleepCount : null;
+
+    // Rating distribution (all-time)
+    const ratingDistribution: RatingDistribution = { rough: 0, okay: 0, good: 0, great: 0 };
+    ratings.forEach(r => {
+      ratingDistribution[r.rating]++;
+    });
+
+    // --- Insights: Patterns tab ---
+
+    // Average gap between on-duty calls
+    const sortedOnDutyDates = onDutyCalls
+      .map(c => c.call_date)
+      .sort((a, b) => a.localeCompare(b));
+
+    let avgGapDays: number | null = null;
+    if (sortedOnDutyDates.length >= 2) {
+      let totalGap = 0;
+      for (let i = 1; i < sortedOnDutyDates.length; i++) {
+        const prev = new Date(sortedOnDutyDates[i - 1] + 'T00:00:00');
+        const curr = new Date(sortedOnDutyDates[i] + 'T00:00:00');
+        totalGap += (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+      }
+      avgGapDays = totalGap / (sortedOnDutyDates.length - 1);
+    }
+
+    // Last month call count
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    const lastMonthCalls = calls.filter(c => {
+      if (!isOnDutyShift(c.shift_type)) return false;
+      const d = new Date(c.call_date + 'T00:00:00');
+      return d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+    }).length;
+
+    // Calls by day of week (Mon=0 ... Sun=6)
+    const callsByDayOfWeek = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
+    onDutyCalls.forEach(c => {
+      const d = new Date(c.call_date + 'T00:00:00');
+      const jsDay = d.getDay(); // 0=Sun, 1=Mon, ...
+      const idx = jsDay === 0 ? 6 : jsDay - 1; // Convert to Mon=0, Sun=6
+      callsByDayOfWeek[idx]++;
+    });
+
+    // All-time hearts and support percentage
+    const allTimeHeartsReceived = heartsReceived.length;
+    const uniqueShiftDatesWithHearts = new Set(heartsReceived.map(h => h.shift_date));
+    const callsWithHeartsPercent = totalCalls > 0
+      ? (uniqueShiftDatesWithHearts.size / totalCalls) * 100
+      : null;
 
     return {
       totalCalls,
@@ -124,6 +217,15 @@ export function useProfileStats(
       avgHeartsPerCall,
       trendData,
       hasTrendData: ratings.length >= 3,
+      // Insights
+      sleepTrend,
+      allTimeSleepAvg,
+      ratingDistribution,
+      avgGapDays,
+      lastMonthCalls,
+      callsByDayOfWeek,
+      allTimeHeartsReceived,
+      callsWithHeartsPercent,
     };
   }, [calls, ratings, heartsReceived]);
 }

@@ -13,7 +13,7 @@ import { useShareCard } from '../hooks/useShareCard';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { MoodCircle } from '../components/MoodCircle';
 import { StatCard } from '../components/profile/StatCard';
-import { TrendChart } from '../components/profile/TrendChart';
+import { InsightsSection } from '../components/profile/InsightsSection';
 import { FriendsSection } from '../components/profile/FriendsSection';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
@@ -193,13 +193,17 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Recent Trends - Primary analytics */}
+        {/* Insights - Trends & Patterns */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <TrendChart data={stats.trendData} />
+          <InsightsSection
+            stats={stats}
+            currentStreak={profile.current_streak ?? 0}
+            longestStreak={profile.longest_streak ?? 0}
+          />
         </motion.div>
 
         {/* Achievements - Strava-style badges */}

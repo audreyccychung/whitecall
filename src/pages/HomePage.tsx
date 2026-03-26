@@ -1,5 +1,5 @@
 // Main home page - user's avatar, hearts, friends on call feed
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useHearts } from '../hooks/useHearts';
@@ -26,6 +26,13 @@ export default function HomePage() {
 
   // Onboarding for new users
   const { showOnboarding, completeOnboarding } = useOnboarding();
+
+  // Defer activity feed render so above-fold content (friends, hearts) paints first
+  const [showFeed, setShowFeed] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowFeed(true), 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load calls data (this syncs to global store)
   useCalls(user?.id);
@@ -181,9 +188,16 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Activity Feed - Friends' call ratings */}
+        {/* Activity Feed - Friends' call ratings (deferred to let above-fold paint first) */}
         <div className="bg-white rounded-2xl shadow-soft-lg p-6">
-          <ActivityFeed userId={user?.id} />
+          {showFeed ? (
+            <ActivityFeed userId={user?.id} />
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm font-semibold text-gray-700 mb-3">Support Feed</p>
+              <div className="w-8 h-8 border-3 border-sky-soft-300 border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          )}
         </div>
       </main>
 

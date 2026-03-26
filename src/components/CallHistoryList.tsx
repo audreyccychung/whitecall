@@ -77,14 +77,6 @@ export function CallHistoryList({
             className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              {/* Date badge */}
-              <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 font-bold">
-                  {format(parseISO(call.call_date), 'd')}
-                </span>
-              </div>
-
-              {/* Date info */}
               <div>
                 <p className="font-medium text-gray-800">
                   {format(parseISO(call.call_date), 'EEEE, MMM d')}
