@@ -5,3 +5,4 @@ export { WeeklyShareCard } from './cards/WeeklyShareCard';
 export { StreakShareCard } from './cards/StreakShareCard';
 export { MonthlyShareCard } from './cards/MonthlyShareCard';
 export { InsightsShareCard } from './cards/InsightsShareCard';
+export { SharePickerModal } from './SharePickerModal';

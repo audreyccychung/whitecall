@@ -9,7 +9,6 @@ import { useCallEngagement } from '../hooks/useCallEngagement';
 import { useHearts } from '../hooks/useHearts';
 import { useProfileStats } from '../hooks/useProfileStats';
 import { useBadges } from '../hooks/useBadges';
-import { useShareCard } from '../hooks/useShareCard';
 import { AvatarDisplay } from '../components/AvatarDisplay';
 import { MoodCircle } from '../components/MoodCircle';
 import { StatCard } from '../components/profile/StatCard';
@@ -18,7 +17,7 @@ import { FriendsSection } from '../components/profile/FriendsSection';
 import { CallHistoryList } from '../components/CallHistoryList';
 import { RateCallModal } from '../components/RateCallModal';
 import { EngagementModal } from '../components/EngagementModal';
-import { StreakShareCard, SharePreviewModal, MonthlyShareCard, ShareButton } from '../components/share';
+import { SharePickerModal } from '../components/share';
 import { formatStat, getStatLabel, type StatKey } from '../utils/statsRegistry';
 import type { CallRating } from '../types/database';
 
@@ -49,12 +48,8 @@ export default function ProfilePage() {
     existingRating?: CallRating;
   }>({ isOpen: false, callDate: '' });
 
-  // Share card state
-  const [shareModal, setShareModal] = useState<{
-    type: 'streak' | 'monthly' | null;
-  }>({ type: null });
-  const streakShare = useShareCard();
-  const monthlyShare = useShareCard();
+  // Unified share modal
+  const [showSharePicker, setShowSharePicker] = useState(false);
 
   // Engagement modal state (for viewing likers + comments on own activity)
   const [selectedActivityForEngagement, setSelectedActivityForEngagement] = useState<string | null>(null);
@@ -67,17 +62,6 @@ export default function ProfilePage() {
   // Close modal
   const closeRatingModal = () => {
     setRatingModal({ isOpen: false, callDate: '' });
-  };
-
-  // Share handlers
-  const handleStreakShare = async () => {
-    await streakShare.generateAndShare();
-    setShareModal({ type: null });
-  };
-
-  const handleMonthlyShare = async () => {
-    await monthlyShare.generateAndShare();
-    setShareModal({ type: null });
   };
 
   // Get current month name
@@ -165,6 +149,17 @@ export default function ProfilePage() {
                 <p className="text-sm text-gray-500 truncate">@{profile.username}</p>
               )}
             </div>
+
+            {/* Share button */}
+            <button
+              onClick={() => setShowSharePicker(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-sky-soft-50 text-sky-soft-600 rounded-xl text-sm font-medium hover:bg-sky-soft-100 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              Share
+            </button>
           </div>
         </motion.div>
 
@@ -174,9 +169,8 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
         >
-          <div className="flex items-center justify-between mb-2 px-1">
+          <div className="mb-2 px-1">
             <p className="text-xs font-medium text-gray-700 uppercase tracking-wide">This Month</p>
-            <ShareButton onClick={() => setShareModal({ type: 'monthly' })} />
           </div>
           <div className="grid grid-cols-4 gap-2">
             {MONTHLY_UI_STATS.map((statKey) => (
@@ -203,9 +197,6 @@ export default function ProfilePage() {
             stats={stats}
             currentStreak={profile.current_streak ?? 0}
             longestStreak={profile.longest_streak ?? 0}
-            calls={calls}
-            ratings={ratings}
-            heartsReceived={heartsReceived}
           />
         </motion.div>
 
@@ -289,34 +280,18 @@ export default function ProfilePage() {
         onClose={() => setSelectedActivityForEngagement(null)}
       />
 
-      {/* Share Modals */}
-      <SharePreviewModal
-        isOpen={shareModal.type === 'streak'}
-        onClose={() => setShareModal({ type: null })}
-        onShare={handleStreakShare}
-        isGenerating={streakShare.isGenerating}
-      >
-        <StreakShareCard
-          ref={streakShare.cardRef}
-          streakDays={profile.current_streak ?? 0}
-        />
-      </SharePreviewModal>
-
-      <SharePreviewModal
-        isOpen={shareModal.type === 'monthly'}
-        onClose={() => setShareModal({ type: null })}
-        onShare={handleMonthlyShare}
-        isGenerating={monthlyShare.isGenerating}
-      >
-        <MonthlyShareCard
-          ref={monthlyShare.cardRef}
-          month={currentMonth}
-          calls={stats.callsThisMonth}
-          avgSleep={stats.avgSleep}
-          heartsReceived={stats.totalHeartsReceived}
-          currentStreak={profile.current_streak ?? 0}
-        />
-      </SharePreviewModal>
+      {/* Unified Share Picker */}
+      <SharePickerModal
+        isOpen={showSharePicker}
+        onClose={() => setShowSharePicker(false)}
+        month={currentMonth}
+        stats={stats}
+        currentStreak={profile.current_streak ?? 0}
+        longestStreak={profile.longest_streak ?? 0}
+        calls={calls}
+        ratings={ratings}
+        heartsReceived={heartsReceived}
+      />
     </div>
   );
 }
