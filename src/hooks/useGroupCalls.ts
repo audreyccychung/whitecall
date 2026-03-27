@@ -48,7 +48,7 @@ interface UseGroupCallsResult {
 
 export function useGroupCalls(
   groupId: string | undefined,
-  daysAhead: number = 14
+  _daysAhead?: number
 ): UseGroupCallsResult {
   const [calendarDays, setCalendarDays] = useState<GroupCalendarDay[]>([]);
   const [members, setMembers] = useState<GroupMemberOnCall[]>([]);
@@ -165,7 +165,7 @@ export function useGroupCalls(
     } finally {
       setLoading(false);
     }
-  }, [groupId, daysAhead]);
+  }, [groupId]);
 
   useEffect(() => {
     loadCalls();

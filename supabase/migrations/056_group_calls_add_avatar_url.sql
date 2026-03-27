@@ -1,5 +1,5 @@
--- Add shift_type to get_group_calls response for overlap calendar
--- Previously only returned user_id + call_date; now includes shift_type
+-- Fix: add avatar_url to get_group_calls member response
+-- Without this, photo avatars don't render in group overlap calendar
 
 CREATE OR REPLACE FUNCTION get_group_calls(
   p_group_id UUID,
@@ -33,7 +33,6 @@ BEGIN
     RETURN '{"code": "INVALID_DATE_RANGE"}'::JSON;
   END IF;
 
-  -- Get all group members with profile data
   SELECT json_agg(member_data) INTO v_members
   FROM (
     SELECT
@@ -49,7 +48,6 @@ BEGIN
     ORDER BY gm.joined_at
   ) member_data;
 
-  -- Get all calls for group members in date range (now includes shift_type)
   SELECT json_agg(call_data) INTO v_calls
   FROM (
     SELECT

@@ -65,10 +65,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log(`[WeeklyRecap] Notifying ${users.length} users`);
 
-    let totalSent = 0;
-
-    // Send notifications
-    await Promise.all(
+    // Send notifications and collect results
+    const results = await Promise.all(
       users.map(async (user: WeeklyRecapUser) => {
         const result = await sendPushToUser(user.user_id, {
           title: 'Your week in review',
@@ -76,10 +74,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tag: 'weekly-recap',
           data: { type: 'weekly_recap', url: '/profile' },
         });
-        totalSent += result.sent;
+        return result.sent;
       })
     );
 
+    const totalSent = results.reduce((sum, n) => sum + n, 0);
     console.log(`[WeeklyRecap] Sent ${totalSent} notifications`);
     return res.status(200).json({ code: 'SUCCESS', users: users.length, sent: totalSent });
   } catch (err) {

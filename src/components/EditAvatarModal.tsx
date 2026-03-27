@@ -83,6 +83,8 @@ export function EditAvatarModal({
     const file = e.target.files?.[0];
     if (!file) return;
     setError(null);
+    // Revoke previous object URL to prevent memory leak
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
     // Open crop view instead of setting preview directly
     const url = URL.createObjectURL(file);
     setCropSrc(url);
@@ -102,7 +104,11 @@ export function EditAvatarModal({
       const blob = await getCroppedBlob(cropSrc, croppedArea);
       const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
       setPhotoFile(file);
+      // Revoke previous preview URL
+      if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(URL.createObjectURL(blob));
+      // Revoke crop source URL
+      URL.revokeObjectURL(cropSrc);
       setCropSrc(null);
     } catch {
       setError('Failed to crop image. Try a different photo.');
@@ -110,10 +116,12 @@ export function EditAvatarModal({
   };
 
   const handleCropCancel = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
     setCropSrc(null);
   };
 
   const handleRemovePhoto = () => {
+    if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(null);
     setPhotoFile(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
