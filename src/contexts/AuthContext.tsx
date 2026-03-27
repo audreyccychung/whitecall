@@ -18,7 +18,7 @@ type AuthStatus = 'initializing' | 'signed_out' | 'signed_in';
 // - 'loading': fetching profile from database
 // - 'exists': profile confirmed to exist
 // - 'missing': profile confirmed to NOT exist (new user needs onboarding)
-type ProfileStatus = 'idle' | 'loading' | 'exists' | 'missing';
+type ProfileStatus = 'idle' | 'loading' | 'exists' | 'missing' | 'error';
 
 interface AuthContextType {
   user: User | null;
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // All retries exhausted — this is a network error, NOT a missing profile
         const message = err instanceof Error ? err.message : 'Failed to load profile';
         setError(message);
-        setProfileStatus('missing');
+        setProfileStatus('error');
         return false;
       }
     }

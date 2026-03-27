@@ -75,14 +75,6 @@ export function PullToRefreshWrapper({ onRefresh, children }: PullToRefreshWrapp
         </div>
       </div>
 
-      {/* Keyframe for spin animation — injected once */}
-      <style>{`
-        @keyframes ptr-spin {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-      `}</style>
-
       {/* Page content — unchanged */}
       {children}
     </>

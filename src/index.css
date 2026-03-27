@@ -136,4 +136,10 @@
   .modal-safe-bottom {
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 1.5rem);
   }
+
+  /* Pull-to-refresh spinner animation */
+  @keyframes ptr-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
 }

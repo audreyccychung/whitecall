@@ -18,6 +18,9 @@ export function usePullToRefresh(onRefresh: () => Promise<void>): UsePullToRefre
   const startYRef = useRef<number | null>(null);
   const isRefreshingRef = useRef(false);
   const pullDistanceRef = useRef(0);
+  // Store onRefresh in a ref so handleTouchEnd doesn't need it in deps
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     // Only start tracking if we are scrolled to the very top
@@ -69,7 +72,7 @@ export function usePullToRefresh(onRefresh: () => Promise<void>): UsePullToRefre
       isRefreshingRef.current = true;
       setIsRefreshing(true);
 
-      onRefresh().finally(() => {
+      onRefreshRef.current().finally(() => {
         isRefreshingRef.current = false;
         setIsRefreshing(false);
         setPullDistance(0);
@@ -80,7 +83,7 @@ export function usePullToRefresh(onRefresh: () => Promise<void>): UsePullToRefre
       setPullDistance(0);
       pullDistanceRef.current = 0;
     }
-  }, [onRefresh]);
+  }, []);
 
   useEffect(() => {
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
