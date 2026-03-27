@@ -71,14 +71,12 @@ export function useGroupCalls(
     setErrorCode(null);
 
     try {
-      // Calculate date range: 1 month back + daysAhead forward (for overlap calendar navigation)
+      // Calculate date range: start of current month + 60 days forward (stays under 90 day RPC limit)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const startDate = new Date(today);
-      startDate.setMonth(startDate.getMonth() - 1);
-      startDate.setDate(1);
+      const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
       const endDate = new Date(today);
-      endDate.setDate(endDate.getDate() + Math.max(daysAhead - 1, 60));
+      endDate.setDate(endDate.getDate() + 60);
 
       const startDateStr = formatDate(startDate);
       const endDateStr = formatDate(endDate);
